@@ -1,53 +1,47 @@
 import { Link } from 'react-router-dom';
+import { ArrowUpRight } from 'lucide-react';
 import { categories } from '@/data/mock-data';
 import { cn } from '@/lib/utils';
 
 export function CategoryGrid() {
   return (
-    <section className="py-16 md:py-24">
-      <div className="container">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+    <section className="section-spacing" aria-labelledby="category-heading">
+      <div className="container px-4 sm:px-6">
+        <div className="text-center mb-10 md:mb-12">
+          <h2 id="category-heading" className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3">
             Danh Mục Sản Phẩm
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
             Khám phá các bộ sưu tập đa dạng từ thời trang công sở đến phụ kiện thời thượng
           </p>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
           {categories.map((category, index) => (
             <Link
               key={category.id}
               to={`/shop?category=${category.slug}`}
               className={cn(
-                'group relative aspect-square overflow-hidden rounded-xl',
-                'animate-fade-up',
-                index % 3 === 1 && 'md:col-span-1'
+                'group relative aspect-square overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                'animate-fade-up'
               )}
-              style={{ animationDelay: `${index * 100}ms` }}
+              style={{ animationDelay: `${index * 80}ms` }}
             >
-              {/* Image */}
               <img
                 src={category.image}
-                alt={category.name}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                alt=""
+                className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-focus-visible:scale-105"
               />
-
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
-
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-end p-4 text-background">
-                <h3 className="font-display text-lg md:text-xl font-semibold text-center">
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/25 to-transparent" />
+              <div className="absolute inset-0 flex flex-col items-center justify-end p-3 sm:p-4 text-white">
+                <span className="font-display text-base sm:text-lg font-semibold text-center drop-shadow-sm">
                   {category.name}
-                </h3>
+                </span>
+                <span className="mt-1 opacity-0 -translate-y-1 group-hover:opacity-100 group-focus-visible:opacity-100 translate-y-0 flex items-center gap-1 text-xs font-medium transition-all duration-300">
+                  Xem thêm <ArrowUpRight className="h-3.5 w-3.5" />
+                </span>
               </div>
-
-              {/* Hover Border */}
-              <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary rounded-xl transition-colors duration-300" />
+              <span className="absolute inset-0 border-2 border-transparent rounded-xl group-hover:border-primary/50 group-focus-visible:border-primary/50 transition-colors duration-300 pointer-events-none" />
             </Link>
           ))}
         </div>

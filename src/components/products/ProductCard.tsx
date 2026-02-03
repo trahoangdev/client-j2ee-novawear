@@ -13,7 +13,6 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
 
@@ -23,111 +22,86 @@ export function ProductCard({ product, className }: ProductCardProps) {
     : 0;
 
   return (
-    <div
+    <article
       className={cn(
-        'group relative bg-card rounded-xl overflow-hidden transition-all duration-300',
-        'hover:shadow-soft-lg hover:-translate-y-1',
+        'group relative bg-card rounded-xl overflow-hidden border border-border/50',
+        'transition-all duration-300 ease-out hover:shadow-soft-lg hover:border-border hover:-translate-y-0.5',
+        'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background',
         className
       )}
-      onMouseEnter={() => {
-        setIsHovered(true);
-        if (product.images.length > 1) setCurrentImage(1);
-      }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        setCurrentImage(0);
-      }}
+      onMouseEnter={() => product.images.length > 1 && setCurrentImage(1)}
+      onMouseLeave={() => setCurrentImage(0)}
     >
-      {/* Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden bg-muted">
-        <Link to={`/product/${product.slug}`}>
+        <Link to={`/product/${product.slug}`} className="block focus:outline-none">
           <img
             src={product.images[currentImage]}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            alt=""
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
         </Link>
 
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
           {product.isNew && (
-            <Badge className="bg-foreground text-background">Mới</Badge>
+            <Badge className="bg-foreground text-background text-xs font-medium">Mới</Badge>
           )}
           {hasDiscount && (
-            <Badge className="bg-coral text-white">-{discountPercent}%</Badge>
+            <Badge className="bg-destructive text-destructive-foreground text-xs font-medium">
+              -{discountPercent}%
+            </Badge>
           )}
         </div>
 
-        {/* Wishlist Button */}
         <Button
           variant="ghost"
           size="icon"
           className={cn(
-            'absolute top-3 right-3 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm',
-            'opacity-0 group-hover:opacity-100 transition-opacity',
+            'absolute top-2.5 right-2.5 h-9 w-9 rounded-full bg-background/90 backdrop-blur-sm tap-target',
+            'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity',
             isLiked && 'opacity-100'
           )}
-          onClick={() => setIsLiked(!isLiked)}
+          onClick={(e) => { e.preventDefault(); setIsLiked(!isLiked); }}
+          aria-label={isLiked ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
         >
-          <Heart
-            className={cn('h-4 w-4', isLiked && 'fill-coral text-coral')}
-          />
+          <Heart className={cn('h-4 w-4', isLiked && 'fill-destructive text-destructive')} />
         </Button>
 
-        {/* Quick Actions */}
-        <div
-          className={cn(
-            'absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-foreground/80 to-transparent',
-            'transform translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100',
-            'transition-all duration-300'
-          )}
-        >
+        <div className="absolute bottom-0 left-0 right-0 p-2.5 bg-gradient-to-t from-foreground/90 to-transparent opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300">
           <div className="flex gap-2">
             <Button
               variant="secondary"
               size="sm"
-              className="flex-1 bg-background hover:bg-background/90"
+              className="flex-1 h-9 bg-background/95 hover:bg-background text-foreground text-xs"
               asChild
             >
               <Link to={`/product/${product.slug}`}>
-                <Eye className="h-4 w-4 mr-2" />
-                Xem Chi Tiết
+                <Eye className="h-3.5 w-3.5 mr-1.5" />
+                Xem
               </Link>
             </Button>
-            <Button
-              size="icon"
-              className="bg-primary hover:bg-primary/90 h-9 w-9"
-            >
-              <ShoppingBag className="h-4 w-4" />
+            <Button size="icon" className="h-9 w-9 bg-primary hover:bg-primary/90 shrink-0" asChild>
+              <Link to={`/product/${product.slug}`} aria-label="Thêm vào giỏ">
+                <ShoppingBag className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        {/* Category */}
+      <div className="p-3 sm:p-4">
         <p className="text-xs text-muted-foreground mb-1">{product.category.name}</p>
-
-        {/* Name */}
-        <Link to={`/product/${product.slug}`}>
-          <h3 className="font-medium text-sm line-clamp-2 hover:text-primary transition-colors mb-2">
+        <Link to={`/product/${product.slug}`} className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+          <h3 className="font-medium text-sm line-clamp-2 hover:text-primary transition-colors mb-1.5">
             {product.name}
           </h3>
         </Link>
-
-        {/* Rating */}
         <div className="flex items-center gap-1 mb-2">
-          <Star className="h-3.5 w-3.5 fill-gold text-gold" />
+          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 shrink-0" aria-hidden />
           <span className="text-xs font-medium">{product.rating}</span>
-          <span className="text-xs text-muted-foreground">
-            ({product.reviewCount})
-          </span>
+          <span className="text-xs text-muted-foreground">({product.reviewCount})</span>
         </div>
-
-        {/* Price */}
-        <div className="flex items-center gap-2">
-          <span className="font-display text-lg font-semibold text-primary">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-display text-base font-semibold text-primary">
             {formatCurrency(product.salePrice || product.price)}
           </span>
           {hasDiscount && (
@@ -136,24 +110,19 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </span>
           )}
         </div>
-
-        {/* Colors */}
-        <div className="flex items-center gap-1 mt-3">
+        <div className="flex items-center gap-1.5 mt-2.5" aria-hidden>
           {product.colors.slice(0, 4).map((color, index) => (
             <span
               key={index}
-              className="h-4 w-4 rounded-full border border-border/50"
+              className="h-3.5 w-3.5 rounded-full border border-border/60 shrink-0"
               style={{ backgroundColor: color.hex }}
-              title={color.name}
             />
           ))}
           {product.colors.length > 4 && (
-            <span className="text-xs text-muted-foreground ml-1">
-              +{product.colors.length - 4}
-            </span>
+            <span className="text-xs text-muted-foreground">+{product.colors.length - 4}</span>
           )}
         </div>
       </div>
-    </div>
+    </article>
   );
 }

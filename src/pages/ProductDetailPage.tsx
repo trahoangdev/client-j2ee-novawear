@@ -76,30 +76,19 @@ export function ProductDetailPage() {
       <Header />
 
       <main className="flex-1">
-        {/* Breadcrumb */}
-        <div className="container py-4">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-foreground">
-              Trang chủ
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <Link to="/shop" className="hover:text-foreground">
-              Bộ sưu tập
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <Link
-              to={`/shop?category=${product.category.slug}`}
-              className="hover:text-foreground"
-            >
-              {product.category.name}
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-foreground">{product.name}</span>
+        <div className="container px-4 sm:px-6 py-4">
+          <nav className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap" aria-label="Breadcrumb">
+            <Link to="/" className="hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">Trang chủ</Link>
+            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+            <Link to="/shop" className="hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">Bộ sưu tập</Link>
+            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+            <Link to={`/shop?category=${product.category.slug}`} className="hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">{product.category.name}</Link>
+            <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="text-foreground truncate max-w-[180px] sm:max-w-none">{product.name}</span>
           </nav>
         </div>
 
-        {/* Product Details */}
-        <div className="container pb-16">
+        <div className="container px-4 sm:px-6 pb-16">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Image Gallery */}
             <div className="space-y-4">
@@ -348,18 +337,17 @@ export function ProductDetailPage() {
                 </Button>
               </div>
 
-              {/* Features */}
-              <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-xl">
-                <div className="text-center">
-                  <Truck className="h-5 w-5 mx-auto mb-2 text-primary" />
+              <div className="grid grid-cols-3 gap-3 p-4 bg-muted/40 rounded-xl" role="list">
+                <div className="text-center" role="listitem">
+                  <Truck className="h-5 w-5 mx-auto mb-1.5 text-primary" aria-hidden />
                   <p className="text-xs font-medium">Miễn phí ship</p>
                 </div>
-                <div className="text-center">
-                  <RefreshCw className="h-5 w-5 mx-auto mb-2 text-primary" />
+                <div className="text-center" role="listitem">
+                  <RefreshCw className="h-5 w-5 mx-auto mb-1.5 text-primary" aria-hidden />
                   <p className="text-xs font-medium">Đổi trả 30 ngày</p>
                 </div>
-                <div className="text-center">
-                  <ShieldCheck className="h-5 w-5 mx-auto mb-2 text-primary" />
+                <div className="text-center" role="listitem">
+                  <ShieldCheck className="h-5 w-5 mx-auto mb-1.5 text-primary" aria-hidden />
                   <p className="text-xs font-medium">Bảo hành chính hãng</p>
                 </div>
               </div>

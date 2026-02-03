@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ShoppingBag, User, Menu, X, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,18 +14,39 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
+const navLinks = [
+  { to: '/shop', label: 'Bộ Sưu Tập' },
+  { to: '/shop?category=tops', label: 'Áo' },
+  { to: '/shop?category=pants', label: 'Quần' },
+  { to: '/shop?category=dresses', label: 'Váy' },
+  { to: '/shop?category=accessories', label: 'Phụ Kiện' },
+];
+
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { toggleCart, itemCount } = useCart();
   const { isAuthenticated, user, logout, setShowAuthModal, setAuthMode, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isSearchOpen]);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+    const q = searchQuery.trim();
+    if (q) {
+      navigate(`/shop?search=${encodeURIComponent(q)}`);
       setIsSearchOpen(false);
       setSearchQuery('');
     }
@@ -36,126 +57,125 @@ export function Header() {
     setShowAuthModal(true);
   };
 
+  const isActive = (path: string) => {
+    if (path === '/shop') return location.pathname === '/shop' && !location.search;
+    if (path.startsWith('/shop?')) {
+      const query = path.split('?')[1] ?? '';
+      return location.pathname === '/shop' && location.search.includes(query);
+    }
+    return false;
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-soft border-b border-border/50">
-      <div className="container mx-auto">
-        <div className="flex h-16 md:h-20 items-center justify-between gap-4">
-          {/* Mobile Menu Button */}
+    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-md border-b border-border/60 supports-[backdrop-filter]:bg-background/80">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="flex h-14 sm:h-16 md:h-[4.5rem] items-center justify-between gap-3">
+          {/* Mobile Menu Button - tap target */}
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden tap-target h-11 w-11 rounded-lg"
+            aria-label="Menu"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-expanded={isMobileMenuOpen}
+            aria-label={isMobileMenuOpen ? 'Đóng menu' : 'Mở menu'}
           >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <h1 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+          <Link
+            to="/"
+            className="flex items-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
+          >
+            <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               NOVA<span className="text-primary">WEAR</span>
             </h1>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link
-              to="/shop"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Bộ Sưu Tập
-            </Link>
-            <Link
-              to="/shop?category=tops"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Áo
-            </Link>
-            <Link
-              to="/shop?category=pants"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Quần
-            </Link>
-            <Link
-              to="/shop?category=dresses"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Váy
-            </Link>
-            <Link
-              to="/shop?category=accessories"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Phụ Kiện
-            </Link>
+          {/* Desktop Navigation with active state */}
+          <nav className="hidden md:flex items-center gap-1" aria-label="Menu chính">
+            {navLinks.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className={cn(
+                  'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                  isActive(to)
+                    ? 'text-primary bg-primary/10'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+                )}
+              >
+                {label}
+              </Link>
+            ))}
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-2">
-            {/* Search */}
-            <div className="relative">
+          <div className="flex items-center gap-1">
+            {/* Search - expandable */}
+            <div className="relative flex items-center">
               {isSearchOpen ? (
-                <form onSubmit={handleSearch} className="absolute right-0 top-1/2 -translate-y-1/2">
-                  <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-1 shadow-soft animate-scale-in">
-                    <Input
-                      type="search"
-                      placeholder="Tìm kiếm..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-48 md:w-64 border-0 focus-visible:ring-0"
-                      autoFocus
-                    />
-                    <Button type="submit" size="icon" variant="ghost">
-                      <Search className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setIsSearchOpen(false)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <form
+                  onSubmit={handleSearch}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1 bg-background border border-border rounded-xl px-2 py-1.5 shadow-soft-lg animate-scale-in"
+                >
+                  <Input
+                    ref={searchInputRef}
+                    type="search"
+                    placeholder="Tìm sản phẩm..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Escape' && (setIsSearchOpen(false), searchInputRef.current?.blur())}
+                    className="w-40 sm:w-52 md:w-64 border-0 bg-transparent focus-visible:ring-0 h-9"
+                    aria-label="Tìm kiếm"
+                  />
+                  <Button type="submit" size="icon" variant="ghost" className="h-8 w-8 shrink-0">
+                    <Search className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+                    aria-label="Đóng tìm kiếm"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </form>
               ) : (
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="h-10 w-10 md:h-11 md:w-11 rounded-lg hover:bg-primary/10 tap-target"
                   onClick={() => setIsSearchOpen(true)}
-                  className="hover:bg-primary/10"
+                  aria-label="Mở tìm kiếm"
                 >
                   <Search className="h-5 w-5" />
                 </Button>
               )}
             </div>
 
-            {/* Wishlist */}
-            <Button variant="ghost" size="icon" className="hidden md:flex hover:bg-primary/10">
+            <Button variant="ghost" size="icon" className="hidden md:flex h-10 w-10 rounded-lg hover:bg-primary/10 tap-target" aria-label="Yêu thích">
               <Heart className="h-5 w-5" />
             </Button>
 
-            {/* User Menu */}
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-primary/10">
+                  <Button variant="ghost" size="icon" className="h-10 w-10 md:h-11 md:w-11 rounded-lg hover:bg-primary/10 tap-target" aria-label="Tài khoản">
                     {user?.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="h-7 w-7 rounded-full object-cover"
-                      />
+                      <img src={user.avatar} alt="" className="h-7 w-7 rounded-full object-cover" />
                     ) : (
                       <User className="h-5 w-5" />
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-3 py-2">
-                    <p className="font-medium">{user?.name}</p>
-                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-soft-lg">
+                  <div className="px-3 py-2.5">
+                    <p className="font-medium truncate">{user?.name}</p>
+                    <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
@@ -168,9 +188,7 @@ export function Header() {
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link to="/admin" className="text-primary font-medium">
-                          Quản Trị
-                        </Link>
+                        <Link to="/admin" className="text-primary font-medium">Quản Trị</Link>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -182,23 +200,24 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="icon"
+                className="h-10 w-10 md:h-11 md:w-11 rounded-lg hover:bg-primary/10 tap-target"
                 onClick={() => handleAuthClick('login')}
-                className="hover:bg-primary/10"
+                aria-label="Đăng nhập"
               >
                 <User className="h-5 w-5" />
               </Button>
             )}
 
-            {/* Cart */}
             <Button
               variant="ghost"
               size="icon"
+              className="relative h-10 w-10 md:h-11 md:w-11 rounded-lg hover:bg-primary/10 tap-target"
               onClick={toggleCart}
-              className="relative hover:bg-primary/10"
+              aria-label={`Giỏ hàng, ${itemCount} sản phẩm`}
             >
               <ShoppingBag className="h-5 w-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center animate-scale-in">
+                <span className="absolute top-1 right-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center">
                   {itemCount > 99 ? '99+' : itemCount}
                 </span>
               )}
@@ -207,68 +226,35 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - slide down */}
       <div
         className={cn(
-          'md:hidden absolute top-full left-0 right-0 bg-background border-b border-border shadow-soft overflow-hidden transition-all duration-300',
-          isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          'md:hidden absolute top-full left-0 right-0 bg-background border-b border-border shadow-soft-lg overflow-hidden transition-[max-height,opacity] duration-300 ease-out',
+          isMobileMenuOpen ? 'max-h-[min(80vh,28rem)] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
         )}
+        role="navigation"
+        aria-label="Menu di động"
       >
-        <nav className="container py-4 flex flex-col gap-2">
-          <Link
-            to="/shop"
-            className="px-4 py-3 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Bộ Sưu Tập
-          </Link>
-          <Link
-            to="/shop?category=tops"
-            className="px-4 py-3 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Áo
-          </Link>
-          <Link
-            to="/shop?category=pants"
-            className="px-4 py-3 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Quần
-          </Link>
-          <Link
-            to="/shop?category=dresses"
-            className="px-4 py-3 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Váy
-          </Link>
-          <Link
-            to="/shop?category=accessories"
-            className="px-4 py-3 text-sm font-medium hover:bg-muted rounded-lg transition-colors"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Phụ Kiện
-          </Link>
+        <nav className="container py-4 flex flex-col gap-0.5">
+          {navLinks.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className={cn(
+                'px-4 py-3.5 text-sm font-medium rounded-lg transition-colors',
+                isActive(to) ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-foreground'
+              )}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              {label}
+            </Link>
+          ))}
           {!isAuthenticated && (
-            <div className="flex gap-2 px-4 pt-2 border-t border-border mt-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  handleAuthClick('login');
-                  setIsMobileMenuOpen(false);
-                }}
-              >
+            <div className="flex gap-2 px-4 pt-4 mt-2 border-t border-border">
+              <Button variant="outline" className="flex-1 h-11" onClick={() => { handleAuthClick('login'); setIsMobileMenuOpen(false); }}>
                 Đăng Nhập
               </Button>
-              <Button
-                className="flex-1 bg-primary hover:bg-primary/90"
-                onClick={() => {
-                  handleAuthClick('register');
-                  setIsMobileMenuOpen(false);
-                }}
-              >
+              <Button className="flex-1 h-11 bg-primary hover:bg-primary/90" onClick={() => { handleAuthClick('register'); setIsMobileMenuOpen(false); }}>
                 Đăng Ký
               </Button>
             </div>

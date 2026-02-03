@@ -217,23 +217,22 @@ export function ShopPage() {
       <Header />
 
       <main className="flex-1">
-        {/* Page Header */}
-        <div className="bg-muted/50 py-8">
-          <div className="container">
-            <h1 className="font-display text-3xl md:text-4xl font-bold">
+        <div className="bg-muted/40 border-b border-border/50 py-6 md:py-8">
+          <div className="container px-4 sm:px-6">
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold">
               {selectedCategory
-                ? categories.find((c) => c.slug === selectedCategory)?.name || 'Bộ Sưu Tập'
+                ? categories.find((c) => c.slug === selectedCategory)?.name ?? 'Bộ Sưu Tập'
                 : searchQuery
                 ? `Kết quả cho "${searchQuery}"`
                 : 'Bộ Sưu Tập'}
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">
               {filteredProducts.length} sản phẩm
             </p>
           </div>
         </div>
 
-        <div className="container py-8">
+        <div className="container py-6 md:py-8 px-4 sm:px-6">
           <div className="flex gap-8">
             {/* Sidebar - Desktop */}
             <aside className="hidden lg:block w-64 shrink-0">
@@ -317,19 +316,20 @@ export function ShopPage() {
                 </div>
               </div>
 
-              {/* Product Grid */}
               {filteredProducts.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-                    <SlidersHorizontal className="h-12 w-12 text-muted-foreground" />
+                <div className="text-center py-14 md:py-20">
+                  <div className="h-20 w-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-5" aria-hidden>
+                    <SlidersHorizontal className="h-10 w-10 text-muted-foreground" />
                   </div>
-                  <h3 className="font-display text-xl font-semibold mb-2">
+                  <h2 className="font-display text-lg sm:text-xl font-semibold mb-2">
                     Không tìm thấy sản phẩm
-                  </h3>
-                  <p className="text-muted-foreground mb-6">
+                  </h2>
+                  <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
                     Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác
                   </p>
-                  <Button onClick={clearFilters}>Xóa bộ lọc</Button>
+                  <Button onClick={clearFilters} variant="outline" className="rounded-lg">
+                    Xóa bộ lọc
+                  </Button>
                 </div>
               ) : (
                 <div

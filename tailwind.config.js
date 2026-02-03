@@ -108,7 +108,7 @@ module.exports = {
   			magenta: '#FF006E'
   		},
   		fontFamily: {
-  			display: ['Fraunces', 'serif'],
+  			display: ['Oswald', 'sans-serif'],
   			body: ['Plus Jakarta Sans', 'sans-serif'],
   			mono: ['JetBrains Mono', 'monospace']
   		},
