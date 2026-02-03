@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* NOVAWEAR Light Theme - Modern Editorial */
+    --background: 36 33% 97%; /* Warm Cream #FAF8F5 */
+    --foreground: 0 0% 18%; /* Charcoal #2D2D2D */
+
+    --card: 36 33% 98%;
+    --card-foreground: 0 0% 18%;
+
+    --popover: 36 33% 98%;
+    --popover-foreground: 0 0% 18%;
+
+    /* Primary - Deep Terracotta #C85A54 */
+    --primary: 4 50% 56%;
+    --primary-foreground: 36 33% 97%;
+
+    /* Secondary - Soft Sage #A8B5A0 */
+    --secondary: 102 12% 67%;
+    --secondary-foreground: 0 0% 18%;
+
+    --muted: 36 20% 93%;
+    --muted-foreground: 0 0% 55%; /* Mid-Grey #8B8B8B */
+
+    --accent: 102 12% 67%;
+    --accent-foreground: 0 0% 18%;
+
+    /* Coral for sale tags #FF6B6B */
+    --destructive: 0 100% 71%;
+    --destructive-foreground: 36 33% 97%;
+
+    --border: 36 15% 88%;
+    --input: 36 15% 88%;
+    --ring: 4 50% 56%;
+
+    --radius: 0.75rem;
+
+    /* Sidebar */
+    --sidebar-background: 36 33% 97%;
+    --sidebar-foreground: 0 0% 18%;
+    --sidebar-primary: 4 50% 56%;
+    --sidebar-primary-foreground: 36 33% 97%;
+    --sidebar-accent: 102 12% 90%;
+    --sidebar-accent-foreground: 0 0% 18%;
+    --sidebar-border: 36 15% 88%;
+    --sidebar-ring: 4 50% 56%;
+
+    /* Custom NOVAWEAR colors */
+    --terracotta: 4 50% 56%;
+    --sage: 102 12% 67%;
+    --cream: 36 33% 97%;
+    --charcoal: 0 0% 18%;
+    --gold: 43 67% 52%;
+    --coral: 0 100% 71%;
+    --success: 171 55% 55%;
+  }
+
+  .dark {
+    /* NOVAWEAR Admin Dark Theme - Deep Navy */
+    --background: 226 41% 16%; /* Deep Navy #1A1F36 */
+    --foreground: 36 33% 97%;
+
+    --card: 226 41% 19%;
+    --card-foreground: 36 33% 97%;
+
+    --popover: 226 41% 19%;
+    --popover-foreground: 36 33% 97%;
+
+    --primary: 4 50% 56%;
+    --primary-foreground: 36 33% 97%;
+
+    --secondary: 226 30% 25%;
+    --secondary-foreground: 36 33% 97%;
+
+    --muted: 226 30% 25%;
+    --muted-foreground: 226 15% 65%;
+
+    --accent: 187 100% 43%; /* Cyan #00D9FF */
+    --accent-foreground: 226 41% 16%;
+
+    --destructive: 336 100% 50%; /* Magenta #FF006E */
+    --destructive-foreground: 36 33% 97%;
+
+    --border: 226 30% 25%;
+    --input: 226 30% 25%;
+    --ring: 187 100% 43%;
+
+    --sidebar-background: 226 41% 12%;
+    --sidebar-foreground: 36 33% 97%;
+    --sidebar-primary: 187 100% 43%;
+    --sidebar-primary-foreground: 226 41% 12%;
+    --sidebar-accent: 226 30% 25%;
+    --sidebar-accent-foreground: 36 33% 97%;
+    --sidebar-border: 226 30% 25%;
+    --sidebar-ring: 187 100% 43%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fraunces', serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Fraunces', serif;
+  }
+  
+  .font-body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  
+  .font-data {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Soft UI Shadows */
+  .shadow-soft {
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.04);
+  }
+  
+  .shadow-soft-lg {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 0 2px rgba(0,0,0,0.04);
+  }
+
+  /* Custom animations */
+  .animate-fade-up {
+    animation: fadeUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+    background-size: 200% 100%;
+  }
+
+  .animate-bounce-subtle {
+    animation: bounceSubtle 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Backdrop blur utility */
+  .backdrop-blur-soft {
+    backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes bounceSubtle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
