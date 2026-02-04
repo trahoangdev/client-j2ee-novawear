@@ -22,6 +22,7 @@ import { ProductCard } from '@/components/products/ProductCard';
 import { categoriesApi, productsApi } from '@/lib/customerApi';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 import { formatCurrency } from '@/lib/utils';
+import { toast } from '@/lib/toast';
 import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,7 @@ export function ShopPage() {
   const categorySlug = searchParams.get('category') ?? '';
   const searchQuery = searchParams.get('search') ?? '';
   const sortBy = searchParams.get('sort') || 'newest';
+  const onSale = searchParams.get('sale') === 'true';
 
   const slugToName: Record<string, string> = { tops: 'Áo', pants: 'Quần', dresses: 'Váy', accessories: 'Phụ Kiện' };
   const effectiveCategoryId = useMemo(() => {
@@ -52,7 +54,10 @@ export function ShopPage() {
   }, [categoryIdParam, categorySlug, categories]);
 
   useEffect(() => {
-    categoriesApi.list().then(({ data }) => setCategories(data)).catch(() => setCategories([]));
+    categoriesApi.list().then(({ data }) => setCategories(data)).catch(() => {
+      setCategories([]);
+      toast.error('Không tải được danh mục');
+    });
   }, []);
 
   useEffect(() => {
@@ -63,6 +68,7 @@ export function ShopPage() {
         size: pageSize,
         categoryId: effectiveCategoryId,
         search: searchQuery || undefined,
+        onSale: onSale || undefined,
       })
       .then(({ data }) => {
         setProducts(data.content.map(productDtoToDisplay));
@@ -71,9 +77,10 @@ export function ShopPage() {
       .catch(() => {
         setProducts([]);
         setTotal(0);
+        toast.error('Không tải được sản phẩm. Vui lòng thử lại.');
       })
       .finally(() => setLoading(false));
-  }, [page, effectiveCategoryId, searchQuery]);
+  }, [page, effectiveCategoryId, searchQuery, onSale]);
 
   const sortedProducts = useMemo(() => {
     const list = [...products];
@@ -111,17 +118,39 @@ export function ShopPage() {
   };
 
   const selectedCategoryId = effectiveCategoryId ?? null;
-  const hasActiveFilters = selectedCategoryId != null || searchQuery;
+  const hasActiveFilters = selectedCategoryId != null || searchQuery || onSale;
 
   const FilterContent = () => (
     <div className="space-y-6">
       <div>
+        <h4 className="font-semibold mb-3">Khuyến mãi</h4>
+        <div className="space-y-2 mb-4">
+          <div
+            className={cn(
+              'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
+              onSale ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+            )}
+            onClick={() => {
+              if (onSale) {
+                searchParams.delete('sale');
+                setSearchParams(searchParams);
+                setPage(0);
+              } else {
+                searchParams.set('sale', 'true');
+                setSearchParams(searchParams);
+                setPage(0);
+              }
+            }}
+          >
+            <span className="text-sm">Chỉ sản phẩm khuyến mãi</span>
+          </div>
+        </div>
         <h4 className="font-semibold mb-3">Danh Mục</h4>
         <div className="space-y-2">
           <div
             className={cn(
               'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
-              selectedCategoryId == null ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+              selectedCategoryId == null && !onSale ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
             )}
             onClick={() => handleCategoryChange(null)}
           >
@@ -161,7 +190,7 @@ export function ShopPage() {
         <div className="bg-muted/40 border-b border-border/50 py-6 md:py-8">
           <div className="container px-4 sm:px-6">
             <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold">
-              {categoryName ?? (searchQuery ? `Kết quả cho "${searchQuery}"` : 'Bộ Sưu Tập')}
+              {categoryName ?? (onSale ? 'Khuyến Mãi' : searchQuery ? `Kết quả cho "${searchQuery}"` : 'Bộ Sưu Tập')}
             </h1>
             <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">
               {loading ? 'Đang tải...' : `${total} sản phẩm`}

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProductCard } from '@/components/products/ProductCard';
 import { productsApi } from '@/lib/customerApi';
+import { toast } from '@/lib/toast';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 
 export function NewArrivals() {
@@ -15,7 +16,10 @@ export function NewArrivals() {
     productsApi
       .list({ size: 8 })
       .then(({ data }) => setProducts(data.content.map(productDtoToDisplay).slice(0, 4)))
-      .catch(() => setProducts([]))
+      .catch(() => {
+        setProducts([]);
+        toast.error('Không tải được hàng mới về');
+      })
       .finally(() => setLoading(false));
   }, []);
 

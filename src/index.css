@@ -243,3 +243,48 @@
     min-width: 44px;
   }
 }
+
+/* Mô tả sản phẩm – render Markdown đồng bộ theme */
+.product-description-markdown.markdown-body {
+  @apply text-muted-foreground leading-relaxed;
+  font-size: inherit;
+}
+.product-description-markdown.markdown-body p {
+  @apply mb-3 last:mb-0;
+}
+.product-description-markdown.markdown-body ul,
+.product-description-markdown.markdown-body ol {
+  @apply mb-3 pl-6;
+}
+.product-description-markdown.markdown-body li {
+  @apply mb-1;
+}
+.product-description-markdown.markdown-body strong {
+  @apply font-semibold text-foreground;
+}
+.product-description-markdown.markdown-body a {
+  @apply text-primary underline underline-offset-2 hover:opacity-90;
+}
+.product-description-markdown.markdown-body h1,
+.product-description-markdown.markdown-body h2,
+.product-description-markdown.markdown-body h3 {
+  @apply font-semibold text-foreground mt-4 mb-2;
+}
+.product-description-markdown.markdown-body h1 { font-size: 1.25rem; }
+.product-description-markdown.markdown-body h2 { font-size: 1.125rem; }
+.product-description-markdown.markdown-body h3 { font-size: 1rem; }
+.product-description-markdown.markdown-body code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm;
+}
+.product-description-markdown.markdown-body pre {
+  @apply bg-muted p-4 rounded-lg overflow-x-auto my-3;
+}
+.product-description-markdown.markdown-body pre code {
+  @apply bg-transparent p-0;
+}
+.product-description-markdown.markdown-body blockquote {
+  @apply border-l-4 border-primary pl-4 italic text-muted-foreground my-3;
+}
+.product-description-markdown.markdown-body img {
+  @apply max-w-full h-auto rounded-lg my-2;
+}

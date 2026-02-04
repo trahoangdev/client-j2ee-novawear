@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { AppSettingsProvider } from "@/context/AppSettingsContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { AuthModal } from "@/components/auth/AuthModal";
 
@@ -32,6 +33,7 @@ const AdminCustomers = lazy(() => import("@/pages/admin/AdminCustomers").then(m 
 const AdminReviews = lazy(() => import("@/pages/admin/AdminReviews").then(m => ({ default: m.AdminReviews })));
 const AdminAnalytics = lazy(() => import("@/pages/admin/AdminAnalytics").then(m => ({ default: m.AdminAnalytics })));
 const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings").then(m => ({ default: m.AdminSettings })));
+const AdminBanners = lazy(() => import("@/pages/admin/AdminBanners").then(m => ({ default: m.AdminBanners })));
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin").then(m => ({ default: m.AdminLogin })));
 
 // Loading Fallback
@@ -49,6 +51,7 @@ function LoadingFallback() {
 function App() {
   return (
     <AuthProvider>
+      <AppSettingsProvider>
       <WishlistProvider>
       <CartProvider>
         <Suspense fallback={<LoadingFallback />}>
@@ -81,6 +84,7 @@ function App() {
               <Route path="orders" element={<AdminOrders />} />
               <Route path="customers" element={<AdminCustomers />} />
               <Route path="reviews" element={<AdminReviews />} />
+              <Route path="public/banners" element={<AdminBanners />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
@@ -90,9 +94,10 @@ function App() {
         {/* Global Components */}
         <CartDrawer />
         <AuthModal />
-        <Toaster position="bottom-right" richColors />
+        <Toaster position="top-right" richColors expand duration={4000} />
       </CartProvider>
       </WishlistProvider>
+      </AppSettingsProvider>
     </AuthProvider>
   );
 }

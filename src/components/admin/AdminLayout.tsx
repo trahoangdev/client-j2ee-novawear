@@ -14,6 +14,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   GlobalOutlined,
+  PictureOutlined,
 } from '@ant-design/icons';
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -29,6 +30,14 @@ const menuItems: MenuProps['items'] = [
   { key: '/admin/orders', icon: <ShoppingCartOutlined />, label: <Link to="/admin/orders">Đơn hàng</Link> },
   { key: '/admin/customers', icon: <UserOutlined />, label: <Link to="/admin/customers">Khách hàng</Link> },
   { key: '/admin/reviews', icon: <StarOutlined />, label: <Link to="/admin/reviews">Đánh giá</Link> },
+  {
+    key: '/admin/public',
+    icon: <PictureOutlined />,
+    label: 'Quản lý công khai',
+    children: [
+      { key: '/admin/public/banners', label: <Link to="/admin/public/banners">Banner</Link> },
+    ],
+  },
   { key: '/admin/analytics', icon: <BarChartOutlined />, label: <Link to="/admin/analytics">Thống kê</Link> },
   { key: '/admin/settings', icon: <SettingOutlined />, label: <Link to="/admin/settings">Cài đặt</Link> },
 ];
@@ -110,7 +119,7 @@ export function AdminLayout() {
             theme="light"
             mode="inline"
             selectedKeys={[location.pathname]}
-            defaultOpenKeys={[]}
+            defaultOpenKeys={['/admin/public']}
             items={menuItems}
             style={{ borderRight: 0, marginTop: 16, background: 'transparent' }}
           />

@@ -3,6 +3,7 @@ import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAppSettingsReadOnly } from '@/context/AppSettingsContext';
 
 const shopLinks = [
   { to: '/shop', label: 'Tất Cả Sản Phẩm' },
@@ -21,12 +22,21 @@ const supportLinks = [
   { to: '/contact', label: 'Liên Hệ' },
 ];
 
-const SHOW_NEWSLETTER = false; // Bật lại khi cần dùng newsletter
+function BrandName({ name }: { name: string }) {
+  if (name === 'NOVAWEAR') {
+    return <>NOVA<span className="text-primary">WEAR</span></>;
+  }
+  return <span>{name}</span>;
+}
 
 export function Footer() {
+  const { store, general } = useAppSettingsReadOnly();
+  const telHref = store.hotline ? `tel:${store.hotline.replace(/\s/g, '')}` : undefined;
+  const mailHref = store.supportEmail ? `mailto:${store.supportEmail}` : undefined;
+
   return (
     <footer className="bg-foreground text-background" role="contentinfo">
-      {SHOW_NEWSLETTER && (
+      {general.newsletterEnabled && (
         <div className="border-b border-background/10">
           <div className="container px-4 sm:px-6 py-12 md:py-16">
             <div className="max-w-xl mx-auto text-center">
@@ -58,18 +68,27 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
-              <span className="font-display text-xl font-bold">NOVA<span className="text-primary">WEAR</span></span>
+              <span className="font-display text-xl font-bold"><BrandName name={store.storeName} /></span>
             </Link>
             <p className="text-background/75 text-sm leading-relaxed max-w-xs">
-              Thời trang Việt Nam hiện đại, kết hợp phong cách đương đại và chất lượng cao cấp.
+              {store.tagline}
             </p>
             <div className="flex gap-3 pt-1">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Facebook">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Instagram">
-                <Instagram className="h-5 w-5" />
-              </a>
+              {store.facebookUrl && (
+                <a href={store.facebookUrl} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Facebook">
+                  <Facebook className="h-5 w-5" />
+                </a>
+              )}
+              {store.instagramUrl && (
+                <a href={store.instagramUrl} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Instagram">
+                  <Instagram className="h-5 w-5" />
+                </a>
+              )}
+              {store.zaloUrl && (
+                <a href={store.zaloUrl.startsWith('http') ? store.zaloUrl : `https://zalo.me/${store.zaloUrl.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Zalo">
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                </a>
+              )}
             </div>
           </div>
 
@@ -108,20 +127,26 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="font-semibold text-sm uppercase tracking-wider text-background/90">Liên Hệ</h3>
             <ul className="space-y-3 text-sm text-background/75">
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden />
-                <span>123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh</span>
-              </li>
-              <li>
-                <a href="tel:1900123456" className="flex items-center gap-3 hover:text-background transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
-                  <Phone className="h-5 w-5 text-primary shrink-0" aria-hidden /> 1900 123 456
-                </a>
-              </li>
-              <li>
-                <a href="mailto:support@novawear.vn" className="flex items-center gap-3 hover:text-background transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
-                  <Mail className="h-5 w-5 text-primary shrink-0" aria-hidden /> support@novawear.vn
-                </a>
-              </li>
+              {store.address && (
+                <li className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden />
+                  <span>{store.address}</span>
+                </li>
+              )}
+              {store.hotline && (
+                <li>
+                  <a href={telHref} className="flex items-center gap-3 hover:text-background transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
+                    <Phone className="h-5 w-5 text-primary shrink-0" aria-hidden /> {store.hotline}
+                  </a>
+                </li>
+              )}
+              {store.supportEmail && (
+                <li>
+                  <a href={mailHref} className="flex items-center gap-3 hover:text-background transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
+                    <Mail className="h-5 w-5 text-primary shrink-0" aria-hidden /> {store.supportEmail}
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
         </div>
@@ -131,7 +156,7 @@ export function Footer() {
       <div className="border-t border-background/10">
         <div className="container px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-6">
           <p className="text-background/50 text-xs sm:text-sm order-2 sm:order-1">
-            © {new Date().getFullYear()} NOVAWEAR. Đã đăng ký bản quyền.
+            © {new Date().getFullYear()} {store.storeName || 'NOVAWEAR'}. Đã đăng ký bản quyền.
           </p>
           <div className="flex items-center gap-5 order-1 sm:order-2">
             <span className="sr-only">Thanh toán: </span>

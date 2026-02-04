@@ -6,6 +6,7 @@ import type {
   UserResponse,
   ReviewDto,
   RevenueStatsDto,
+  BannerDto,
   Page,
 } from '@/types/api';
 
@@ -22,9 +23,9 @@ export const authApi = {
 export const adminCategoriesApi = {
   list: () => api.get<CategoryDto[]>('/api/admin/categories'),
   getById: (id: number) => api.get<CategoryDto>(`/api/admin/categories/${id}`),
-  create: (data: { name: string; description?: string }) =>
+  create: (data: { name: string; description?: string; imageUrl?: string }) =>
     api.post<CategoryDto>('/api/admin/categories', data),
-  update: (id: number, data: { name: string; description?: string }) =>
+  update: (id: number, data: { name: string; description?: string; imageUrl?: string }) =>
     api.put<CategoryDto>(`/api/admin/categories/${id}`, data),
   delete: (id: number) => api.delete(`/api/admin/categories/${id}`),
 };
@@ -32,15 +33,24 @@ export const adminCategoriesApi = {
 /** Admin Products (list from public API; create/update/delete from admin) */
 export const productsApi = {
   list: (params?: { page?: number; size?: number; categoryId?: number; search?: string }) =>
-    api.get<Page<ProductDto>>('/api/products', { params: { page: params?.page ?? 0, size: params?.size ?? 100 } }),
+    api.get<Page<ProductDto>>('/api/products', {
+      params: {
+        page: params?.page ?? 0,
+        size: params?.size ?? 100,
+        ...(params?.categoryId != null && { categoryId: params.categoryId }),
+        ...(params?.search != null && params.search.trim() !== '' && { search: params.search.trim() }),
+      },
+    }),
   getById: (id: number) => api.get<ProductDto>(`/api/products/${id}`),
 };
 export const adminProductsApi = {
   getById: (id: number) => api.get<ProductDto>(`/api/admin/products/${id}`),
-  create: (data: { name: string; price: number; description?: string; imageUrl?: string; categoryId: number; stock: number }) =>
+  create: (data: { name: string; price: number; description?: string; imageUrl?: string; categoryId: number; stock: number; salePrice?: number | null; featured?: boolean; bestseller?: boolean; isNew?: boolean; sizes?: string[]; colors?: import('@/types/api').ProductColorDto[] }) =>
     api.post<ProductDto>('/api/admin/products', data),
-  update: (id: number, data: { name: string; price: number; description?: string; imageUrl?: string; categoryId: number; stock: number }) =>
+  update: (id: number, data: { name: string; price: number; description?: string; imageUrl?: string; categoryId: number; stock: number; salePrice?: number | null; featured?: boolean; bestseller?: boolean; isNew?: boolean; sizes?: string[]; colors?: import('@/types/api').ProductColorDto[] }) =>
     api.put<ProductDto>(`/api/admin/products/${id}`, data),
+  updateFlags: (id: number, data: { featured?: boolean; bestseller?: boolean }) =>
+    api.patch<ProductDto>(`/api/admin/products/${id}/flags`, data),
   delete: (id: number) => api.delete(`/api/admin/products/${id}`),
 };
 
@@ -58,6 +68,11 @@ export const adminUsersApi = {
   list: (params?: { page?: number; size?: number }) =>
     api.get<Page<UserResponse>>('/api/admin/users', { params: { page: params?.page ?? 0, size: params?.size ?? 10 } }),
   getById: (id: number) => api.get<UserResponse>(`/api/admin/users/${id}`),
+  create: (data: { username: string; email: string; password: string; role?: string }) =>
+    api.post<UserResponse>('/api/admin/users', data),
+  update: (id: number, data: { username: string; email: string; password?: string; role?: string; active?: boolean }) =>
+    api.put<UserResponse>(`/api/admin/users/${id}`, data),
+  delete: (id: number) => api.delete(`/api/admin/users/${id}`),
   setActive: (id: number, active: boolean) =>
     api.patch<UserResponse>(`/api/admin/users/${id}/active`, null, { params: { active } }),
 };
@@ -68,6 +83,11 @@ export const adminReviewsApi = {
     api.get<Page<ReviewDto>>('/api/admin/reviews', {
       params: { page: params?.page ?? 0, size: params?.size ?? 10, ...(params?.productId != null && { productId: params.productId }) },
     }),
+  getById: (id: number) => api.get<ReviewDto>(`/api/admin/reviews/${id}`),
+  create: (data: { userId: number; productId: number; rating: number; comment?: string; approved?: boolean }) =>
+    api.post<ReviewDto>('/api/admin/reviews', data),
+  update: (id: number, data: { rating?: number; comment?: string; approved?: boolean }) =>
+    api.put<ReviewDto>(`/api/admin/reviews/${id}`, data),
   approve: (id: number, approved: boolean) =>
     api.patch<ReviewDto>(`/api/admin/reviews/${id}/approve`, null, { params: { approved } }),
   delete: (id: number) => api.delete(`/api/admin/reviews/${id}`),
@@ -77,4 +97,15 @@ export const adminReviewsApi = {
 export const adminStatsApi = {
   revenue: (params?: { from?: string; to?: string }) =>
     api.get<RevenueStatsDto>('/api/admin/stats/revenue', { params }),
+};
+
+/** Admin Banners (Public Management) */
+export const adminBannersApi = {
+  list: () => api.get<BannerDto[]>('/api/admin/banners'),
+  getById: (id: number) => api.get<BannerDto>(`/api/admin/banners/${id}`),
+  create: (data: { title?: string; subtitle?: string; imageUrl: string; linkUrl?: string; ctaText?: string; sortOrder?: number; active?: boolean }) =>
+    api.post<BannerDto>('/api/admin/banners', data),
+  update: (id: number, data: { title?: string; subtitle?: string; imageUrl?: string; linkUrl?: string; ctaText?: string; sortOrder?: number; active?: boolean }) =>
+    api.put<BannerDto>(`/api/admin/banners/${id}`, data),
+  delete: (id: number) => api.delete(`/api/admin/banners/${id}`),
 };

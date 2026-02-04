@@ -26,9 +26,11 @@ import { useWishlist } from '@/context/WishlistContext';
 import { productsApi, reviewsApi } from '@/lib/customerApi';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { toast } from '@/lib/toast';
 import type { ReviewDto } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
+import { MarkdownContent } from '@/components/ui/MarkdownContent';
 
 const DEFAULT_COLOR = { name: 'Đen', hex: '#2D2D2D' };
 
@@ -76,7 +78,10 @@ export function ProductDetailPage() {
             .catch(() => setRelatedProducts([]));
         }
       })
-      .catch(() => setProduct(null))
+      .catch(() => {
+        setProduct(null);
+        toast.error('Không tải được thông tin sản phẩm. Vui lòng thử lại.');
+      })
       .finally(() => setLoading(false));
   }, [id, productId]);
 
@@ -89,6 +94,7 @@ export function ProductDetailPage() {
       selectedColor
     );
     setAddedToCart(true);
+    toast.success('Đã thêm vào giỏ hàng');
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
@@ -102,6 +108,9 @@ export function ProductDetailPage() {
       });
       setReviews((prev) => [data, ...prev]);
       setReviewForm({ rating: 5, comment: '' });
+      toast.success('Đã gửi đánh giá. Đánh giá có thể cần duyệt trước khi hiển thị.');
+    } catch {
+      toast.error('Gửi đánh giá thất bại. Vui lòng thử lại.');
     } finally {
       setSubmittingReview(false);
     }
@@ -208,7 +217,7 @@ export function ProductDetailPage() {
               <div className="flex items-center gap-3 mb-6">
                 <span className="font-display text-3xl font-bold text-primary">{formatCurrency(product.price)}</span>
               </div>
-              <p className="text-muted-foreground mb-8">{product.description ?? ''}</p>
+              <MarkdownContent source={product.description ?? ''} className="mb-8" />
 
               <div className="mb-6">
                 <h4 className="font-semibold mb-3">Màu sắc</h4>
@@ -275,7 +284,7 @@ export function ProductDetailPage() {
                 <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-0 pb-4">Đánh giá ({reviews.length})</TabsTrigger>
               </TabsList>
               <TabsContent value="description" className="pt-8">
-                <p className="text-muted-foreground leading-relaxed">{product.description ?? 'Không có mô tả.'}</p>
+                <MarkdownContent source={product.description ?? ''} emptyFallback="Không có mô tả." className="text-muted-foreground leading-relaxed" />
               </TabsContent>
               <TabsContent value="reviews" className="pt-8">
                 {reviews.length === 0 && !isAuthenticated && (

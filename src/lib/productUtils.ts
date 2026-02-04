@@ -14,16 +14,21 @@ export interface ProductDisplay {
   stockCount?: number;
   rating: number;
   reviewCount: number;
+  featured?: boolean;
   isNew?: boolean;
+  bestseller?: boolean;
   colors?: { name: string; hex: string }[];
   sizes?: string[];
 }
 
 export function productDtoToDisplay(dto: ProductDto): ProductDisplay {
+  const price = Number(dto.price);
+  const salePrice = dto.salePrice != null && dto.salePrice !== '' ? Number(dto.salePrice) : undefined;
   return {
     id: String(dto.id),
     name: dto.name,
-    price: dto.price,
+    price,
+    salePrice: salePrice != null && !Number.isNaN(salePrice) ? salePrice : undefined,
     images: dto.imageUrl ? [dto.imageUrl] : [],
     category: { id: String(dto.categoryId), name: dto.categoryName ?? '' },
     slug: String(dto.id),
@@ -31,9 +36,11 @@ export function productDtoToDisplay(dto: ProductDto): ProductDisplay {
     stockCount: dto.stock,
     rating: 0,
     reviewCount: 0,
-    isNew: false,
-    colors: [],
-    sizes: ['S', 'M', 'L'],
+    featured: !!dto.featured,
+    isNew: !!(dto.isNew ?? (dto as Record<string, unknown>).new),
+    bestseller: !!dto.bestseller,
+    colors: dto.colors?.length ? dto.colors.map((c) => ({ name: c.name, hex: c.hex })) : [],
+    sizes: dto.sizes?.length ? dto.sizes : ['S', 'M', 'L'],
   };
 }
 

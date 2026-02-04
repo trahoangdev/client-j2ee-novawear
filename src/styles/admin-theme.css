@@ -122,10 +122,12 @@
   color: var(--admin-text) !important;
 }
 .admin-theme .ant-btn-link {
-  color: var(--admin-primary) !important;
+  color: var(--admin-primary-active) !important;
+  opacity: 1;
 }
 .admin-theme .ant-btn-link:hover {
-  color: var(--admin-primary-hover) !important;
+  color: #0369a1 !important;
+  opacity: 1;
 }
 
 /* Mã đơn / code */
@@ -141,15 +143,19 @@
 
 /* Dropdown render ra body khi mở từ admin – chỉ khi body có class .admin-body */
 body.admin-body .ant-dropdown-menu {
-  background: var(--admin-bg-elevated) !important;
+  background: #ffffff !important;
   border: 1px solid var(--admin-border) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 body.admin-body .ant-dropdown-menu-item {
-  color: var(--admin-text) !important;
+  color: #0f172a !important;
+  font-weight: 500;
+  opacity: 1;
 }
 body.admin-body .ant-dropdown-menu-item:hover {
   background: var(--admin-bg-hover) !important;
-  color: var(--admin-text) !important;
+  color: #0f172a !important;
+  opacity: 1;
 }
 body.admin-body .ant-dropdown-menu-item-divider {
   background: var(--admin-border-subtle) !important;
@@ -279,4 +285,30 @@ body.admin-body .ant-select-item-option-state {
 }
 .admin-theme .ant-pagination .ant-pagination-total-text {
   color: var(--admin-text-secondary) !important;
+}
+
+/* Markdown editor cho Mô tả sản phẩm */
+.admin-theme .admin-description-editor .w-md-editor {
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.admin-theme .admin-description-editor .w-md-editor-toolbar {
+  background: var(--admin-bg-elevated);
+  border-bottom: 1px solid var(--admin-border);
+}
+.admin-theme .admin-description-editor .w-md-editor-content {
+  background: var(--admin-bg-container);
+}
+.admin-theme .admin-description-editor .w-md-editor-text-pre,
+.admin-theme .admin-description-editor .w-md-editor-text-input,
+.admin-theme .admin-description-editor .wmde-markdown {
+  color: var(--admin-text);
+}
+.admin-theme .admin-description-editor .w-md-editor-preview {
+  background: var(--admin-bg-elevated);
+}
+.admin-theme .admin-description-editor .wmde-markdown p,
+.admin-theme .admin-description-editor .wmde-markdown li {
+  color: var(--admin-text);
 }

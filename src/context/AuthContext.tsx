@@ -2,13 +2,14 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { User } from '@/types';
 import { getToken, setToken, clearToken, setOnUnauthorized } from '@/lib/api';
 import { authApi } from '@/lib/adminApi';
+import { toast } from '@/lib/toast';
 
 interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
   login: (usernameOrEmail: string, password: string) => Promise<{ ok: boolean; role?: string }>;
-  register: (username: string, email: string, password: string) => Promise<boolean>;
+  register: (username: string, email: string, password: string) => Promise<{ ok: boolean; role?: string }>;
   logout: () => void;
   showAuthModal: boolean;
   setShowAuthModal: (show: boolean) => void;
@@ -86,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     clearToken();
     setUser(null);
+    toast.success('Đã đăng xuất');
   };
 
   return (

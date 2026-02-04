@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Card, Table, Typography, Image, Button, Space, Modal, message, Spin } from 'antd';
+import { useState, useEffect, useCallback } from 'react';
+import { Card, Table, Typography, Image, Button, Space, Modal, message, Spin, Input, Select, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { productsApi, adminProductsApi } from '@/lib/adminApi';
-import type { ProductDto } from '@/types/api';
+import { productsApi, adminProductsApi, adminCategoriesApi } from '@/lib/adminApi';
+import type { ProductDto, CategoryDto } from '@/types/api';
 
 function formatCurrency(n: number) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
@@ -16,12 +16,20 @@ export function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState('');
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [categories, setCategories] = useState<CategoryDto[]>([]);
   const pageSize = 10;
 
-  const fetchProducts = async (pageNum = 0) => {
+  const fetchProducts = useCallback(async (pageNum = 0) => {
     setLoading(true);
     try {
-      const { data } = await productsApi.list({ page: pageNum, size: pageSize });
+      const { data } = await productsApi.list({
+        page: pageNum,
+        size: pageSize,
+        ...(categoryId != null && { categoryId }),
+        ...(search.trim() && { search: search.trim() }),
+      });
       setDataSource(data.content);
       setTotal(data.totalElements);
     } catch {
@@ -29,11 +37,15 @@ export function AdminProducts() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageSize, categoryId, search]);
+
+  useEffect(() => {
+    adminCategoriesApi.list().then(({ data }) => setCategories(data)).catch(() => setCategories([]));
+  }, []);
 
   useEffect(() => {
     fetchProducts(page);
-  }, [page]);
+  }, [page, fetchProducts]);
 
   const handleDelete = (record: ProductDto) => {
     Modal.confirm({
@@ -78,9 +90,39 @@ export function AdminProducts() {
       title: 'Giá',
       dataIndex: 'price',
       key: 'price',
-      width: 130,
+      width: 120,
       align: 'center',
-      render: (val: number) => formatCurrency(val),
+      render: (val: number, record: ProductDto) => (
+        <span>
+          {record.salePrice != null && record.salePrice < val ? (
+            <>
+              <Typography.Text delete type="secondary" style={{ fontSize: 12 }}>
+                {formatCurrency(val)}
+              </Typography.Text>
+              <br />
+              <Typography.Text type="danger" strong>
+                {formatCurrency(record.salePrice)}
+              </Typography.Text>
+            </>
+          ) : (
+            formatCurrency(val)
+          )}
+        </span>
+      ),
+    },
+    {
+      title: 'Nhãn',
+      key: 'flags',
+      width: 140,
+      align: 'center',
+      render: (_, record: ProductDto) => (
+        <Space size="small" wrap>
+          {record.salePrice != null && record.salePrice < record.price && <Tag color="red">Sale</Tag>}
+          {record.featured && <Tag color="blue">Nổi bật</Tag>}
+          {record.bestseller && <Tag color="orange">Bán chạy</Tag>}
+          {record.isNew && <Tag color="green">Mới</Tag>}
+        </Space>
+      ),
     },
     { title: 'Tồn', dataIndex: 'stock', key: 'stock', width: 70, align: 'center' },
     {
@@ -109,7 +151,7 @@ export function AdminProducts() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
         <Typography.Title level={4} style={{ margin: 0, color: 'var(--admin-text)' }}>
           Quản lý sản phẩm
         </Typography.Title>
@@ -117,6 +159,30 @@ export function AdminProducts() {
           Thêm sản phẩm
         </Button>
       </div>
+      <Card style={{ marginBottom: 16 }}>
+        <Space wrap size="middle" style={{ width: '100%' }}>
+          <Input
+            placeholder="Tìm theo tên sản phẩm..."
+            prefix={<SearchOutlined />}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onPressEnter={() => { setPage(0); fetchProducts(0); }}
+            style={{ width: 260 }}
+            allowClear
+          />
+          <Select
+            placeholder="Tất cả danh mục"
+            value={categoryId}
+            onChange={(v) => { setCategoryId(v ?? null); setPage(0); }}
+            options={[{ value: null, label: 'Tất cả danh mục' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
+            style={{ width: 200 }}
+            allowClear
+          />
+          <Button type="primary" onClick={() => { setPage(0); fetchProducts(0); }}>
+            Lọc
+          </Button>
+        </Space>
+      </Card>
       <Card>
         <Spin spinning={loading}>
           <Table

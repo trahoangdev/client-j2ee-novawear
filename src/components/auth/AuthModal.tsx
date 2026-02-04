@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 
 export function AuthModal() {
@@ -22,13 +23,19 @@ export function AuthModal() {
 
     if (authMode === 'login') {
       const result = await login(email, password);
-      if (!result.ok) {
+      if (result.ok) {
+        toast.success('Đăng nhập thành công');
+      } else {
         setError('Email/username hoặc mật khẩu không đúng');
+        toast.error('Email/username hoặc mật khẩu không đúng');
       }
     } else {
       const result = await register(name.trim() || email, email, password);
-      if (!result.ok) {
+      if (result.ok) {
+        toast.success('Đăng ký thành công');
+      } else {
         setError('Đăng ký thất bại. Kiểm tra username/email hoặc thử lại.');
+        toast.error('Đăng ký thất bại. Kiểm tra username/email hoặc thử lại.');
       }
     }
 

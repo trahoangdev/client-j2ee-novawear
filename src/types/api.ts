@@ -4,6 +4,12 @@ export interface CategoryDto {
   id: number;
   name: string;
   description?: string;
+  imageUrl?: string;
+}
+
+export interface ProductColorDto {
+  name: string;
+  hex: string;
 }
 
 export interface ProductDto {
@@ -15,6 +21,16 @@ export interface ProductDto {
   categoryId: number;
   categoryName?: string;
   stock: number;
+  /** Giá khuyến mãi (null = không giảm). Hiển thị Sale khi salePrice < price */
+  salePrice?: number | null;
+  /** Nổi bật: hiển thị block "Sản phẩm nổi bật" trang chủ */
+  featured?: boolean;
+  /** Bán chạy: nhãn do admin đánh dấu */
+  bestseller?: boolean;
+  /** Hàng mới: badge "Mới" trên thẻ sản phẩm */
+  isNew?: boolean;
+  sizes?: string[];
+  colors?: ProductColorDto[];
 }
 
 export interface OrderDetailDto {
@@ -69,6 +85,18 @@ export interface RevenueStatsDto {
   from: string;
   to: string;
   byDay: RevenueByDayDto[];
+}
+
+export interface BannerDto {
+  id: number;
+  title?: string;
+  subtitle?: string;
+  imageUrl: string;
+  linkUrl?: string;
+  ctaText?: string;
+  sortOrder: number;
+  active: boolean;
+  createdAt?: string;
 }
 
 export interface LoginRequest {

@@ -5,26 +5,34 @@ import type {
   OrderDto,
   ReviewDto,
   CartItemDto,
+  BannerDto,
   Page,
 } from '@/types/api';
 
 /** Public – không cần đăng nhập */
+export const bannersApi = {
+  listActive: () => api.get<BannerDto[]>('/api/banners'),
+};
+
 export const categoriesApi = {
   list: () => api.get<CategoryDto[]>('/api/categories'),
   getById: (id: number) => api.get<CategoryDto>(`/api/categories/${id}`),
 };
 
 export const productsApi = {
-  list: (params?: { page?: number; size?: number; categoryId?: number; search?: string }) =>
+  list: (params?: { page?: number; size?: number; categoryId?: number; search?: string; onSale?: boolean; bestseller?: boolean }) =>
     api.get<Page<ProductDto>>('/api/products', {
       params: {
         page: params?.page ?? 0,
         size: params?.size ?? 12,
         ...(params?.categoryId != null && { categoryId: params.categoryId }),
         ...(params?.search != null && params.search !== '' && { search: params.search }),
+        ...(params?.onSale === true && { onSale: true }),
+        ...(params?.bestseller === true && { bestseller: true }),
       },
     }),
   featured: () => api.get<ProductDto[]>('/api/products/featured'),
+  bestseller: () => api.get<ProductDto[]>('/api/products/bestseller'),
   getById: (id: number) => api.get<ProductDto>(`/api/products/${id}`),
 };
 

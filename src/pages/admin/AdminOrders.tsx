@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Select, Button, Typography, Modal, Descriptions, message, Spin } from 'antd';
+import { Card, Table, Select, Button, Typography, Modal, Descriptions, message, Spin, Tag, Dropdown, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined } from '@ant-design/icons';
+import { EyeOutlined, EditOutlined } from '@ant-design/icons';
+import type { MenuProps } from 'antd';
 import { adminOrdersApi } from '@/lib/adminApi';
 import type { OrderDto } from '@/types/api';
 
@@ -17,6 +18,16 @@ const orderStatusOptions = [
   { value: 'DELIVERED', label: 'Đã giao' },
   { value: 'CANCELLED', label: 'Đã hủy' },
 ];
+
+/** Màu Tag theo trạng thái đơn hàng */
+const orderStatusColor: Record<string, string> = {
+  PENDING: 'orange',      // Chờ xác nhận
+  CONFIRMED: 'blue',       // Đã xác nhận
+  PROCESSING: 'cyan',      // Đang xử lý
+  SHIPPED: 'geekblue',     // Đang giao
+  DELIVERED: 'green',      // Đã giao
+  CANCELLED: 'red',        // Đã hủy
+};
 
 export function AdminOrders() {
   const [orders, setOrders] = useState<OrderDto[]>([]);
@@ -88,16 +99,12 @@ export function AdminOrders() {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      width: 150,
-      render: (status: string, record: OrderDto) => (
-        <Select
-          value={status}
-          size="small"
-          style={{ width: '100%', minWidth: 120 }}
-          options={orderStatusOptions}
-          onChange={(v) => handleStatusChange(record.id, v)}
-        />
-      ),
+      width: 130,
+      render: (status: string) => {
+        const label = orderStatusOptions.find((o) => o.value === status)?.label ?? status;
+        const color = orderStatusColor[status] ?? 'default';
+        return <Tag color={color}>{label}</Tag>;
+      },
     },
     {
       title: 'Ngày đặt',
@@ -109,13 +116,27 @@ export function AdminOrders() {
     {
       title: 'Thao tác',
       key: 'action',
-      width: 100,
+      width: 140,
       align: 'center',
-      render: (_, record) => (
-        <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => setDetailOrder(record)}>
-          Chi tiết
-        </Button>
-      ),
+      render: (_, record) => {
+        const editMenu: MenuProps['items'] = orderStatusOptions.map((opt) => ({
+          key: opt.value,
+          label: opt.label,
+          onClick: () => handleStatusChange(record.id, opt.value),
+        }));
+        return (
+          <Space size="small">
+            <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => setDetailOrder(record)}>
+              Chi tiết
+            </Button>
+            <Dropdown menu={{ items: editMenu, triggerSubMenuAction: 'click' }} trigger={['click']}>
+              <Button type="link" size="small" icon={<EditOutlined />}>
+                Sửa
+              </Button>
+            </Dropdown>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -168,7 +189,9 @@ export function AdminOrders() {
               <Descriptions.Item label="ID">#{detailOrder.id}</Descriptions.Item>
               <Descriptions.Item label="Khách hàng">{detailOrder.username}</Descriptions.Item>
               <Descriptions.Item label="Trạng thái">
-                {orderStatusOptions.find((o) => o.value === detailOrder.status)?.label ?? detailOrder.status}
+                <Tag color={orderStatusColor[detailOrder.status] ?? 'default'}>
+                  {orderStatusOptions.find((o) => o.value === detailOrder.status)?.label ?? detailOrder.status}
+                </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Ngày đặt">
                 {detailOrder.orderDate ? new Date(detailOrder.orderDate).toLocaleString('vi-VN') : '—'}

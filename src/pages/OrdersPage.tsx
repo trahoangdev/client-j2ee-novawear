@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { ordersApi } from '@/lib/customerApi';
+import { toast } from '@/lib/toast';
 import { OrderCard } from '@/components/orders/OrderCard';
 import type { OrderDto, Page } from '@/types/api';
 
@@ -27,6 +28,9 @@ export function OrdersPage() {
       .myOrders({ page, size: PAGE_SIZE })
       .then(({ data }) => {
         if (!cancelled) setOrdersPage(data);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('Không tải được đơn hàng. Vui lòng thử lại.');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

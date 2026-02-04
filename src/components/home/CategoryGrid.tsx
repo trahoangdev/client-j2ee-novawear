@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { categoriesApi } from '@/lib/customerApi';
+import { toast } from '@/lib/toast';
 import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +16,10 @@ export function CategoryGrid() {
     categoriesApi
       .list()
       .then(({ data }) => setCategories(data))
-      .catch(() => setCategories([]))
+      .catch(() => {
+        setCategories([]);
+        toast.error('Không tải được danh mục');
+      })
       .finally(() => setLoading(false));
   }, []);
 

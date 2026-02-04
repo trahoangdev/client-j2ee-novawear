@@ -3,8 +3,19 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { bannersApi } from '@/lib/customerApi';
+import type { BannerDto } from '@/types/api';
 
-const slides = [
+type Slide = {
+  id: number;
+  image: string;
+  title: string;
+  subtitle: string;
+  cta: string;
+  link: string;
+};
+
+const defaultSlides: Slide[] = [
   {
     id: 1,
     image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&q=80',
@@ -31,42 +42,74 @@ const slides = [
   },
 ];
 
+function bannerToSlide(b: BannerDto): Slide {
+  return {
+    id: b.id,
+    image: b.imageUrl || '',
+    title: b.title?.replace(/\\n/g, '\n') ?? '',
+    subtitle: b.subtitle ?? '',
+    cta: b.ctaText ?? 'Xem thêm',
+    link: b.linkUrl?.startsWith('http') ? b.linkUrl : (b.linkUrl || '/shop'),
+  };
+}
+
 export function HeroCarousel() {
+  const [slides, setSlides] = useState<Slide[]>(defaultSlides);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
-  const goToSlide = useCallback((index: number) => {
-    setCurrentSlide(index);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 8000);
+  useEffect(() => {
+    bannersApi
+      .listActive()
+      .then(({ data }) => {
+        if (data.length > 0) {
+          setSlides(data.map(bannerToSlide).filter((s) => s.image));
+        }
+      })
+      .catch(() => {
+        // Giữ defaultSlides
+      });
   }, []);
+
+  const length = slides.length;
+
+  const goToSlide = useCallback(
+    (index: number) => {
+      setCurrentSlide(index);
+      setIsAutoPlaying(false);
+      setTimeout(() => setIsAutoPlaying(true), 8000);
+    },
+    []
+  );
 
   const nextSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
+    setCurrentSlide((prev) => (prev + 1) % length);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 8000);
-  }, []);
+  }, [length]);
 
   const prevSlide = useCallback(() => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    setCurrentSlide((prev) => (prev - 1 + length) % length);
     setIsAutoPlaying(false);
     setTimeout(() => setIsAutoPlaying(true), 8000);
-  }, []);
+  }, [length]);
 
   useEffect(() => {
-    if (!isAutoPlaying) return;
-    const interval = setInterval(() => setCurrentSlide((prev) => (prev + 1) % slides.length), 5000);
+    if (!isAutoPlaying || length === 0) return;
+    const interval = setInterval(() => setCurrentSlide((prev) => (prev + 1) % length), 5000);
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, length]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') setCurrentSlide((p) => (p - 1 + slides.length) % slides.length);
-      if (e.key === 'ArrowRight') setCurrentSlide((p) => (p + 1) % slides.length);
+      if (e.key === 'ArrowLeft') setCurrentSlide((p) => (p - 1 + length) % length);
+      if (e.key === 'ArrowRight') setCurrentSlide((p) => (p + 1) % length);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [length]);
+
+  if (length === 0) return null;
 
   return (
     <section
@@ -78,7 +121,7 @@ export function HeroCarousel() {
           key={slide.id}
           role="group"
           aria-roledescription="slide"
-          aria-label={`Slide ${index + 1} of ${slides.length}`}
+          aria-label={`Slide ${index + 1} of ${length}`}
           className={cn(
             'absolute inset-0 transition-opacity duration-700 ease-out',
             index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
@@ -101,7 +144,7 @@ export function HeroCarousel() {
               )}
             >
               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.15] whitespace-pre-line mb-3 md:mb-5">
-                {slide.title}
+                {slide.title || 'NOVAWEAR'}
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-background/85 mb-5 md:mb-7 max-w-md">
                 {slide.subtitle}
@@ -111,7 +154,11 @@ export function HeroCarousel() {
                 className="bg-primary hover:bg-primary/90 text-primary-foreground h-11 md:h-12 px-6 md:px-8 text-sm font-semibold rounded-xl tap-target"
                 asChild
               >
-                <Link to={slide.link}>{slide.cta}</Link>
+                {slide.link.startsWith('http') ? (
+                  <a href={slide.link} target="_blank" rel="noopener noreferrer">{slide.cta}</a>
+                ) : (
+                  <Link to={slide.link}>{slide.cta}</Link>
+                )}
               </Button>
             </div>
           </div>

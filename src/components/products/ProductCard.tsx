@@ -4,6 +4,7 @@ import { Heart, Eye, ShoppingBag, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useWishlist } from '@/context/WishlistContext';
+import { toast } from '@/lib/toast';
 import { Product } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import type { ProductDisplay } from '@/lib/productUtils';
@@ -20,9 +21,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const isLiked = isInWishlist(productId);
   const [currentImage, setCurrentImage] = useState(0);
 
-  const hasDiscount = product.salePrice != null && product.salePrice < product.price;
+  const priceNum = Number(product.price);
+  const salePriceNum = product.salePrice != null ? Number(product.salePrice) : undefined;
+  const hasDiscount = salePriceNum != null && !Number.isNaN(salePriceNum) && salePriceNum < priceNum;
   const discountPercent = hasDiscount
-    ? Math.round(((product.price - product.salePrice!) / product.price) * 100)
+    ? Math.round(((priceNum - salePriceNum!) / priceNum) * 100)
     : 0;
   const slug = 'slug' in product ? product.slug : String(product.id);
   const images = product.images?.length ? product.images : (product as ProductDisplay).images ?? [];
@@ -30,6 +33,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const rating = 'rating' in product ? (product.rating ?? 0) : 0;
   const reviewCount = 'reviewCount' in product ? (product.reviewCount ?? 0) : 0;
   const colors = product.colors ?? [];
+  const isNew = (product as ProductDisplay).isNew ?? ('isNew' in product && product.isNew);
+  const bestseller = (product as ProductDisplay).bestseller ?? false;
+  const featured = (product as ProductDisplay).featured ?? ('isFeatured' in product && product.isFeatured);
 
   return (
     <article
@@ -52,13 +58,19 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </Link>
 
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
-          {'isNew' in product && product.isNew && (
+          {isNew && (
             <Badge className="bg-foreground text-background text-xs font-medium">Mới</Badge>
           )}
           {hasDiscount && (
             <Badge className="bg-destructive text-destructive-foreground text-xs font-medium">
               -{discountPercent}%
             </Badge>
+          )}
+          {bestseller && (
+            <Badge className="bg-amber-500 text-white text-xs font-medium">Bán chạy</Badge>
+          )}
+          {featured && (
+            <Badge className="bg-primary text-primary-foreground text-xs font-medium">Nổi bật</Badge>
           )}
         </div>
 
@@ -70,7 +82,12 @@ export function ProductCard({ product, className }: ProductCardProps) {
             'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity',
             isLiked && 'opacity-100'
           )}
-          onClick={(e) => { e.preventDefault(); toggleWishlist(productId); }}
+          onClick={(e) => {
+            e.preventDefault();
+            const wasLiked = isInWishlist(productId);
+            toggleWishlist(productId);
+            toast.success(wasLiked ? 'Đã bỏ khỏi yêu thích' : 'Đã thêm vào yêu thích');
+          }}
           aria-label={isLiked ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
         >
           <Heart className={cn('h-4 w-4', isLiked && 'fill-destructive text-destructive')} />
@@ -112,11 +129,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-display text-base font-semibold text-primary">
-            {formatCurrency(product.salePrice || product.price)}
+            {formatCurrency(hasDiscount ? salePriceNum! : priceNum)}
           </span>
           {hasDiscount && (
             <span className="text-sm text-muted-foreground line-through">
-              {formatCurrency(product.price)}
+              {formatCurrency(priceNum)}
             </span>
           )}
         </div>

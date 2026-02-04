@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/components/products/ProductCard';
 import { useWishlist } from '@/context/WishlistContext';
+import { toast } from '@/lib/toast';
 import { productsApi } from '@/lib/customerApi';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 
@@ -26,7 +27,10 @@ export function WishlistPage() {
       .then((responses) => {
         setProducts(responses.map((r) => productDtoToDisplay(r.data)));
       })
-      .catch(() => setProducts([]))
+      .catch(() => {
+        setProducts([]);
+        toast.error('Không tải được danh sách yêu thích. Vui lòng thử lại.');
+      })
       .finally(() => setLoading(false));
   }, [itemIds]);
 

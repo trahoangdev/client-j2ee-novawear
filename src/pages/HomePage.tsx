@@ -3,6 +3,7 @@ import { Footer } from '@/components/layout/Footer';
 import { HeroCarousel } from '@/components/home/HeroCarousel';
 import { CategoryGrid } from '@/components/home/CategoryGrid';
 import { FeaturedProducts } from '@/components/home/FeaturedProducts';
+import { BestsellerProducts } from '@/components/home/BestsellerProducts';
 import { NewArrivals } from '@/components/home/NewArrivals';
 import { PromoBanner } from '@/components/home/PromoBanner';
 import { Features } from '@/components/home/Features';
@@ -17,6 +18,7 @@ export function HomePage() {
         <Features />
         <CategoryGrid />
         <FeaturedProducts />
+        <BestsellerProducts />
         <PromoBanner />
         <NewArrivals />
       </main>

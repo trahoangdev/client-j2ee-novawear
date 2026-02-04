@@ -17,6 +17,7 @@ import { productsApi } from '@/lib/customerApi';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { useAppSettingsReadOnly } from '@/context/AppSettingsContext';
 
 const navLinks = [
   { to: '/shop', label: 'Bộ Sưu Tập' },
@@ -29,7 +30,15 @@ const navLinks = [
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_SUGGESTIONS_SIZE = 6;
 
+function BrandName({ name }: { name: string }) {
+  if (name === 'NOVAWEAR') {
+    return <>NOVA<span className="text-primary">WEAR</span></>;
+  }
+  return <span>{name}</span>;
+}
+
 export function Header() {
+  const { store } = useAppSettingsReadOnly();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -141,7 +150,7 @@ export function Header() {
             className="flex items-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
           >
             <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              NOVA<span className="text-primary">WEAR</span>
+              <BrandName name={store.storeName || 'NOVAWEAR'} />
             </h1>
           </Link>
 

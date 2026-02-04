@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Typography, Modal, Form, Input, message, Spin } from 'antd';
+import { Card, Table, Button, Space, Typography, Modal, Form, Input, message, Spin, Image } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { adminCategoriesApi } from '@/lib/adminApi';
 import type { CategoryDto } from '@/types/api';
+
+const IMAGE_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect fill='%23e2e8f0' width='64' height='64'/%3E%3Ctext fill='%2394a3b8' x='32' y='34' text-anchor='middle' font-size='10'%3E?%3C/text%3E%3C/svg%3E";
 
 export function AdminCategories() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -32,10 +34,10 @@ export function AdminCategories() {
     try {
       const values = await form.validateFields();
       if (editing) {
-        await adminCategoriesApi.update(editing.id, { name: values.name, description: values.description });
+        await adminCategoriesApi.update(editing.id, { name: values.name, description: values.description, imageUrl: values.imageUrl?.trim() || undefined });
         message.success('Đã cập nhật danh mục');
       } else {
-        await adminCategoriesApi.create({ name: values.name, description: values.description });
+        await adminCategoriesApi.create({ name: values.name, description: values.description, imageUrl: values.imageUrl?.trim() || undefined });
         message.success('Đã thêm danh mục');
       }
       setModalOpen(false);
@@ -68,6 +70,23 @@ export function AdminCategories() {
   };
 
   const columns: ColumnsType<CategoryDto> = [
+    {
+      title: 'Hình',
+      dataIndex: 'imageUrl',
+      key: 'image',
+      width: 80,
+      align: 'center',
+      render: (url: string) => (
+        <Image
+          src={url}
+          alt=""
+          width={48}
+          height={48}
+          style={{ objectFit: 'cover', borderRadius: 6 }}
+          fallback={IMAGE_FALLBACK}
+        />
+      ),
+    },
     { title: 'ID', dataIndex: 'id', key: 'id', width: 90, render: (t) => <Typography.Text code>{t}</Typography.Text> },
     { title: 'Tên', dataIndex: 'name', key: 'name', width: 180, ellipsis: true },
     { title: 'Mô tả', dataIndex: 'description', key: 'description', ellipsis: true },
@@ -83,7 +102,7 @@ export function AdminCategories() {
             icon={<EditOutlined />}
             onClick={() => {
               setEditing(record);
-              form.setFieldsValue({ name: record.name, description: record.description });
+              form.setFieldsValue({ name: record.name, description: record.description, imageUrl: record.imageUrl ?? '' });
               setModalOpen(true);
             }}
           >
@@ -115,7 +134,7 @@ export function AdminCategories() {
             rowKey="id"
             pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (t) => `Tổng ${t} mục` }}
             size="middle"
-            scroll={{ x: 560 }}
+            scroll={{ x: 640 }}
             tableLayout="fixed"
           />
         </Spin>
@@ -135,6 +154,9 @@ export function AdminCategories() {
           </Form.Item>
           <Form.Item name="description" label="Mô tả (tùy chọn)">
             <Input.TextArea placeholder="Mô tả ngắn" rows={2} />
+          </Form.Item>
+          <Form.Item name="imageUrl" label="URL hình ảnh" extra="Để trống nếu chưa có ảnh.">
+            <Input placeholder="https://..." maxLength={501} />
           </Form.Item>
         </Form>
       </Modal>

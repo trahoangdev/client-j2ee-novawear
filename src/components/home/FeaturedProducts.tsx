@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/products/ProductCard';
 import { productsApi } from '@/lib/customerApi';
+import { toast } from '@/lib/toast';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 
 export function FeaturedProducts() {
@@ -15,7 +16,10 @@ export function FeaturedProducts() {
       .featured()
       .then(({ data }) => setProducts((data ?? []).map(productDtoToDisplay).slice(0, 4)))
       .catch(() => {
-        productsApi.list({ size: 8 }).then(({ data }) => setProducts(data.content.map(productDtoToDisplay).slice(0, 4)));
+        productsApi
+          .list({ size: 8 })
+          .then(({ data }) => setProducts(data.content.map(productDtoToDisplay).slice(0, 4)))
+          .catch(() => toast.error('Không tải được sản phẩm nổi bật'));
       })
       .finally(() => setLoading(false));
   }, []);
