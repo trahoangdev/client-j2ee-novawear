@@ -13,6 +13,14 @@ const ProductDetailPage = lazy(() => import("@/pages/ProductDetailPage").then(m 
 const CheckoutPage = lazy(() => import("@/pages/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
 const AdminLayout = lazy(() => import("@/components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard").then(m => ({ default: m.AdminDashboard })));
+const AdminCategories = lazy(() => import("@/pages/admin/AdminCategories").then(m => ({ default: m.AdminCategories })));
+const AdminProducts = lazy(() => import("@/pages/admin/AdminProducts").then(m => ({ default: m.AdminProducts })));
+const AdminProductForm = lazy(() => import("@/pages/admin/AdminProductForm").then(m => ({ default: m.AdminProductForm })));
+const AdminOrders = lazy(() => import("@/pages/admin/AdminOrders").then(m => ({ default: m.AdminOrders })));
+const AdminCustomers = lazy(() => import("@/pages/admin/AdminCustomers").then(m => ({ default: m.AdminCustomers })));
+const AdminReviews = lazy(() => import("@/pages/admin/AdminReviews").then(m => ({ default: m.AdminReviews })));
+const AdminAnalytics = lazy(() => import("@/pages/admin/AdminAnalytics").then(m => ({ default: m.AdminAnalytics })));
+const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings").then(m => ({ default: m.AdminSettings })));
 
 // Loading Fallback
 function LoadingFallback() {
@@ -41,12 +49,15 @@ function App() {
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
-              <Route path="products" element={<AdminDashboard />} />
-              <Route path="orders" element={<AdminDashboard />} />
-              <Route path="customers" element={<AdminDashboard />} />
-              <Route path="reviews" element={<AdminDashboard />} />
-              <Route path="analytics" element={<AdminDashboard />} />
-              <Route path="settings" element={<AdminDashboard />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="products/new" element={<AdminProductForm />} />
+              <Route path="products/:id/edit" element={<AdminProductForm />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="customers" element={<AdminCustomers />} />
+              <Route path="reviews" element={<AdminReviews />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
           </Routes>
         </Suspense>

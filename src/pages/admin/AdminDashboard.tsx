@@ -1,12 +1,13 @@
+import { Card, Row, Col, Statistic, Table, Tag, Typography } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  ShoppingCart,
-  Users,
-  Package,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  DollarOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
+  ShoppingOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+} from '@ant-design/icons';
 import {
   AreaChart,
   Area,
@@ -19,61 +20,9 @@ import {
   Bar,
 } from 'recharts';
 import { dashboardStats, salesData, topProducts, mockOrders, formatCurrency } from '@/data/mock-data';
-import { cn } from '@/lib/utils';
+import type { Order, OrderStatus } from '@/types';
 
-const statsCards = [
-  {
-    title: 'Doanh Thu',
-    value: dashboardStats.totalRevenue,
-    change: dashboardStats.revenueChange,
-    icon: DollarSign,
-    format: 'currency',
-    gradient: 'from-cyan/20 to-cyan/5',
-    iconBg: 'bg-cyan/20',
-    iconColor: 'text-cyan',
-  },
-  {
-    title: 'Đơn Hàng',
-    value: dashboardStats.totalOrders,
-    change: dashboardStats.ordersChange,
-    icon: ShoppingCart,
-    format: 'number',
-    gradient: 'from-magenta/20 to-magenta/5',
-    iconBg: 'bg-magenta/20',
-    iconColor: 'text-magenta',
-  },
-  {
-    title: 'Khách Hàng',
-    value: dashboardStats.totalCustomers,
-    change: dashboardStats.customersChange,
-    icon: Users,
-    format: 'number',
-    gradient: 'from-gold/20 to-gold/5',
-    iconBg: 'bg-gold/20',
-    iconColor: 'text-gold',
-  },
-  {
-    title: 'Sản Phẩm',
-    value: dashboardStats.totalProducts,
-    change: dashboardStats.productsChange,
-    icon: Package,
-    format: 'number',
-    gradient: 'from-success/20 to-success/5',
-    iconBg: 'bg-success/20',
-    iconColor: 'text-success',
-  },
-];
-
-const orderStatusColors: Record<string, string> = {
-  pending: 'bg-yellow-500/20 text-yellow-500',
-  confirmed: 'bg-blue-500/20 text-blue-500',
-  processing: 'bg-purple-500/20 text-purple-500',
-  shipped: 'bg-cyan/20 text-cyan',
-  delivered: 'bg-success/20 text-success',
-  cancelled: 'bg-destructive/20 text-destructive',
-};
-
-const orderStatusLabels: Record<string, string> = {
+const orderStatusLabels: Record<OrderStatus, string> = {
   pending: 'Chờ xác nhận',
   confirmed: 'Đã xác nhận',
   processing: 'Đang xử lý',
@@ -82,228 +31,199 @@ const orderStatusLabels: Record<string, string> = {
   cancelled: 'Đã hủy',
 };
 
+const orderStatusColors: Record<OrderStatus, string> = {
+  pending: 'gold',
+  confirmed: 'blue',
+  processing: 'purple',
+  shipped: 'cyan',
+  delivered: 'green',
+  cancelled: 'red',
+};
+
+const orderColumns: ColumnsType<Order> = [
+  {
+    title: 'Mã đơn',
+    dataIndex: 'orderNumber',
+    key: 'orderNumber',
+    render: (text: string) => <Typography.Text code>{text}</Typography.Text>,
+  },
+  {
+    title: 'Khách hàng',
+    key: 'user',
+    render: (_: unknown, record: Order) => record.user.name,
+  },
+  {
+    title: 'Tổng tiền',
+    dataIndex: 'total',
+    key: 'total',
+    render: (val: number) => formatCurrency(val),
+  },
+  {
+    title: 'Trạng thái',
+    dataIndex: 'status',
+    key: 'status',
+    render: (status: OrderStatus) => (
+      <Tag color={orderStatusColors[status]}>{orderStatusLabels[status]}</Tag>
+    ),
+  },
+];
+
 export function AdminDashboard() {
+  const stats = [
+    {
+      title: 'Doanh thu',
+      value: dashboardStats.totalRevenue,
+      change: dashboardStats.revenueChange,
+      prefix: <DollarOutlined />,
+      formatter: (v: number) => formatCurrency(v),
+    },
+    {
+      title: 'Đơn hàng',
+      value: dashboardStats.totalOrders,
+      change: dashboardStats.ordersChange,
+      prefix: <ShoppingCartOutlined />,
+    },
+    {
+      title: 'Khách hàng',
+      value: dashboardStats.totalCustomers,
+      change: dashboardStats.customersChange,
+      prefix: <UserOutlined />,
+    },
+    {
+      title: 'Sản phẩm',
+      value: dashboardStats.totalProducts,
+      change: dashboardStats.productsChange,
+      prefix: <ShoppingOutlined />,
+    },
+  ];
+
+  const chartGrid = { stroke: 'var(--admin-border)' };
+  const chartTick = { fill: 'var(--admin-text-muted)', fontSize: 12 };
+  const tooltipStyle = { background: 'var(--admin-bg-container)', border: '1px solid var(--admin-border)', borderRadius: 8 };
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="font-display text-2xl md:text-3xl font-bold text-white mb-1">
-          Tổng Quan
-        </h1>
-        <p className="text-white/50">Chào mừng trở lại! Đây là tình hình kinh doanh của bạn.</p>
-      </div>
+    <div style={{ marginBottom: 24 }}>
+      <Typography.Title level={4} style={{ marginBottom: 4, color: 'var(--admin-text)' }}>
+        Tổng quan
+      </Typography.Title>
+      <Typography.Text type="secondary" style={{ marginBottom: 24, display: 'block', color: 'var(--admin-text-secondary)' }}>
+        Chào mừng trở lại! Đây là tình hình kinh doanh của bạn.
+      </Typography.Text>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statsCards.map((stat) => (
-          <Card
-            key={stat.title}
-            className={cn(
-              'bg-gradient-to-br border-white/10',
-              stat.gradient
-            )}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-white/70 mb-1">{stat.title}</p>
-                  <p className="font-display text-2xl font-bold text-white">
-                    {stat.format === 'currency'
-                      ? formatCurrency(stat.value)
-                      : stat.value.toLocaleString()}
-                  </p>
-                  <div
-                    className={cn(
-                      'flex items-center gap-1 mt-2 text-sm',
-                      stat.change >= 0 ? 'text-success' : 'text-destructive'
-                    )}
-                  >
-                    {stat.change >= 0 ? (
-                      <TrendingUp className="h-4 w-4" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4" />
-                    )}
-                    <span>{Math.abs(stat.change)}%</span>
-                    <span className="text-white/50">so với tháng trước</span>
-                  </div>
-                </div>
-                <div className={cn('p-3 rounded-xl', stat.iconBg)}>
-                  <stat.icon className={cn('h-6 w-6', stat.iconColor)} />
-                </div>
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        {stats.map((s) => (
+          <Col xs={24} sm={12} lg={6} key={s.title}>
+            <Card size="small">
+              <Statistic
+                title={<span style={{ color: 'var(--admin-text-secondary)' }}>{s.title}</span>}
+                value={s.value}
+                prefix={s.prefix}
+                formatter={s.formatter ? (_, v) => s.formatter(Number(v)) : undefined}
+                valueStyle={{ color: 'var(--admin-text)' }}
+              />
+              <div style={{ marginTop: 8, fontSize: 12 }}>
+                {s.change >= 0 ? (
+                  <ArrowUpOutlined style={{ color: 'var(--admin-success)', marginRight: 4 }} />
+                ) : (
+                  <ArrowDownOutlined style={{ color: 'var(--admin-error)', marginRight: 4 }} />
+                )}
+                <span style={{ color: s.change >= 0 ? 'var(--admin-success)' : 'var(--admin-error)' }}>{Math.abs(s.change)}%</span>
+                <span style={{ color: 'var(--admin-text-secondary)', marginLeft: 4 }}>so với tháng trước</span>
               </div>
-            </CardContent>
-          </Card>
+            </Card>
+          </Col>
         ))}
-      </div>
+      </Row>
 
-      {/* Charts Row */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
-        <Card className="bg-navy-light border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Doanh Thu</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} lg={12}>
+          <Card title="Doanh thu" size="small">
+            <div style={{ height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={salesData}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00D9FF" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#00D9FF" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--admin-primary-hover)" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="var(--admin-primary-hover)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis
-                    dataKey="date"
-                    stroke="rgba(255,255,255,0.5)"
-                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-                    tickFormatter={(value) => value.slice(5)}
-                  />
-                  <YAxis
-                    stroke="rgba(255,255,255,0.5)"
-                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-                    tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1A1F36',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
-                    }}
-                    labelStyle={{ color: '#fff' }}
-                    formatter={(value: number) => [formatCurrency(value), 'Doanh thu']}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#00D9FF"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorRevenue)"
-                  />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} />
+                  <XAxis dataKey="date" stroke={chartGrid.stroke} tick={chartTick} tickFormatter={(v) => v.slice(5)} />
+                  <YAxis stroke={chartGrid.stroke} tick={chartTick} tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} />
+                  <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [formatCurrency(value), 'Doanh thu']} />
+                  <Area type="monotone" dataKey="revenue" stroke="var(--admin-primary-hover)" strokeWidth={2} fill="url(#colorRevenue)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Orders Chart */}
-        <Card className="bg-navy-light border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Đơn Hàng</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
+          </Card>
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card title="Đơn hàng" size="small">
+            <div style={{ height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis
-                    dataKey="date"
-                    stroke="rgba(255,255,255,0.5)"
-                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-                    tickFormatter={(value) => value.slice(5)}
-                  />
-                  <YAxis
-                    stroke="rgba(255,255,255,0.5)"
-                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1A1F36',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
-                    }}
-                    labelStyle={{ color: '#fff' }}
-                    formatter={(value: number) => [value, 'Đơn hàng']}
-                  />
-                  <Bar dataKey="orders" fill="#FF006E" radius={[4, 4, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} />
+                  <XAxis dataKey="date" stroke={chartGrid.stroke} tick={chartTick} tickFormatter={(v) => v.slice(5)} />
+                  <YAxis stroke={chartGrid.stroke} tick={chartTick} />
+                  <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [value, 'Đơn hàng']} />
+                  <Bar dataKey="orders" fill="var(--admin-primary-hover)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </Card>
+        </Col>
+      </Row>
 
-      {/* Bottom Row */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
-        <Card className="bg-navy-light border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Đơn Hàng Gần Đây</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockOrders.slice(0, 5).map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-cyan/10 flex items-center justify-center">
-                      <ShoppingCart className="h-5 w-5 text-cyan" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-white font-mono text-sm">
-                        {order.orderNumber}
-                      </p>
-                      <p className="text-sm text-white/50">{order.user.name}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-white">
-                      {formatCurrency(order.total)}
-                    </p>
-                    <span
-                      className={cn(
-                        'inline-flex px-2 py-0.5 rounded-full text-xs font-medium',
-                        orderStatusColors[order.status]
-                      )}
-                    >
-                      {orderStatusLabels[order.status]}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Products */}
-        <Card className="bg-navy-light border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Sản Phẩm Bán Chạy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={12}>
+          <Card title="Đơn hàng gần đây" size="small">
+            <Table
+              dataSource={mockOrders.slice(0, 5)}
+              columns={orderColumns}
+              rowKey="id"
+              pagination={false}
+              size="small"
+            />
+          </Card>
+        </Col>
+        <Col xs={24} lg={12}>
+          <Card title="Sản phẩm bán chạy" size="small">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {topProducts.slice(0, 5).map((item, index) => (
                 <div
                   key={item.product.id}
-                  className="flex items-center gap-4 p-3 bg-white/5 rounded-lg"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '8px 0',
+                    borderBottom: index < 4 ? '1px solid var(--admin-border)' : 'none',
+                  }}
                 >
-                  <span className="font-display text-lg font-bold text-white/30 w-6">
-                    #{index + 1}
-                  </span>
+                  <span style={{ color: 'var(--admin-text-muted)', fontWeight: 600, width: 24 }}>#{index + 1}</span>
                   <img
                     src={item.product.images[0]}
-                    alt={item.product.name}
-                    className="h-12 w-10 object-cover rounded-md"
+                    alt=""
+                    style={{ width: 40, height: 48, objectFit: 'cover', borderRadius: 4 }}
                   />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm line-clamp-1">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <Typography.Text style={{ color: 'var(--admin-text)' }} ellipsis>
                       {item.product.name}
-                    </p>
-                    <p className="text-xs text-white/50">{item.sales} đã bán</p>
+                    </Typography.Text>
+                    <br />
+                    <Typography.Text type="secondary" style={{ fontSize: 12, color: 'var(--admin-text-secondary)' }}>
+                      {item.sales} đã bán
+                    </Typography.Text>
                   </div>
-                  <p className="font-medium text-cyan">
+                  <Typography.Text style={{ color: 'var(--admin-primary-hover)', fontWeight: 500 }}>
                     {formatCurrency(item.revenue)}
-                  </p>
+                  </Typography.Text>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 }
