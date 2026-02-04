@@ -24,14 +24,18 @@ export interface ProductDisplay {
 export function productDtoToDisplay(dto: ProductDto): ProductDisplay {
   const price = Number(dto.price);
   const salePrice = dto.salePrice != null && dto.salePrice !== '' ? Number(dto.salePrice) : undefined;
+  // Use images array if available, otherwise fallback to imageUrl
+  const images = dto.images && dto.images.length > 0 
+    ? dto.images.filter((url) => url && url.trim() !== '')
+    : (dto.imageUrl ? [dto.imageUrl] : []);
   return {
     id: String(dto.id),
     name: dto.name,
     price,
     salePrice: salePrice != null && !Number.isNaN(salePrice) ? salePrice : undefined,
-    images: dto.imageUrl ? [dto.imageUrl] : [],
+    images,
     category: { id: String(dto.categoryId), name: dto.categoryName ?? '' },
-    slug: String(dto.id),
+    slug: dto.slug || String(dto.id), // Use slug if available, fallback to id
     description: dto.description,
     stockCount: dto.stock,
     rating: 0,

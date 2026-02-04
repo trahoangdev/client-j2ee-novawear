@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Eye, ShoppingBag, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const { has: isInWishlist, toggle: toggleWishlist } = useWishlist();
   const productId = product.id;
   const isLiked = isInWishlist(productId);
-  const [currentImage, setCurrentImage] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
   const priceNum = Number(product.price);
   const salePriceNum = product.salePrice != null ? Number(product.salePrice) : undefined;
@@ -29,6 +29,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     : 0;
   const slug = 'slug' in product ? product.slug : String(product.id);
   const images = product.images?.length ? product.images : (product as ProductDisplay).images ?? [];
+  const hasMultipleImages = images.length >= 2;
   const categoryName = product.category?.name ?? '';
   const rating = 'rating' in product ? (product.rating ?? 0) : 0;
   const reviewCount = 'reviewCount' in product ? (product.reviewCount ?? 0) : 0;
@@ -36,6 +37,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const isNew = (product as ProductDisplay).isNew ?? ('isNew' in product && product.isNew);
   const bestseller = (product as ProductDisplay).bestseller ?? false;
   const featured = (product as ProductDisplay).featured ?? ('isFeatured' in product && product.isFeatured);
+
+  // Preload second image if available
+  useEffect(() => {
+    if (hasMultipleImages && images[1]) {
+      const img = new Image();
+      img.src = images[1];
+    }
+  }, [hasMultipleImages, images]);
 
   return (
     <article
@@ -45,16 +54,39 @@ export function ProductCard({ product, className }: ProductCardProps) {
         'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background',
         className
       )}
-        onMouseEnter={() => images.length > 1 && setCurrentImage(1)}
-      onMouseLeave={() => setCurrentImage(0)}
+      onMouseEnter={() => {
+        if (hasMultipleImages) {
+          setIsHovered(true);
+        }
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+      }}
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-muted">
-        <Link to={`/product/${slug}`} className="block focus:outline-none">
+        <Link to={`/product/${slug}`} className="block focus:outline-none relative h-full w-full group/image">
+          {/* First image */}
           <img
-            src={images[currentImage] ?? ''}
+            src={images[0] ?? ''}
             alt=""
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            className={cn(
+              'absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-in-out',
+              'group-hover/image:scale-[1.03]',
+              isHovered && hasMultipleImages ? 'opacity-0' : 'opacity-100'
+            )}
           />
+          {/* Second image (shown on hover) */}
+          {hasMultipleImages && images[1] && (
+            <img
+              src={images[1]}
+              alt=""
+              className={cn(
+                'absolute inset-0 h-full w-full object-cover transition-all duration-500 ease-in-out',
+                'group-hover/image:scale-[1.03]',
+                isHovered ? 'opacity-100' : 'opacity-0'
+              )}
+            />
+          )}
         </Link>
 
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">

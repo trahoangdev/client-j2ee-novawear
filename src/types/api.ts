@@ -15,9 +15,12 @@ export interface ProductColorDto {
 export interface ProductDto {
   id: number;
   name: string;
+  slug?: string;
   price: number;
   description?: string;
   imageUrl?: string;
+  /** Danh sách URL hình ảnh */
+  images?: string[];
   categoryId: number;
   categoryName?: string;
   stock: number;

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/products/ProductCard';
+import { ProductCardSkeleton } from '@/components/products/ProductCardSkeleton';
 import { productsApi } from '@/lib/customerApi';
 import { toast } from '@/lib/toast';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
@@ -24,20 +25,7 @@ export function FeaturedProducts() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return (
-      <section className="section-spacing bg-muted/30" aria-labelledby="featured-heading">
-        <div className="container px-4 sm:px-6">
-          <h2 id="featured-heading" className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-8">
-            Sản Phẩm Nổi Bật
-          </h2>
-          <p className="text-muted-foreground">Đang tải...</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (products.length === 0) return null;
+  if (products.length === 0 && !loading) return null;
 
   return (
     <section className="section-spacing bg-muted/30" aria-labelledby="featured-heading">
@@ -58,11 +46,19 @@ export function FeaturedProducts() {
             </Link>
           </Button>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

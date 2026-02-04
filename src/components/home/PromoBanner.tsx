@@ -18,7 +18,7 @@ export function PromoBanner() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <Button size="lg" className="bg-background text-foreground hover:bg-background/90 h-11 px-6 rounded-xl" asChild>
-                <Link to="/shop?sale=true">Mua Ngay</Link>
+                <Link to="/sale">Mua Ngay</Link>
               </Button>
               <Button
                 size="lg"

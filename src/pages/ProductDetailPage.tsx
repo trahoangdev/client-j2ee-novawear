@@ -21,6 +21,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/components/products/ProductCard';
+import { ProductCardSkeleton } from '@/components/products/ProductCardSkeleton';
+import { ProductDetailSkeleton } from '@/components/products/ProductDetailSkeleton';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { productsApi, reviewsApi } from '@/lib/customerApi';
@@ -35,8 +37,7 @@ import { MarkdownContent } from '@/components/ui/MarkdownContent';
 const DEFAULT_COLOR = { name: 'Đen', hex: '#2D2D2D' };
 
 export function ProductDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const productId = id ? Number(id) : NaN;
+  const { slug } = useParams<{ slug: string }>();
   const { addItem } = useCart();
   const { has: isInWishlist, toggle: toggleWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
@@ -54,18 +55,24 @@ export function ProductDetailPage() {
   const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
-    if (!id || Number.isNaN(productId)) {
+    if (!slug) {
       setLoading(false);
       return;
     }
     setLoading(true);
-    Promise.all([
-      productsApi.getById(productId),
-      reviewsApi.getByProduct(productId),
-    ])
-      .then(([prodRes, revRes]) => {
+    productsApi
+      .getBySlug(slug)
+      .then((prodRes) => {
         const p = productDtoToDisplay(prodRes.data);
+        const productId = Number(p.id);
         setProduct(p);
+        // Load reviews by product ID
+        return Promise.all([
+          Promise.resolve(p),
+          reviewsApi.getByProduct(productId),
+        ]);
+      })
+      .then(([p, revRes]) => {
         setReviews(Array.isArray(revRes.data) ? revRes.data : []);
         const c = p.colors?.length ? p.colors[0] : DEFAULT_COLOR;
         setSelectedColor(c);
@@ -73,7 +80,7 @@ export function ProductDetailPage() {
         if (p.category?.id) {
           productsApi.list({ categoryId: Number(p.category.id), size: 5 })
             .then(({ data }) =>
-              setRelatedProducts(data.content.filter((d) => d.id !== productId).map(productDtoToDisplay).slice(0, 4))
+              setRelatedProducts(data.content.filter((d) => Number(d.id) !== Number(p.id)).map(productDtoToDisplay).slice(0, 4))
             )
             .catch(() => setRelatedProducts([]));
         }
@@ -83,7 +90,7 @@ export function ProductDetailPage() {
         toast.error('Không tải được thông tin sản phẩm. Vui lòng thử lại.');
       })
       .finally(() => setLoading(false));
-  }, [id, productId]);
+  }, [slug]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -99,9 +106,10 @@ export function ProductDetailPage() {
   };
 
   const handleSubmitReview = async () => {
-    if (!isAuthenticated || !reviewForm.comment.trim()) return;
+    if (!isAuthenticated || !reviewForm.comment.trim() || !product) return;
     setSubmittingReview(true);
     try {
+      const productId = Number(product.id);
       const { data } = await reviewsApi.create(productId, {
         rating: reviewForm.rating,
         comment: reviewForm.comment.trim(),
@@ -120,8 +128,8 @@ export function ProductDetailPage() {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 flex items-center justify-center py-20">
-          <p className="text-muted-foreground">Đang tải...</p>
+        <main className="flex-1">
+          <ProductDetailSkeleton />
         </main>
         <Footer />
       </div>

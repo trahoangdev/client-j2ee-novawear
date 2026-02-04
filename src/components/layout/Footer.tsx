@@ -11,7 +11,9 @@ const shopLinks = [
   { to: '/shop?category=pants', label: 'Quần' },
   { to: '/shop?category=dresses', label: 'Váy' },
   { to: '/shop?category=accessories', label: 'Phụ Kiện' },
-  { to: '/shop?sale=true', label: 'Khuyến Mãi', highlight: true },
+  { to: '/sale', label: 'Khuyến Mãi', highlight: true },
+  { to: '/bestseller', label: 'Bán Chạy' },
+  { to: '/new-arrivals', label: 'Hàng Mới' },
 ];
 
 const supportLinks = [

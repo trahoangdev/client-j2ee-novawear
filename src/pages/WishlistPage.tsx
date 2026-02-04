@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/components/products/ProductCard';
+import { ProductCardSkeleton } from '@/components/products/ProductCardSkeleton';
 import { useWishlist } from '@/context/WishlistContext';
 import { toast } from '@/lib/toast';
 import { productsApi } from '@/lib/customerApi';
@@ -45,9 +46,10 @@ export function WishlistPage() {
           </h1>
 
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-muted-foreground">
-              <Loader2 className="h-8 w-8 animate-spin mr-2" />
-              Đang tải...
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
             </div>
           ) : products.length === 0 ? (
             <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">

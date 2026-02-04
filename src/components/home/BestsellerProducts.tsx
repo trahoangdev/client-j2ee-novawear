@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProductCard } from '@/components/products/ProductCard';
+import { ProductCardSkeleton } from '@/components/products/ProductCardSkeleton';
 import { productsApi } from '@/lib/customerApi';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 
@@ -27,19 +28,6 @@ export function BestsellerProducts() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return (
-      <section className="section-spacing bg-muted/30" aria-labelledby="bestseller-heading">
-        <div className="container px-4 sm:px-6">
-          <h2 id="bestseller-heading" className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-8">
-            Sản Phẩm Bán Chạy
-          </h2>
-          <p className="text-muted-foreground">Đang tải...</p>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="section-spacing bg-muted/30" aria-labelledby="bestseller-heading">
       <div className="container px-4 sm:px-6">
@@ -53,13 +41,19 @@ export function BestsellerProducts() {
             </p>
           </div>
           <Button variant="link" className="text-primary p-0 h-auto font-medium w-fit" asChild>
-            <Link to="/shop" className="inline-flex items-center gap-2 group">
+            <Link to="/bestseller" className="inline-flex items-center gap-2 group">
               Xem tất cả
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </Button>
         </div>
-        {products.length > 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : products.length > 0 ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />

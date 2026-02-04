@@ -11,6 +11,9 @@ import { AuthModal } from "@/components/auth/AuthModal";
 // Lazy load pages
 const HomePage = lazy(() => import("@/pages/HomePage").then(m => ({ default: m.HomePage })));
 const ShopPage = lazy(() => import("@/pages/ShopPage").then(m => ({ default: m.ShopPage })));
+const BestsellerPage = lazy(() => import("@/pages/BestsellerPage").then(m => ({ default: m.BestsellerPage })));
+const SalePage = lazy(() => import("@/pages/SalePage").then(m => ({ default: m.SalePage })));
+const NewArrivalsPage = lazy(() => import("@/pages/NewArrivalsPage").then(m => ({ default: m.NewArrivalsPage })));
 const ProductDetailPage = lazy(() => import("@/pages/ProductDetailPage").then(m => ({ default: m.ProductDetailPage })));
 const CheckoutPage = lazy(() => import("@/pages/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage").then(m => ({ default: m.ProfilePage })));
@@ -59,7 +62,10 @@ function App() {
             {/* Customer Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/shop" element={<ShopPage />} />
-            <Route path="/product/:id" element={<ProductDetailPage />} />
+            <Route path="/bestseller" element={<BestsellerPage />} />
+            <Route path="/sale" element={<SalePage />} />
+            <Route path="/new-arrivals" element={<NewArrivalsPage />} />
+            <Route path="/product/:slug" element={<ProductDetailPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/orders" element={<OrdersPage />} />

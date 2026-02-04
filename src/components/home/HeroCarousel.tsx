@@ -38,7 +38,7 @@ const defaultSlides: Slide[] = [
     title: 'Giảm Giá\nĐến 50%',
     subtitle: 'Ưu đãi đặc biệt cho thành viên mới',
     cta: 'Mua Ngay',
-    link: '/shop?sale=true',
+    link: '/sale',
   },
 ];
 

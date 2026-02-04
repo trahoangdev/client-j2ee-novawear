@@ -20,7 +20,7 @@ export const categoriesApi = {
 };
 
 export const productsApi = {
-  list: (params?: { page?: number; size?: number; categoryId?: number; search?: string; onSale?: boolean; bestseller?: boolean }) =>
+  list: (params?: { page?: number; size?: number; categoryId?: number; search?: string; onSale?: boolean; bestseller?: boolean; isNew?: boolean }) =>
     api.get<Page<ProductDto>>('/api/products', {
       params: {
         page: params?.page ?? 0,
@@ -29,11 +29,13 @@ export const productsApi = {
         ...(params?.search != null && params.search !== '' && { search: params.search }),
         ...(params?.onSale === true && { onSale: true }),
         ...(params?.bestseller === true && { bestseller: true }),
+        ...(params?.isNew === true && { isNew: true }),
       },
     }),
   featured: () => api.get<ProductDto[]>('/api/products/featured'),
   bestseller: () => api.get<ProductDto[]>('/api/products/bestseller'),
   getById: (id: number) => api.get<ProductDto>(`/api/products/${id}`),
+  getBySlug: (slug: string) => api.get<ProductDto>(`/api/products/slug/${slug}`),
 };
 
 export const reviewsApi = {

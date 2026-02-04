@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SlidersHorizontal, Grid3X3, LayoutGrid, X } from 'lucide-react';
+import { Grid3X3, LayoutGrid, SlidersHorizontal, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -22,12 +23,11 @@ import { ProductCard } from '@/components/products/ProductCard';
 import { ProductCardSkeleton } from '@/components/products/ProductCardSkeleton';
 import { categoriesApi, productsApi } from '@/lib/customerApi';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
-import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
 
-export function ShopPage() {
+export function BestsellerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [gridCols, setGridCols] = useState<2 | 3 | 4>(3);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
@@ -35,30 +35,18 @@ export function ShopPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
+  const [sortBy, setSortBy] = useState('newest');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') ?? '');
   const pageSize = 12;
 
   const categoryIdParam = searchParams.get('categoryId');
-  const categorySlug = searchParams.get('category') ?? '';
-  const searchQuery = searchParams.get('search') ?? '';
-  const sortBy = searchParams.get('sort') || 'newest';
-  const onSale = searchParams.get('sale') === 'true';
-
-  const slugToName: Record<string, string> = { tops: 'Áo', pants: 'Quần', dresses: 'Váy', accessories: 'Phụ Kiện' };
   const effectiveCategoryId = useMemo(() => {
     const numId = categoryIdParam ? Number(categoryIdParam) : NaN;
-    if (!Number.isNaN(numId)) return numId;
-    if (categorySlug && slugToName[categorySlug]) {
-      const found = categories.find((c) => c.name === slugToName[categorySlug]);
-      return found?.id;
-    }
-    return undefined;
-  }, [categoryIdParam, categorySlug, categories]);
+    return !Number.isNaN(numId) ? numId : undefined;
+  }, [categoryIdParam]);
 
   useEffect(() => {
-    categoriesApi.list().then(({ data }) => setCategories(data)).catch(() => {
-      setCategories([]);
-      toast.error('Không tải được danh mục');
-    });
+    categoriesApi.list().then(({ data }) => setCategories(data)).catch(() => setCategories([]));
   }, []);
 
   useEffect(() => {
@@ -67,9 +55,9 @@ export function ShopPage() {
       .list({
         page,
         size: pageSize,
+        bestseller: true,
         categoryId: effectiveCategoryId,
         search: searchQuery || undefined,
-        onSale: onSale || undefined,
       })
       .then(({ data }) => {
         setProducts(data.content.map(productDtoToDisplay));
@@ -81,7 +69,7 @@ export function ShopPage() {
         toast.error('Không tải được sản phẩm. Vui lòng thử lại.');
       })
       .finally(() => setLoading(false));
-  }, [page, effectiveCategoryId, searchQuery, onSale]);
+  }, [page, effectiveCategoryId, searchQuery]);
 
   const sortedProducts = useMemo(() => {
     const list = [...products];
@@ -108,50 +96,34 @@ export function ShopPage() {
     setPage(0);
   };
 
-  const handleSortChange = (value: string) => {
-    searchParams.set('sort', value);
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      searchParams.set('search', searchQuery.trim());
+    } else {
+      searchParams.delete('search');
+    }
     setSearchParams(searchParams);
+    setPage(0);
   };
 
   const clearFilters = () => {
     setSearchParams({});
+    setSearchQuery('');
     setPage(0);
   };
 
   const selectedCategoryId = effectiveCategoryId ?? null;
-  const hasActiveFilters = selectedCategoryId != null || searchQuery || onSale;
+  const hasActiveFilters = selectedCategoryId != null || searchQuery;
 
   const FilterContent = () => (
     <div className="space-y-6">
       <div>
-        <h4 className="font-semibold mb-3">Khuyến mãi</h4>
-        <div className="space-y-2 mb-4">
-          <div
-            className={cn(
-              'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
-              onSale ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-            )}
-            onClick={() => {
-              if (onSale) {
-                searchParams.delete('sale');
-                setSearchParams(searchParams);
-                setPage(0);
-              } else {
-                searchParams.set('sale', 'true');
-                setSearchParams(searchParams);
-                setPage(0);
-              }
-            }}
-          >
-            <span className="text-sm">Chỉ sản phẩm khuyến mãi</span>
-          </div>
-        </div>
         <h4 className="font-semibold mb-3">Danh Mục</h4>
         <div className="space-y-2">
           <div
             className={cn(
               'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
-              selectedCategoryId == null && !onSale ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+              selectedCategoryId == null ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
             )}
             onClick={() => handleCategoryChange(null)}
           >
@@ -181,8 +153,6 @@ export function ShopPage() {
     </div>
   );
 
-  const categoryName = selectedCategoryId != null ? categories.find((c) => c.id === selectedCategoryId)?.name : null;
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -190,11 +160,12 @@ export function ShopPage() {
       <main className="flex-1">
         <div className="bg-muted/40 border-b border-border/50 py-6 md:py-8">
           <div className="container px-4 sm:px-6">
-            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold">
-              {categoryName ?? (onSale ? 'Khuyến Mãi' : searchQuery ? `Kết quả cho "${searchQuery}"` : 'Bộ Sưu Tập')}
-            </h1>
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold">Sản Phẩm Bán Chạy</h1>
             <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">
               {loading ? 'Đang tải...' : `${total} sản phẩm`}
+            </p>
+            <p className="text-muted-foreground mt-2 text-sm">
+              Được khách hàng lựa chọn nhiều nhất
             </p>
           </div>
         </div>
@@ -206,7 +177,19 @@ export function ShopPage() {
             </aside>
 
             <div className="flex-1">
-              <div className="flex items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-4 mb-6 flex-wrap">
+                <div className="flex-1 min-w-[200px]">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Tìm kiếm sản phẩm..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="outline" className="lg:hidden">
@@ -223,9 +206,8 @@ export function ShopPage() {
                     </div>
                   </SheetContent>
                 </Sheet>
-
-                <div className="flex items-center gap-4 ml-auto">
-                  <Select value={sortBy} onValueChange={handleSortChange}>
+                <div className="flex items-center gap-4">
+                  <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-44">
                       <SelectValue placeholder="Sắp xếp" />
                     </SelectTrigger>
@@ -275,11 +257,8 @@ export function ShopPage() {
                 </div>
               ) : sortedProducts.length === 0 ? (
                 <div className="text-center py-14 md:py-20">
-                  <h2 className="font-display text-lg sm:text-xl font-semibold mb-2">Không tìm thấy sản phẩm</h2>
-                  <p className="text-muted-foreground text-sm mb-6">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
-                  <Button onClick={clearFilters} variant="outline">
-                    Xóa bộ lọc
-                  </Button>
+                  <h2 className="font-display text-lg sm:text-xl font-semibold mb-2">Chưa có sản phẩm bán chạy</h2>
+                  <p className="text-muted-foreground text-sm">Quay lại sau nhé!</p>
                 </div>
               ) : (
                 <>

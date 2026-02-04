@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ordersApi } from '@/lib/customerApi';
 import { toast } from '@/lib/toast';
 import { OrderCard } from '@/components/orders/OrderCard';
+import { OrderCardSkeleton } from '@/components/orders/OrderCardSkeleton';
 import type { OrderDto, Page } from '@/types/api';
 
 const PAGE_SIZE = 10;
@@ -67,9 +68,10 @@ export function OrdersPage() {
           <h1 className="font-display text-2xl md:text-3xl font-bold mb-8">Đơn hàng của tôi</h1>
 
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-muted-foreground">
-              <Loader2 className="h-8 w-8 animate-spin mr-2" />
-              Đang tải...
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <OrderCardSkeleton key={i} />
+              ))}
             </div>
           ) : content.length === 0 ? (
             <div className="rounded-2xl border border-border bg-card p-10 text-center text-muted-foreground">

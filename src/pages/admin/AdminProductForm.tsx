@@ -25,8 +25,30 @@ import type { CategoryDto, ProductDto } from '@/types/api';
 import type { AxiosError } from 'axios';
 
 const NAME_MAX = 200;
+const SLUG_MAX = 255;
 const DESC_MAX = 2000;
 const IMAGE_URL_MAX = 500;
+
+/** Generate slug from Vietnamese text */
+function generateSlug(text: string): string {
+  if (!text) return '';
+  return text
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a')
+    .replace(/[èéẹẻẽêềếệểễ]/g, 'e')
+    .replace(/[ìíịỉĩ]/g, 'i')
+    .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, 'o')
+    .replace(/[ùúụủũưừứựửữ]/g, 'u')
+    .replace(/[ỳýỵỷỹ]/g, 'y')
+    .replace(/[đ]/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
 
 /** Trình soạn Mô tả hỗ trợ Markdown, tương thích Ant Design Form */
 function DescriptionMarkdownEditor({
@@ -81,7 +103,7 @@ export function AdminProductForm() {
   const [submitting, setSubmitting] = useState(false);
 
   const isNew = id === undefined || id === 'new';
-  const imageUrl = Form.useWatch('imageUrl', form);
+  const images = Form.useWatch('images', form);
 
   useEffect(() => {
     adminCategoriesApi.list().then(({ data }) => setCategories(data)).catch(() => setCategories([]));
@@ -103,11 +125,16 @@ export function AdminProductForm() {
       .getById(numId)
       .then(({ data }) => {
         setProduct(data);
+        // Use images array if available, otherwise fallback to imageUrl
+        const imageList = data.images && data.images.length > 0 
+          ? data.images.filter((url: string) => url && url.trim() !== '')
+          : (data.imageUrl ? [data.imageUrl] : []);
         form.setFieldsValue({
           name: data.name ?? '',
+          slug: data.slug ?? '',
           price: data.price ?? 0,
           description: data.description ?? '',
-          imageUrl: data.imageUrl ?? '',
+          images: imageList.length > 0 ? imageList : [''],
           categoryId: data.categoryId,
           stock: data.stock ?? 0,
           salePrice: data.salePrice ?? undefined,
@@ -130,11 +157,17 @@ export function AdminProductForm() {
         const colorsList: ProductColorDto[] = (values.colors ?? [])
           .filter((c: { name?: string; hex?: string }) => c?.name != null && String(c.name).trim() !== '' && c?.hex != null && String(c.hex).trim() !== '')
           .map((c: { name: string; hex: string }) => ({ name: String(c.name).trim(), hex: String(c.hex).trim() }));
+        const imagesList = (values.images ?? [])
+          .filter((url: string) => url != null && String(url).trim() !== '')
+          .map((url: string) => String(url).trim());
+        const slugValue = values.slug?.trim() || generateSlug(values.name || '');
         const body = {
           name: String(values.name ?? '').trim(),
+          slug: slugValue || undefined,
           price: Number(values.price),
           description: values.description != null ? String(values.description).trim() : undefined,
-          imageUrl: values.imageUrl != null && String(values.imageUrl).trim() !== '' ? String(values.imageUrl).trim() : undefined,
+          images: imagesList.length > 0 ? imagesList : undefined,
+          imageUrl: imagesList.length > 0 ? imagesList[0] : undefined, // Backward compatibility
           categoryId: values.categoryId,
           stock: Math.max(0, Math.floor(Number(values.stock) || 0)),
           salePrice: values.salePrice != null && values.salePrice !== '' ? Number(values.salePrice) : null,
@@ -203,6 +236,8 @@ export function AdminProductForm() {
         layout="vertical"
         onFinish={handleSubmit}
         initialValues={{
+          slug: '',
+          images: [''],
           sizes: [],
           colors: [{ name: '', hex: '#000000' }],
           featured: false,
@@ -222,7 +257,46 @@ export function AdminProductForm() {
                 ]}
                 extra={`Tối đa ${NAME_MAX} ký tự`}
               >
-                <Input placeholder="Ví dụ: Áo Blazer Premium" maxLength={NAME_MAX + 1} showCount />
+                <Input 
+                  placeholder="Ví dụ: Áo Blazer Premium" 
+                  maxLength={NAME_MAX + 1} 
+                  showCount
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    const currentSlug = form.getFieldValue('slug');
+                    // Auto-generate slug if slug is empty or matches previous name
+                    if (!currentSlug || currentSlug === generateSlug(form.getFieldValue('name') || '')) {
+                      form.setFieldsValue({ slug: generateSlug(name) });
+                    }
+                  }}
+                />
+              </Form.Item>
+              <Form.Item
+                name="slug"
+                label="Slug (URL-friendly)"
+                rules={[
+                  { max: SLUG_MAX, message: `Tối đa ${SLUG_MAX} ký tự` },
+                  { pattern: /^[a-z0-9-]+$/, message: 'Chỉ chứa chữ thường, số và dấu gạch ngang' },
+                ]}
+                extra="Đường dẫn URL thân thiện (tự động tạo từ tên). Ví dụ: ao-blazer-premium"
+              >
+                <Input 
+                  placeholder="ao-blazer-premium" 
+                  maxLength={SLUG_MAX + 1}
+                  addonAfter={
+                    <Button
+                      type="text"
+                      size="small"
+                      onClick={() => {
+                        const name = form.getFieldValue('name') || '';
+                        form.setFieldsValue({ slug: generateSlug(name) });
+                      }}
+                      style={{ padding: '0 8px', height: '100%' }}
+                    >
+                      Tạo tự động
+                    </Button>
+                  }
+                />
               </Form.Item>
               <Form.Item name="categoryId" label="Danh mục" rules={[{ required: true, message: 'Chọn danh mục' }]}>
                 <Select
@@ -363,28 +437,58 @@ export function AdminProductForm() {
 
             <Card size="small" title="Hình ảnh" style={{ marginBottom: 16 }}>
               <Form.Item
-                name="imageUrl"
                 label="URL hình ảnh"
-                rules={[{ max: IMAGE_URL_MAX, message: `URL tối đa ${IMAGE_URL_MAX} ký tự` }]}
-                extra="Dán link ảnh từ internet. Để trống nếu chưa có ảnh."
+                extra="Nhập từng URL hình ảnh. Hình đầu tiên sẽ là hình chính. Hình thứ 2 sẽ hiển thị khi hover."
               >
-                <Input placeholder="https://example.com/image.jpg" maxLength={IMAGE_URL_MAX + 1} />
+                <Form.List name="images">
+                  {(fields, { add, remove }) => (
+                    <>
+                      {fields.map(({ key, name, ...rest }) => (
+                        <div key={key} style={{ marginBottom: 8 }}>
+                          <Form.Item
+                            {...rest}
+                            name={name}
+                            rules={[{ max: IMAGE_URL_MAX, message: `URL tối đa ${IMAGE_URL_MAX} ký tự` }]}
+                            style={{ marginBottom: 0 }}
+                          >
+                            <Input
+                              placeholder={`Hình ${name + 1}: https://example.com/image.jpg`}
+                              maxLength={IMAGE_URL_MAX + 1}
+                              addonAfter={
+                                fields.length > 1 ? (
+                                  <Button
+                                    type="text"
+                                    danger
+                                    size="small"
+                                    icon={<DeleteOutlined />}
+                                    onClick={() => remove(name)}
+                                    aria-label="Xóa hình"
+                                  />
+                                ) : null
+                              }
+                            />
+                          </Form.Item>
+                          {images?.[name] && images[name].trim() && (
+                            <div style={{ marginTop: 8, marginLeft: 0 }}>
+                              <Image
+                                src={images[name].trim()}
+                                alt={`Preview ${name + 1}`}
+                                width={120}
+                                height={150}
+                                style={{ objectFit: 'cover', borderRadius: 8 }}
+                                fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='150' viewBox='0 0 120 150'%3E%3Crect fill='%23334155' width='120' height='150'/%3E%3Ctext fill='%2394a3b8' x='60' y='78' text-anchor='middle' font-size='12'%3EKhông tải được%3C/text%3E%3C/svg%3E"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      <Button type="dashed" onClick={() => add('')} icon={<PlusOutlined />} style={{ width: '100%' }}>
+                        Thêm hình ảnh
+                      </Button>
+                    </>
+                  )}
+                </Form.List>
               </Form.Item>
-              {imageUrl && imageUrl.trim() && (
-                <div style={{ marginTop: 8 }}>
-                  <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
-                    Xem trước:
-                  </Typography.Text>
-                  <Image
-                    src={imageUrl.trim()}
-                    alt="Preview"
-                    width={160}
-                    height={200}
-                    style={{ objectFit: 'cover', borderRadius: 8 }}
-                    fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='200' viewBox='0 0 160 200'%3E%3Crect fill='%23334155' width='160' height='200'/%3E%3Ctext fill='%2394a3b8' x='80' y='105' text-anchor='middle' font-size='14'%3EKhông tải được ảnh%3C/text%3E%3C/svg%3E"
-                  />
-                </div>
-              )}
             </Card>
           </Col>
           <Col xs={24} lg={10}>
@@ -414,12 +518,13 @@ export function AdminProductForm() {
 function ProductPreview({ form, categories }: { form: ReturnType<typeof Form.useForm>[0]; categories: CategoryDto[] }) {
   const name = Form.useWatch('name', form);
   const price = Form.useWatch('price', form);
-  const imageUrl = Form.useWatch('imageUrl', form);
+  const images = Form.useWatch('images', form);
   const categoryId = Form.useWatch('categoryId', form);
   const categoryName = categories.find((c) => c.id === categoryId)?.name;
   const displayName = name?.trim() || 'Tên sản phẩm';
   const displayPrice = price != null && !Number.isNaN(Number(price)) ? Number(price) : 0;
-  const displayImage = imageUrl?.trim() || '';
+  const displayImages = (images ?? []).filter((url: string) => url && url.trim() !== '').map((url: string) => url.trim());
+  const displayImage = displayImages.length > 0 ? displayImages[0] : '';
 
   return (
     <div
@@ -434,14 +539,31 @@ function ProductPreview({ form, categories }: { form: ReturnType<typeof Form.use
     >
       <div style={{ aspectRatio: '3/4', background: '#f1f5f9', position: 'relative' }}>
         {displayImage ? (
-          <img
-            src={displayImage}
-            alt=""
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
+          <>
+            <img
+              src={displayImage}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            {displayImages.length > 1 && (
+              <div style={{ position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 4 }}>
+                {displayImages.map((_, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: idx === 0 ? '#0ea5e9' : '#cbd5e1',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <PictureOutlined style={{ fontSize: 48, color: '#94a3b8' }} />

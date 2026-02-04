@@ -5,6 +5,7 @@ import { categoriesApi } from '@/lib/customerApi';
 import { toast } from '@/lib/toast';
 import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { CategoryGridSkeleton } from './CategoryGridSkeleton';
 
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1558769132-cb1aea913002?w=400&q=80';
 
@@ -24,18 +25,7 @@ export function CategoryGrid() {
   }, []);
 
   if (loading) {
-    return (
-      <section className="section-spacing" aria-labelledby="category-heading">
-        <div className="container px-4 sm:px-6">
-          <div className="text-center mb-10">
-            <h2 id="category-heading" className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3">
-              Danh Mục Sản Phẩm
-            </h2>
-            <p className="text-muted-foreground">Đang tải...</p>
-          </div>
-        </div>
-      </section>
-    );
+    return <CategoryGridSkeleton />;
   }
 
   if (categories.length === 0) return null;

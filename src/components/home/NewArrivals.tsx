@@ -4,6 +4,7 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProductCard } from '@/components/products/ProductCard';
+import { ProductCardSkeleton } from '@/components/products/ProductCardSkeleton';
 import { productsApi } from '@/lib/customerApi';
 import { toast } from '@/lib/toast';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
@@ -14,7 +15,7 @@ export function NewArrivals() {
 
   useEffect(() => {
     productsApi
-      .list({ size: 8 })
+      .list({ size: 8, isNew: true })
       .then(({ data }) => setProducts(data.content.map(productDtoToDisplay).slice(0, 4)))
       .catch(() => {
         setProducts([]);
@@ -23,20 +24,7 @@ export function NewArrivals() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return (
-      <section className="section-spacing" aria-labelledby="new-arrivals-heading">
-        <div className="container px-4 sm:px-6">
-          <h2 id="new-arrivals-heading" className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-8">
-            Hàng Mới Về
-          </h2>
-          <p className="text-muted-foreground">Đang tải...</p>
-        </div>
-      </section>
-    );
-  }
-
-  if (products.length === 0) return null;
+  if (products.length === 0 && !loading) return null;
 
   return (
     <section className="section-spacing" aria-labelledby="new-arrivals-heading">
@@ -55,17 +43,25 @@ export function NewArrivals() {
             </p>
           </div>
           <Button variant="link" className="text-primary p-0 h-auto font-medium w-fit" asChild>
-            <Link to="/shop" className="inline-flex items-center gap-2 group">
+            <Link to="/new-arrivals" className="inline-flex items-center gap-2 group">
               Xem tất cả
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </Button>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
