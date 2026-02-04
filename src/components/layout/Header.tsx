@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingBag, User, Menu, X, Heart } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, X, Heart, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
+import { useWishlist } from '@/context/WishlistContext';
 import { useAuth } from '@/context/AuthContext';
 import {
   DropdownMenu,
@@ -12,6 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { productsApi } from '@/lib/customerApi';
+import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
+import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -22,12 +26,20 @@ const navLinks = [
   { to: '/shop?category=accessories', label: 'Phụ Kiện' },
 ];
 
+const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_SUGGESTIONS_SIZE = 6;
+
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<ProductDisplay[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toggleCart, itemCount } = useCart();
+  const { count: wishlistCount } = useWishlist();
   const { isAuthenticated, user, logout, setShowAuthModal, setAuthMode, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,6 +54,39 @@ export function Header() {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
 
+  // Gợi ý sản phẩm khi nhập (debounce)
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchLoading(true);
+      productsApi
+        .list({ search: q, page: 0, size: SEARCH_SUGGESTIONS_SIZE })
+        .then(({ data }) => setSearchResults(data.content.map(productDtoToDisplay)))
+        .catch(() => setSearchResults([]))
+        .finally(() => setSearchLoading(false));
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchQuery]);
+
+  // Click outside đóng dropdown (không đóng cả ô search)
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const onMouseDown = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [isSearchOpen]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = searchQuery.trim();
@@ -49,8 +94,15 @@ export function Header() {
       navigate(`/shop?search=${encodeURIComponent(q)}`);
       setIsSearchOpen(false);
       setSearchQuery('');
+      setSearchResults([]);
     }
   };
+
+  const closeSearch = useCallback(() => {
+    setIsSearchOpen(false);
+    setSearchQuery('');
+    setSearchResults([]);
+  }, []);
 
   const handleAuthClick = (mode: 'login' | 'register') => {
     setAuthMode(mode);
@@ -113,37 +165,73 @@ export function Header() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-1">
-            {/* Search - expandable */}
-            <div className="relative flex items-center">
+            {/* Search - expandable + gợi ý sản phẩm ngay bên dưới */}
+            <div className="relative flex items-center" ref={searchContainerRef}>
               {isSearchOpen ? (
-                <form
-                  onSubmit={handleSearch}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1 bg-background border border-border rounded-xl px-2 py-1.5 shadow-soft-lg animate-scale-in"
-                >
-                  <Input
-                    ref={searchInputRef}
-                    type="search"
-                    placeholder="Tìm sản phẩm..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Escape' && (setIsSearchOpen(false), searchInputRef.current?.blur())}
-                    className="w-40 sm:w-52 md:w-64 border-0 bg-transparent focus-visible:ring-0 h-9"
-                    aria-label="Tìm kiếm"
-                  />
-                  <Button type="submit" size="icon" variant="ghost" className="h-8 w-8 shrink-0">
-                    <Search className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 shrink-0"
-                    onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
-                    aria-label="Đóng tìm kiếm"
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-[min(100vw-2rem,22rem)]">
+                  <form
+                    onSubmit={handleSearch}
+                    className="flex items-center gap-1 bg-background border border-border rounded-xl px-2 py-1.5 shadow-soft-lg animate-scale-in"
                   >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </form>
+                    <Input
+                      ref={searchInputRef}
+                      type="search"
+                      placeholder="Tìm sản phẩm..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Escape' && (closeSearch(), searchInputRef.current?.blur())}
+                      className="w-full min-w-0 border-0 bg-transparent focus-visible:ring-0 h-9 flex-1"
+                      aria-label="Tìm kiếm"
+                    />
+                    <Button type="submit" size="icon" variant="ghost" className="h-8 w-8 shrink-0">
+                      <Search className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 shrink-0"
+                      onClick={closeSearch}
+                      aria-label="Đóng tìm kiếm"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </form>
+                  {/* Danh sách gợi ý ngay dưới thanh search */}
+                  {(searchLoading || searchResults.length > 0) && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-background border border-border rounded-xl shadow-soft-lg overflow-hidden max-h-[min(70vh,20rem)] overflow-y-auto">
+                      {searchLoading ? (
+                        <div className="flex items-center justify-center py-8 text-muted-foreground">
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                        </div>
+                      ) : (
+                        <ul className="py-1">
+                          {searchResults.map((p) => (
+                            <li key={p.id}>
+                              <Link
+                                to={`/product/${p.id}`}
+                                onClick={closeSearch}
+                                className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/80 transition-colors"
+                              >
+                                <div className="h-12 w-12 rounded-lg bg-muted shrink-0 overflow-hidden">
+                                  {p.images[0] ? (
+                                    <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
+                                  ) : (
+                                    <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs" />
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium text-sm truncate">{p.name}</p>
+                                  <p className="text-primary text-sm font-semibold">{formatCurrency(p.price)}</p>
+                                </div>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <Button
                   variant="ghost"
@@ -157,8 +245,15 @@ export function Header() {
               )}
             </div>
 
-            <Button variant="ghost" size="icon" className="hidden md:flex h-10 w-10 rounded-lg hover:bg-primary/10 tap-target" aria-label="Yêu thích">
-              <Heart className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="relative h-10 w-10 md:h-11 md:w-11 rounded-lg hover:bg-primary/10 tap-target shrink-0" asChild>
+              <Link to="/wishlist" aria-label={`Yêu thích, ${wishlistCount} sản phẩm`}>
+                <Heart className="h-5 w-5" />
+                {wishlistCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-destructive text-destructive-foreground text-xs font-semibold flex items-center justify-center">
+                    {wishlistCount > 99 ? '99+' : wishlistCount}
+                  </span>
+                )}
+              </Link>
             </Button>
 
             {isAuthenticated ? (

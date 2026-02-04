@@ -1,10 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, Grid3X3, LayoutGrid, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -19,86 +16,88 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Slider } from '@/components/ui/slider';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/components/products/ProductCard';
-import { products, categories, formatCurrency } from '@/data/mock-data';
+import { categoriesApi, productsApi } from '@/lib/customerApi';
+import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
+import { formatCurrency } from '@/lib/utils';
+import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
 
 export function ShopPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [gridCols, setGridCols] = useState<2 | 3 | 4>(3);
-  const [priceRange, setPriceRange] = useState([0, 2000000]);
+  const [categories, setCategories] = useState<CategoryDto[]>([]);
+  const [products, setProducts] = useState<ProductDisplay[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const pageSize = 12;
 
-  const selectedCategory = searchParams.get('category');
-  const searchQuery = searchParams.get('search');
-  const showSale = searchParams.get('sale') === 'true';
-  const showNew = searchParams.get('new') === 'true';
+  const categoryIdParam = searchParams.get('categoryId');
+  const categorySlug = searchParams.get('category') ?? '';
+  const searchQuery = searchParams.get('search') ?? '';
   const sortBy = searchParams.get('sort') || 'newest';
 
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-
-    // Filter by category
-    if (selectedCategory) {
-      result = result.filter((p) => p.category.slug === selectedCategory);
+  const slugToName: Record<string, string> = { tops: 'Áo', pants: 'Quần', dresses: 'Váy', accessories: 'Phụ Kiện' };
+  const effectiveCategoryId = useMemo(() => {
+    const numId = categoryIdParam ? Number(categoryIdParam) : NaN;
+    if (!Number.isNaN(numId)) return numId;
+    if (categorySlug && slugToName[categorySlug]) {
+      const found = categories.find((c) => c.name === slugToName[categorySlug]);
+      return found?.id;
     }
+    return undefined;
+  }, [categoryIdParam, categorySlug, categories]);
 
-    // Filter by search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query)
-      );
-    }
+  useEffect(() => {
+    categoriesApi.list().then(({ data }) => setCategories(data)).catch(() => setCategories([]));
+  }, []);
 
-    // Filter by sale
-    if (showSale) {
-      result = result.filter((p) => p.salePrice);
-    }
+  useEffect(() => {
+    setLoading(true);
+    productsApi
+      .list({
+        page,
+        size: pageSize,
+        categoryId: effectiveCategoryId,
+        search: searchQuery || undefined,
+      })
+      .then(({ data }) => {
+        setProducts(data.content.map(productDtoToDisplay));
+        setTotal(data.totalElements);
+      })
+      .catch(() => {
+        setProducts([]);
+        setTotal(0);
+      })
+      .finally(() => setLoading(false));
+  }, [page, effectiveCategoryId, searchQuery]);
 
-    // Filter by new
-    if (showNew) {
-      result = result.filter((p) => p.isNew);
-    }
-
-    // Filter by price
-    result = result.filter((p) => {
-      const price = p.salePrice || p.price;
-      return price >= priceRange[0] && price <= priceRange[1];
-    });
-
-    // Sort
+  const sortedProducts = useMemo(() => {
+    const list = [...products];
     switch (sortBy) {
       case 'price-asc':
-        result.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
+        list.sort((a, b) => a.price - b.price);
         break;
       case 'price-desc':
-        result.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
+        list.sort((a, b) => b.price - a.price);
         break;
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating);
+      default:
         break;
-      case 'popular':
-        result.sort((a, b) => b.reviewCount - a.reviewCount);
-        break;
-      default: // newest
-        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
+    return list;
+  }, [products, sortBy]);
 
-    return result;
-  }, [selectedCategory, searchQuery, showSale, showNew, sortBy, priceRange]);
-
-  const handleCategoryChange = (slug: string | null) => {
-    if (slug) {
-      searchParams.set('category', slug);
+  const handleCategoryChange = (id: number | null) => {
+    if (id != null) {
+      searchParams.set('categoryId', String(id));
     } else {
-      searchParams.delete('category');
+      searchParams.delete('categoryId');
     }
     setSearchParams(searchParams);
+    setPage(0);
   };
 
   const handleSortChange = (value: string) => {
@@ -108,21 +107,21 @@ export function ShopPage() {
 
   const clearFilters = () => {
     setSearchParams({});
-    setPriceRange([0, 2000000]);
+    setPage(0);
   };
 
-  const hasActiveFilters = selectedCategory || searchQuery || showSale || showNew;
+  const selectedCategoryId = effectiveCategoryId ?? null;
+  const hasActiveFilters = selectedCategoryId != null || searchQuery;
 
   const FilterContent = () => (
     <div className="space-y-6">
-      {/* Categories */}
       <div>
         <h4 className="font-semibold mb-3">Danh Mục</h4>
         <div className="space-y-2">
           <div
             className={cn(
               'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
-              !selectedCategory ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+              selectedCategoryId == null ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
             )}
             onClick={() => handleCategoryChange(null)}
           >
@@ -133,73 +132,13 @@ export function ShopPage() {
               key={cat.id}
               className={cn(
                 'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
-                selectedCategory === cat.slug
-                  ? 'bg-primary/10 text-primary'
-                  : 'hover:bg-muted'
+                selectedCategoryId === cat.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
               )}
-              onClick={() => handleCategoryChange(cat.slug)}
+              onClick={() => handleCategoryChange(cat.id)}
             >
               <span className="text-sm">{cat.name}</span>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Price Range */}
-      <div>
-        <h4 className="font-semibold mb-3">Khoảng Giá</h4>
-        <Slider
-          min={0}
-          max={2000000}
-          step={50000}
-          value={priceRange}
-          onValueChange={setPriceRange}
-          className="mb-4"
-        />
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{formatCurrency(priceRange[0])}</span>
-          <span>{formatCurrency(priceRange[1])}</span>
-        </div>
-      </div>
-
-      {/* Special Filters */}
-      <div>
-        <h4 className="font-semibold mb-3">Bộ Lọc</h4>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="sale"
-              checked={showSale}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  searchParams.set('sale', 'true');
-                } else {
-                  searchParams.delete('sale');
-                }
-                setSearchParams(searchParams);
-              }}
-            />
-            <Label htmlFor="sale" className="text-sm cursor-pointer">
-              Đang giảm giá
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="new"
-              checked={showNew}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  searchParams.set('new', 'true');
-                } else {
-                  searchParams.delete('new');
-                }
-                setSearchParams(searchParams);
-              }}
-            />
-            <Label htmlFor="new" className="text-sm cursor-pointer">
-              Hàng mới về
-            </Label>
-          </div>
         </div>
       </div>
 
@@ -212,6 +151,8 @@ export function ShopPage() {
     </div>
   );
 
+  const categoryName = selectedCategoryId != null ? categories.find((c) => c.id === selectedCategoryId)?.name : null;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -220,30 +161,22 @@ export function ShopPage() {
         <div className="bg-muted/40 border-b border-border/50 py-6 md:py-8">
           <div className="container px-4 sm:px-6">
             <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold">
-              {selectedCategory
-                ? categories.find((c) => c.slug === selectedCategory)?.name ?? 'Bộ Sưu Tập'
-                : searchQuery
-                ? `Kết quả cho "${searchQuery}"`
-                : 'Bộ Sưu Tập'}
+              {categoryName ?? (searchQuery ? `Kết quả cho "${searchQuery}"` : 'Bộ Sưu Tập')}
             </h1>
             <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">
-              {filteredProducts.length} sản phẩm
+              {loading ? 'Đang tải...' : `${total} sản phẩm`}
             </p>
           </div>
         </div>
 
         <div className="container py-6 md:py-8 px-4 sm:px-6">
           <div className="flex gap-8">
-            {/* Sidebar - Desktop */}
             <aside className="hidden lg:block w-64 shrink-0">
               <FilterContent />
             </aside>
 
-            {/* Main Content */}
             <div className="flex-1">
-              {/* Toolbar */}
               <div className="flex items-center justify-between gap-4 mb-6">
-                {/* Mobile Filter */}
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="outline" className="lg:hidden">
@@ -261,7 +194,6 @@ export function ShopPage() {
                   </SheetContent>
                 </Sheet>
 
-                {/* Sort */}
                 <div className="flex items-center gap-4 ml-auto">
                   <Select value={sortBy} onValueChange={handleSortChange}>
                     <SelectTrigger className="w-44">
@@ -271,35 +203,17 @@ export function ShopPage() {
                       <SelectItem value="newest">Mới nhất</SelectItem>
                       <SelectItem value="price-asc">Giá: Thấp đến cao</SelectItem>
                       <SelectItem value="price-desc">Giá: Cao đến thấp</SelectItem>
-                      <SelectItem value="rating">Đánh giá cao</SelectItem>
-                      <SelectItem value="popular">Phổ biến</SelectItem>
                     </SelectContent>
                   </Select>
 
-                  {/* Grid Toggle - Desktop */}
                   <div className="hidden md:flex items-center gap-1 border border-border rounded-lg p-1">
-                    <Button
-                      variant={gridCols === 2 ? 'secondary' : 'ghost'}
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setGridCols(2)}
-                    >
+                    <Button variant={gridCols === 2 ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setGridCols(2)}>
                       <LayoutGrid className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant={gridCols === 3 ? 'secondary' : 'ghost'}
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setGridCols(3)}
-                    >
+                    <Button variant={gridCols === 3 ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setGridCols(3)}>
                       <Grid3X3 className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant={gridCols === 4 ? 'secondary' : 'ghost'}
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setGridCols(4)}
-                    >
+                    <Button variant={gridCols === 4 ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setGridCols(4)}>
                       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="3" width="4" height="4" />
                         <rect x="10" y="3" width="4" height="4" />
@@ -316,34 +230,48 @@ export function ShopPage() {
                 </div>
               </div>
 
-              {filteredProducts.length === 0 ? (
+              {loading ? (
+                <div className="text-center py-14 text-muted-foreground">Đang tải sản phẩm...</div>
+              ) : sortedProducts.length === 0 ? (
                 <div className="text-center py-14 md:py-20">
-                  <div className="h-20 w-20 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-5" aria-hidden>
-                    <SlidersHorizontal className="h-10 w-10 text-muted-foreground" />
-                  </div>
-                  <h2 className="font-display text-lg sm:text-xl font-semibold mb-2">
-                    Không tìm thấy sản phẩm
-                  </h2>
-                  <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
-                    Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác
-                  </p>
-                  <Button onClick={clearFilters} variant="outline" className="rounded-lg">
+                  <h2 className="font-display text-lg sm:text-xl font-semibold mb-2">Không tìm thấy sản phẩm</h2>
+                  <p className="text-muted-foreground text-sm mb-6">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
+                  <Button onClick={clearFilters} variant="outline">
                     Xóa bộ lọc
                   </Button>
                 </div>
               ) : (
-                <div
-                  className={cn(
-                    'grid gap-4 md:gap-6',
-                    gridCols === 2 && 'grid-cols-2',
-                    gridCols === 3 && 'grid-cols-2 md:grid-cols-3',
-                    gridCols === 4 && 'grid-cols-2 md:grid-cols-4'
+                <>
+                  <div
+                    className={cn(
+                      'grid gap-4 md:gap-6',
+                      gridCols === 2 && 'grid-cols-2',
+                      gridCols === 3 && 'grid-cols-2 md:grid-cols-3',
+                      gridCols === 4 && 'grid-cols-2 md:grid-cols-4'
+                    )}
+                  >
+                    {sortedProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                  {total > pageSize && (
+                    <div className="flex justify-center gap-2 mt-8">
+                      <Button variant="outline" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+                        Trước
+                      </Button>
+                      <span className="flex items-center px-4 text-sm text-muted-foreground">
+                        {page + 1} / {Math.ceil(total / pageSize)}
+                      </span>
+                      <Button
+                        variant="outline"
+                        disabled={(page + 1) * pageSize >= total}
+                        onClick={() => setPage((p) => p + 1)}
+                      >
+                        Sau
+                      </Button>
+                    </div>
                   )}
-                >
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
+                </>
               )}
             </div>
           </div>

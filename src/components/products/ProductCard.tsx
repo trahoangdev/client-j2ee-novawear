@@ -3,23 +3,33 @@ import { Link } from 'react-router-dom';
 import { Heart, Eye, ShoppingBag, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useWishlist } from '@/context/WishlistContext';
 import { Product } from '@/types';
-import { formatCurrency } from '@/data/mock-data';
+import { formatCurrency } from '@/lib/utils';
+import type { ProductDisplay } from '@/lib/productUtils';
 import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
-  product: Product;
+  product: Product | ProductDisplay;
   className?: string;
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
-  const [isLiked, setIsLiked] = useState(false);
+  const { has: isInWishlist, toggle: toggleWishlist } = useWishlist();
+  const productId = product.id;
+  const isLiked = isInWishlist(productId);
   const [currentImage, setCurrentImage] = useState(0);
 
-  const hasDiscount = product.salePrice && product.salePrice < product.price;
+  const hasDiscount = product.salePrice != null && product.salePrice < product.price;
   const discountPercent = hasDiscount
     ? Math.round(((product.price - product.salePrice!) / product.price) * 100)
     : 0;
+  const slug = 'slug' in product ? product.slug : String(product.id);
+  const images = product.images?.length ? product.images : (product as ProductDisplay).images ?? [];
+  const categoryName = product.category?.name ?? '';
+  const rating = 'rating' in product ? (product.rating ?? 0) : 0;
+  const reviewCount = 'reviewCount' in product ? (product.reviewCount ?? 0) : 0;
+  const colors = product.colors ?? [];
 
   return (
     <article
@@ -29,20 +39,20 @@ export function ProductCard({ product, className }: ProductCardProps) {
         'focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background',
         className
       )}
-      onMouseEnter={() => product.images.length > 1 && setCurrentImage(1)}
+        onMouseEnter={() => images.length > 1 && setCurrentImage(1)}
       onMouseLeave={() => setCurrentImage(0)}
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-muted">
-        <Link to={`/product/${product.slug}`} className="block focus:outline-none">
+        <Link to={`/product/${slug}`} className="block focus:outline-none">
           <img
-            src={product.images[currentImage]}
+            src={images[currentImage] ?? ''}
             alt=""
             className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
         </Link>
 
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
-          {product.isNew && (
+          {'isNew' in product && product.isNew && (
             <Badge className="bg-foreground text-background text-xs font-medium">Mới</Badge>
           )}
           {hasDiscount && (
@@ -60,7 +70,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity',
             isLiked && 'opacity-100'
           )}
-          onClick={(e) => { e.preventDefault(); setIsLiked(!isLiked); }}
+          onClick={(e) => { e.preventDefault(); toggleWishlist(productId); }}
           aria-label={isLiked ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
         >
           <Heart className={cn('h-4 w-4', isLiked && 'fill-destructive text-destructive')} />
@@ -74,13 +84,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
               className="flex-1 h-9 bg-background/95 hover:bg-background text-foreground text-xs"
               asChild
             >
-              <Link to={`/product/${product.slug}`}>
+              <Link to={`/product/${slug}`}>
                 <Eye className="h-3.5 w-3.5 mr-1.5" />
                 Xem
               </Link>
             </Button>
             <Button size="icon" className="h-9 w-9 bg-primary hover:bg-primary/90 shrink-0" asChild>
-              <Link to={`/product/${product.slug}`} aria-label="Thêm vào giỏ">
+              <Link to={`/product/${slug}`} aria-label="Thêm vào giỏ">
                 <ShoppingBag className="h-4 w-4" />
               </Link>
             </Button>
@@ -89,16 +99,16 @@ export function ProductCard({ product, className }: ProductCardProps) {
       </div>
 
       <div className="p-3 sm:p-4">
-        <p className="text-xs text-muted-foreground mb-1">{product.category.name}</p>
-        <Link to={`/product/${product.slug}`} className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+        <p className="text-xs text-muted-foreground mb-1">{categoryName}</p>
+        <Link to={`/product/${slug}`} className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
           <h3 className="font-medium text-sm line-clamp-2 hover:text-primary transition-colors mb-1.5">
             {product.name}
           </h3>
         </Link>
         <div className="flex items-center gap-1 mb-2">
           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 shrink-0" aria-hidden />
-          <span className="text-xs font-medium">{product.rating}</span>
-          <span className="text-xs text-muted-foreground">({product.reviewCount})</span>
+          <span className="text-xs font-medium">{rating}</span>
+          <span className="text-xs text-muted-foreground">({reviewCount})</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-display text-base font-semibold text-primary">
@@ -110,18 +120,20 @@ export function ProductCard({ product, className }: ProductCardProps) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 mt-2.5" aria-hidden>
-          {product.colors.slice(0, 4).map((color, index) => (
-            <span
-              key={index}
-              className="h-3.5 w-3.5 rounded-full border border-border/60 shrink-0"
-              style={{ backgroundColor: color.hex }}
-            />
-          ))}
-          {product.colors.length > 4 && (
-            <span className="text-xs text-muted-foreground">+{product.colors.length - 4}</span>
-          )}
-        </div>
+        {colors.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-2.5" aria-hidden>
+            {colors.slice(0, 4).map((color, index) => (
+              <span
+                key={index}
+                className="h-3.5 w-3.5 rounded-full border border-border/60 shrink-0"
+                style={{ backgroundColor: color.hex }}
+              />
+            ))}
+            {colors.length > 4 && (
+              <span className="text-xs text-muted-foreground">+{colors.length - 4}</span>
+            )}
+          </div>
+        )}
       </div>
     </article>
   );

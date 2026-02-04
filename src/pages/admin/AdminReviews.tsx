@@ -1,112 +1,85 @@
-import { useState } from 'react';
-import { Card, Table, Button, Tag, Typography, Rate, Space, Modal, Form, Input, Select, Switch, message } from 'antd';
+import { useState, useEffect } from 'react';
+import { Card, Table, Button, Tag, Typography, Rate, Space, Modal, message, Spin } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { PlusOutlined, EditOutlined, CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
-import { mockReviews, formatDate, products, mockUsers } from '@/data/mock-data';
-import type { Review } from '@/types';
+import { CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons';
+import { adminReviewsApi } from '@/lib/adminApi';
+import type { ReviewDto } from '@/types/api';
 
-const { TextArea } = Input;
+function formatDate(iso: string) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('vi-VN');
+}
 
 export function AdminReviews() {
-  const [reviews, setReviews] = useState(mockReviews);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Review | null>(null);
-  const [form] = Form.useForm();
+  const [reviews, setReviews] = useState<ReviewDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
+  const pageSize = 10;
 
-  const handleSave = () => {
-    form.validateFields().then((values) => {
-      const product = products.find((p) => p.id === values.productId);
-      const user = mockUsers.find((u) => u.id === values.userId);
-      if (!product || !user) {
-        message.error('Chọn sản phẩm và người đánh giá');
-        return;
-      }
-      if (editing) {
-        setReviews((prev) =>
-          prev.map((r) =>
-            r.id === editing.id
-              ? {
-                  ...r,
-                  rating: values.rating,
-                  comment: values.comment,
-                  isApproved: !!values.isApproved,
-                }
-              : r
-          )
-        );
-        message.success('Đã cập nhật đánh giá');
-      } else {
-        const newReview: Review = {
-          id: String(Date.now()),
-          user,
-          product,
-          rating: values.rating,
-          comment: values.comment,
-          isApproved: !!values.isApproved,
-          helpfulCount: 0,
-          createdAt: new Date().toISOString(),
-        };
-        setReviews((prev) => [...prev, newReview]);
-        message.success('Đã thêm đánh giá');
-      }
-      setModalOpen(false);
-      setEditing(null);
-      form.resetFields();
-    });
+  const fetchReviews = async (pageNum = 0) => {
+    setLoading(true);
+    try {
+      const { data } = await adminReviewsApi.list({ page: pageNum, size: pageSize });
+      setReviews(data.content);
+      setTotal(data.totalElements);
+    } catch {
+      message.error('Không tải được đánh giá');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleApprove = (id: string, approved: boolean) => {
-    setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, isApproved: approved } : r)));
+  useEffect(() => {
+    fetchReviews(page);
+  }, [page]);
+
+  const handleApprove = async (id: number, approved: boolean) => {
+    try {
+      await adminReviewsApi.approve(id, approved);
+      message.success(approved ? 'Đã duyệt đánh giá' : 'Đã bỏ duyệt');
+      setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, approved } : r)));
+    } catch {
+      message.error('Cập nhật thất bại');
+    }
   };
 
-  const handleDelete = (record: Review) => {
+  const handleDelete = (record: ReviewDto) => {
     Modal.confirm({
       title: 'Xóa đánh giá?',
-      content: `Bạn có chắc muốn xóa đánh giá của "${record.user.name}" cho "${record.product.name}"?`,
+      content: `Bạn có chắc muốn xóa đánh giá của "${record.username}"?`,
       okText: 'Xóa',
       okType: 'danger',
       cancelText: 'Hủy',
-      onOk: () => {
-        setReviews((prev) => prev.filter((r) => r.id !== record.id));
-        message.success('Đã xóa đánh giá');
+      onOk: async () => {
+        try {
+          await adminReviewsApi.delete(record.id);
+          message.success('Đã xóa đánh giá');
+          fetchReviews(page);
+        } catch {
+          message.error('Xóa thất bại');
+        }
       },
     });
   };
 
-  const columns: ColumnsType<Review> = [
-    {
-      title: 'Sản phẩm',
-      key: 'product',
-      width: 180,
-      ellipsis: true,
-      render: (_, r) => r.product.name,
-    },
-    {
-      title: 'Người đánh giá',
-      key: 'user',
-      width: 130,
-      ellipsis: true,
-      render: (_, r) => r.user.name,
-    },
+  const columns: ColumnsType<ReviewDto> = [
+    { title: 'ID', dataIndex: 'id', key: 'id', width: 70, render: (t) => <Typography.Text code>{t}</Typography.Text> },
+    { title: 'Product ID', dataIndex: 'productId', key: 'productId', width: 90 },
+    { title: 'Người đánh giá', dataIndex: 'username', key: 'username', width: 130, ellipsis: true },
     {
       title: 'Sao',
       dataIndex: 'rating',
       key: 'rating',
-      width: 90,
+      width: 100,
       render: (v: number) => <Rate disabled value={v} allowHalf style={{ fontSize: 14 }} />,
     },
-    {
-      title: 'Nội dung',
-      dataIndex: 'comment',
-      key: 'comment',
-      width: 220,
-      ellipsis: true,
-    },
+    { title: 'Nội dung', dataIndex: 'comment', key: 'comment', width: 220, ellipsis: true },
     {
       title: 'Trạng thái',
-      dataIndex: 'isApproved',
-      key: 'isApproved',
-      width: 150,
+      dataIndex: 'approved',
+      key: 'approved',
+      width: 160,
       render: (approved: boolean, record) =>
         approved ? (
           <Tag color="green">Đã duyệt</Tag>
@@ -122,13 +95,6 @@ export function AdminReviews() {
         ),
     },
     {
-      title: 'Hữu ích',
-      dataIndex: 'helpfulCount',
-      key: 'helpfulCount',
-      width: 80,
-      align: 'center',
-    },
-    {
       title: 'Ngày',
       dataIndex: 'createdAt',
       key: 'createdAt',
@@ -138,32 +104,12 @@ export function AdminReviews() {
     {
       title: 'Thao tác',
       key: 'action',
-      width: 130,
+      width: 90,
       align: 'center',
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditing(record);
-              form.setFieldsValue({
-                productId: record.product.id,
-                userId: record.user.id,
-                rating: record.rating,
-                comment: record.comment,
-                isApproved: record.isApproved,
-              });
-              setModalOpen(true);
-            }}
-          >
-            Sửa
-          </Button>
-          <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
-            Xóa
-          </Button>
-        </Space>
+        <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
+          Xóa
+        </Button>
       ),
     },
   ];
@@ -174,71 +120,27 @@ export function AdminReviews() {
         <Typography.Title level={4} style={{ margin: 0, color: 'var(--admin-text)' }}>
           Quản lý đánh giá / bình luận
         </Typography.Title>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => {
-            setEditing(null);
-            form.resetFields();
-            setModalOpen(true);
-          }}
-        >
-          Thêm đánh giá
-        </Button>
       </div>
       <Card>
-        <Table
-          dataSource={reviews}
-          columns={columns}
-          rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (t) => `Tổng ${t} đánh giá` }}
-          size="middle"
-          scroll={{ x: 1080 }}
-          tableLayout="fixed"
-        />
+        <Spin spinning={loading}>
+          <Table
+            dataSource={reviews}
+            columns={columns}
+            rowKey="id"
+            pagination={{
+              current: page + 1,
+              pageSize,
+              total,
+              showSizeChanger: true,
+              showTotal: (t) => `Tổng ${t} đánh giá`,
+              onChange: (p) => setPage(p - 1),
+            }}
+            size="middle"
+            scroll={{ x: 900 }}
+            tableLayout="fixed"
+          />
+        </Spin>
       </Card>
-      <Modal
-        title={editing ? 'Sửa đánh giá' : 'Thêm đánh giá'}
-        open={modalOpen}
-        onOk={handleSave}
-        onCancel={() => {
-          setModalOpen(false);
-          setEditing(null);
-          form.resetFields();
-        }}
-        okText="Lưu"
-        cancelText="Hủy"
-        destroyOnClose
-        width={520}
-      >
-        <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="productId" label="Sản phẩm" rules={[{ required: true, message: 'Chọn sản phẩm' }]}>
-            <Select
-              placeholder="Chọn sản phẩm"
-              options={products.map((p) => ({ value: p.id, label: p.name }))}
-              showSearch
-              optionFilterProp="label"
-              disabled={!!editing}
-            />
-          </Form.Item>
-          <Form.Item name="userId" label="Người đánh giá" rules={[{ required: true, message: 'Chọn người đánh giá' }]}>
-            <Select
-              placeholder="Chọn khách hàng"
-              options={mockUsers.map((u) => ({ value: u.id, label: `${u.name} (${u.email})` }))}
-              disabled={!!editing}
-            />
-          </Form.Item>
-          <Form.Item name="rating" label="Số sao" rules={[{ required: true, message: 'Chọn số sao' }]}>
-            <Rate allowHalf />
-          </Form.Item>
-          <Form.Item name="comment" label="Nội dung" rules={[{ required: true, message: 'Nhập nội dung' }]}>
-            <TextArea rows={3} placeholder="Nội dung đánh giá / bình luận" />
-          </Form.Item>
-          <Form.Item name="isApproved" label="Đã duyệt" valuePropName="checked">
-            <Switch />
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 }

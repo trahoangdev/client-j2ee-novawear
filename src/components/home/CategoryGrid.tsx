@@ -1,9 +1,41 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
-import { categories } from '@/data/mock-data';
+import { categoriesApi } from '@/lib/customerApi';
+import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
 
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1558769132-cb1aea913002?w=400&q=80';
+
 export function CategoryGrid() {
+  const [categories, setCategories] = useState<CategoryDto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    categoriesApi
+      .list()
+      .then(({ data }) => setCategories(data))
+      .catch(() => setCategories([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="section-spacing" aria-labelledby="category-heading">
+        <div className="container px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <h2 id="category-heading" className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3">
+              Danh Mục Sản Phẩm
+            </h2>
+            <p className="text-muted-foreground">Đang tải...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (categories.length === 0) return null;
+
   return (
     <section className="section-spacing" aria-labelledby="category-heading">
       <div className="container px-4 sm:px-6">
@@ -20,7 +52,7 @@ export function CategoryGrid() {
           {categories.map((category, index) => (
             <Link
               key={category.id}
-              to={`/shop?category=${category.slug}`}
+              to={`/shop?categoryId=${category.id}`}
               className={cn(
                 'group relative aspect-square overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                 'animate-fade-up'
@@ -28,7 +60,7 @@ export function CategoryGrid() {
               style={{ animationDelay: `${index * 80}ms` }}
             >
               <img
-                src={category.image}
+                src={PLACEHOLDER_IMAGE}
                 alt=""
                 className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-focus-visible:scale-105"
               />

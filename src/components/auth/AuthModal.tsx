@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
 export function AuthModal() {
-  const { showAuthModal, setShowAuthModal, authMode, setAuthMode, login } = useAuth();
+  const { showAuthModal, setShowAuthModal, authMode, setAuthMode, login, register } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -20,19 +20,15 @@ export function AuthModal() {
     setError('');
     setIsLoading(true);
 
-    // Simulate loading
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     if (authMode === 'login') {
-      const success = await login(email, password);
-      if (!success) {
-        setError('Email hoặc mật khẩu không đúng');
+      const result = await login(email, password);
+      if (!result.ok) {
+        setError('Email/username hoặc mật khẩu không đúng');
       }
     } else {
-      // Mock registration - just log them in
-      const success = await login('customer@example.com', 'password');
-      if (!success) {
-        setError('Đã có lỗi xảy ra');
+      const result = await register(name.trim() || email, email, password);
+      if (!result.ok) {
+        setError('Đăng ký thất bại. Kiểm tra username/email hoặc thử lại.');
       }
     }
 
@@ -118,15 +114,16 @@ export function AuthModal() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {authMode === 'register' && (
               <div className="space-y-2">
-                <Label htmlFor="name">Họ và tên</Label>
+                <Label htmlFor="name">Tên đăng nhập</Label>
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Nguyễn Văn A"
+                  placeholder="username"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="h-11"
                   required
+                  minLength={2}
                 />
               </div>
             )}
@@ -144,7 +141,7 @@ export function AuthModal() {
               />
               {authMode === 'login' && (
                 <p className="text-xs text-muted-foreground">
-                  Demo: customer@example.com hoặc admin@novawear.vn
+                  Dùng email hoặc username
                 </p>
               )}
             </div>
@@ -176,9 +173,9 @@ export function AuthModal() {
                   )}
                 </Button>
               </div>
-              {authMode === 'login' && (
+              {authMode === 'register' && (
                 <p className="text-xs text-muted-foreground">
-                  Demo: bất kỳ mật khẩu nào từ 6 ký tự
+                  Tối thiểu 6 ký tự
                 </p>
               )}
             </div>

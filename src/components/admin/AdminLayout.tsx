@@ -17,7 +17,6 @@ import {
 } from '@ant-design/icons';
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { AdminProductsProvider } from '@/context/AdminProductsContext';
 import { getAdminTheme } from '@/styles/admin-tokens';
 import '@/styles/admin-theme.css';
 
@@ -38,12 +37,31 @@ export function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, isAdmin, loading } = useAuth();
 
   useEffect(() => {
     document.body.classList.add('admin-body');
     return () => document.body.classList.remove('admin-body');
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!isAuthenticated) {
+      navigate('/admin/login', { replace: true });
+      return;
+    }
+    if (!isAdmin) {
+      navigate('/', { replace: true });
+    }
+  }, [loading, isAuthenticated, isAdmin, navigate]);
+
+  if (loading || !isAuthenticated || !isAdmin) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--admin-bg-layout)' }}>
+        <span style={{ color: 'var(--admin-text-muted)' }}>Đang xác thực...</span>
+      </div>
+    );
+  }
 
   const userMenuItems: MenuProps['items'] = [
     {
@@ -142,9 +160,7 @@ export function AdminLayout() {
               border: '1px solid var(--admin-border)',
             }}
           >
-            <AdminProductsProvider>
-              <Outlet />
-            </AdminProductsProvider>
+            <Outlet />
           </Content>
         </Layout>
       </Layout>

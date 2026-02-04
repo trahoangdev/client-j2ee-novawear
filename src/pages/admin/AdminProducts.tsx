@@ -1,39 +1,69 @@
-import { Card, Table, Tag, Typography, Image, Button, Space, Modal, message } from 'antd';
+import { useState, useEffect } from 'react';
+import { Card, Table, Typography, Image, Button, Space, Modal, message, Spin } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { categories, formatCurrency } from '@/data/mock-data';
-import { useAdminProducts } from '@/context/AdminProductsContext';
-import type { Product } from '@/types';
+import { productsApi, adminProductsApi } from '@/lib/adminApi';
+import type { ProductDto } from '@/types/api';
+
+function formatCurrency(n: number) {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
+}
 
 export function AdminProducts() {
   const navigate = useNavigate();
-  const { products: dataSource, setProducts } = useAdminProducts();
+  const [dataSource, setDataSource] = useState<ProductDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
+  const pageSize = 10;
 
-  const handleDelete = (record: Product) => {
+  const fetchProducts = async (pageNum = 0) => {
+    setLoading(true);
+    try {
+      const { data } = await productsApi.list({ page: pageNum, size: pageSize });
+      setDataSource(data.content);
+      setTotal(data.totalElements);
+    } catch {
+      message.error('Không tải được sản phẩm');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts(page);
+  }, [page]);
+
+  const handleDelete = (record: ProductDto) => {
     Modal.confirm({
       title: 'Xóa sản phẩm?',
       content: `Bạn có chắc muốn xóa "${record.name}"?`,
       okText: 'Xóa',
       okType: 'danger',
       cancelText: 'Hủy',
-      onOk: () => {
-        setProducts((prev) => prev.filter((p) => p.id !== record.id));
-        message.success('Đã xóa sản phẩm');
+      onOk: async () => {
+        try {
+          await adminProductsApi.delete(record.id);
+          message.success('Đã xóa sản phẩm');
+          fetchProducts(page);
+        } catch {
+          message.error('Xóa thất bại');
+        }
       },
     });
   };
 
-  const columns: ColumnsType<Product> = [
+  const columns: ColumnsType<ProductDto> = [
     {
       title: 'Hình',
-      dataIndex: 'images',
+      dataIndex: 'imageUrl',
       key: 'image',
       width: 70,
       align: 'center',
-      render: (imgs: string[]) => (
+      render: (url: string) => (
         <Image
-          src={imgs?.[0]}
+          src={url}
           alt=""
           width={48}
           height={60}
@@ -43,58 +73,16 @@ export function AdminProducts() {
       ),
     },
     { title: 'Tên', dataIndex: 'name', key: 'name', width: 200, ellipsis: true },
-    {
-      title: 'Danh mục',
-      key: 'category',
-      width: 110,
-      align: 'center',
-      render: (_, r) => r.category.name,
-    },
+    { title: 'Danh mục', dataIndex: 'categoryName', key: 'categoryName', width: 110, align: 'center' },
     {
       title: 'Giá',
+      dataIndex: 'price',
       key: 'price',
       width: 130,
       align: 'center',
-      render: (_, r) => (
-        <>
-          <span style={{ color: r.salePrice ? 'var(--admin-error)' : 'inherit' }}>
-            {formatCurrency(r.salePrice ?? r.price)}
-          </span>
-          {r.salePrice && (
-            <Typography.Text type="secondary" delete style={{ marginLeft: 8, fontSize: 12 }}>
-              {formatCurrency(r.price)}
-            </Typography.Text>
-          )}
-        </>
-      ),
+      render: (val: number) => formatCurrency(val),
     },
-    {
-      title: 'Tồn',
-      dataIndex: 'stockCount',
-      key: 'stockCount',
-      width: 70,
-      align: 'center',
-    },
-    {
-      title: 'Trạng thái',
-      key: 'tags',
-      width: 140,
-      align: 'center',
-      render: (_, r) => (
-        <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {r.isNew && <Tag color="blue">Mới</Tag>}
-          {r.isFeatured && <Tag color="green">Nổi bật</Tag>}
-          {!r.inStock && <Tag color="red">Hết hàng</Tag>}
-        </span>
-      ),
-    },
-    {
-      title: 'Đánh giá',
-      key: 'rating',
-      width: 95,
-      align: 'center',
-      render: (_, r) => `${r.rating} (${r.reviewCount})`,
-    },
+    { title: 'Tồn', dataIndex: 'stock', key: 'stock', width: 70, align: 'center' },
     {
       title: 'Thao tác',
       key: 'action',
@@ -130,15 +118,24 @@ export function AdminProducts() {
         </Button>
       </div>
       <Card>
-        <Table
-          dataSource={dataSource}
-          columns={columns}
-          rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (t) => `Tổng ${t} sản phẩm` }}
-          size="middle"
-          scroll={{ x: 920 }}
-          tableLayout="fixed"
-        />
+        <Spin spinning={loading}>
+          <Table
+            dataSource={dataSource}
+            columns={columns}
+            rowKey="id"
+            pagination={{
+              current: page + 1,
+              pageSize,
+              total,
+              showSizeChanger: true,
+              showTotal: (t) => `Tổng ${t} sản phẩm`,
+              onChange: (p) => setPage(p - 1),
+            }}
+            size="middle"
+            scroll={{ x: 720 }}
+            tableLayout="fixed"
+          />
+        </Spin>
       </Card>
     </div>
   );

@@ -17,7 +17,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useCart } from '@/context/CartContext';
-import { formatCurrency } from '@/data/mock-data';
+import { useAuth } from '@/context/AuthContext';
+import { formatCurrency } from '@/lib/utils';
+import { ordersApi } from '@/lib/customerApi';
 import { cn } from '@/lib/utils';
 
 const steps = [
@@ -26,13 +28,17 @@ const steps = [
   { id: 3, name: 'Xác nhận đơn hàng', icon: Check },
 ];
 
+const PAYMENT_MAP: Record<string, string> = { cod: 'COD', momo: 'MOMO', paypal: 'PAYPAL' };
+
 export function CheckoutPage() {
   const { state, subtotal, clearCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState('');
+  const [checkoutError, setCheckoutError] = useState('');
 
   // Form state
   const [shippingInfo, setShippingInfo] = useState({
@@ -67,13 +73,30 @@ export function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    if (!isAuthenticated) {
+      setCheckoutError('Vui lòng đăng nhập để đặt hàng.');
+      return;
+    }
+    const items = state.items.map((i) => ({
+      productId: Number(i.product.id),
+      quantity: i.quantity,
+    }));
+    if (items.length === 0 || items.some((i) => Number.isNaN(i.productId))) {
+      setCheckoutError('Giỏ hàng không hợp lệ.');
+      return;
+    }
+    setCheckoutError('');
     setIsProcessing(true);
-    // Simulate order processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsProcessing(false);
-    setOrderComplete(true);
-    setOrderId(`NW-${Date.now()}`);
-    clearCart();
+    try {
+      const { data } = await ordersApi.checkout(PAYMENT_MAP[paymentMethod] ?? 'COD', items);
+      setOrderId(data.orderNumber ?? String(data.id).padStart(6, '0'));
+      setOrderComplete(true);
+      clearCart();
+    } catch {
+      setCheckoutError('Đặt hàng thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (state.items.length === 0 && !orderComplete) {
@@ -119,7 +142,7 @@ export function CheckoutPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild>
-                <Link to="/orders">Xem Đơn Hàng</Link>
+                <Link to="/shop">Xem sản phẩm</Link>
               </Button>
               <Button variant="outline" asChild>
                 <Link to="/shop">Tiếp Tục Mua Sắm</Link>
@@ -461,17 +484,25 @@ export function CheckoutPage() {
                       <ChevronRight className="h-4 w-4 ml-2" />
                     </Button>
                   ) : (
-                    <Button
-                      onClick={handlePlaceOrder}
-                      disabled={isProcessing}
-                      className="bg-primary hover:bg-primary/90 min-w-[160px]"
-                    >
-                      {isProcessing ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        'Đặt Hàng'
+                    <>
+                      {checkoutError && (
+                        <p className="text-destructive text-sm mb-2 w-full">{checkoutError}</p>
                       )}
-                    </Button>
+                      {!isAuthenticated && (
+                        <p className="text-muted-foreground text-sm mb-2 w-full">Bạn cần đăng nhập để đặt hàng.</p>
+                      )}
+                      <Button
+                        onClick={handlePlaceOrder}
+                        disabled={isProcessing}
+                        className="bg-primary hover:bg-primary/90 min-w-[160px]"
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                          'Đặt Hàng'
+                        )}
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>

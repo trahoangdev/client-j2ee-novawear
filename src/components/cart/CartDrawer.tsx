@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { formatCurrency } from '@/data/mock-data';
+import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 export function CartDrawer() {

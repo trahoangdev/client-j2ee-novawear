@@ -1,0 +1,26 @@
+---
+description: Admin UI dùng shadcn/ui; Ant Design giữ cho layout/menu
+globs: src/pages/admin/**/*.tsx, src/components/admin/**/*.tsx
+alwaysApply: false
+---
+
+# Admin UI – shadcn/ui + Ant Design
+
+## Nguyên tắc
+
+- **UI/UX khu vực admin**: dùng **shadcn/ui** (components trong `@/components/ui/`).
+- **Ant Design**: giữ lại dùng ít, chủ yếu cho:
+  - Layout admin: `ConfigProvider`, `Layout`, `Menu`, `Dropdown`, `Space`, `Typography` trong `AdminLayout.tsx`
+  - Các trang admin có thể vẫn dùng Ant Design cho bảng phức tạp (Table với pagination, filter) nếu chưa migrate; ưu tiên chuyển dần sang shadcn.
+
+## Cách dùng shadcn trong admin
+
+- Import từ `@/components/ui/`: `Card`, `CardHeader`, `CardTitle`, `CardContent`, `Button`, `Input`, `Label`, `Table`, `Badge`, `Select`, `Dialog`, v.v.
+- Dùng utility `cn()` từ `@/lib/utils` để gộp class Tailwind.
+- Vùng admin đã có class `dark` trên wrapper nên shadcn tự dùng theme tối (CSS variables trong `index.css`).
+- Style thêm bằng Tailwind, tránh inline style trừ khi cần thiết.
+
+## Ví dụ
+
+- Thay `Card` + `Typography` (antd) bằng `Card`, `CardHeader`, `CardTitle`, `CardContent` (shadcn) và Tailwind cho chữ.
+- Bảng: dùng shadcn `Table` (TableHeader, TableBody, TableRow, TableCell) kết hợp `Pagination` từ `@/components/ui/pagination` nếu cần.

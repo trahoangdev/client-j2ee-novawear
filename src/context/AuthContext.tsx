@@ -1,38 +1,90 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User } from '@/types';
-import { mockUsers } from '@/data/mock-data';
+import { getToken, setToken, clearToken, setOnUnauthorized } from '@/lib/api';
+import { authApi } from '@/lib/adminApi';
 
 interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (usernameOrEmail: string, password: string) => Promise<{ ok: boolean; role?: string }>;
+  register: (username: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   showAuthModal: boolean;
   setShowAuthModal: (show: boolean) => void;
   authMode: 'login' | 'register';
   setAuthMode: (mode: 'login' | 'register') => void;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+function mapUserResponseToUser(res: { id: number; username: string; email: string; role: string }): User {
+  return {
+    id: String(res.id),
+    email: res.email,
+    name: res.username,
+    role: res.role === 'ADMIN' ? 'admin' : 'customer',
+    createdAt: '',
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [loading, setLoading] = useState(true);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication
-    const foundUser = mockUsers.find((u) => u.email === email);
-    if (foundUser && password.length >= 6) {
-      setUser(foundUser);
-      setShowAuthModal(false);
-      return true;
+  const loadUser = useCallback(async () => {
+    const token = getToken();
+    if (!token) {
+      setLoading(false);
+      return;
     }
-    return false;
+    try {
+      const { data } = await authApi.me();
+      setUser(mapUserResponseToUser(data));
+    } catch {
+      clearToken();
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      setUser(null);
+    });
+  }, []);
+
+  const login = async (usernameOrEmail: string, password: string): Promise<{ ok: boolean; role?: string }> => {
+    try {
+      const { data } = await authApi.login(usernameOrEmail.trim(), password);
+      setToken(data.token);
+      setUser(mapUserResponseToUser(data));
+      setShowAuthModal(false);
+      return { ok: true, role: data.role };
+    } catch {
+      return { ok: false };
+    }
+  };
+
+  const register = async (username: string, email: string, password: string): Promise<{ ok: boolean; role?: string }> => {
+    try {
+      await authApi.register({ username: username.trim(), email: email.trim(), password });
+      return await login(username.trim(), password);
+    } catch {
+      return { ok: false };
+    }
   };
 
   const logout = () => {
+    clearToken();
     setUser(null);
   };
 
@@ -43,11 +95,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
         login,
+        register,
         logout,
         showAuthModal,
         setShowAuthModal,
         authMode,
         setAuthMode,
+        loading,
       }}
     >
       {children}

@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -11,6 +12,16 @@ const HomePage = lazy(() => import("@/pages/HomePage").then(m => ({ default: m.H
 const ShopPage = lazy(() => import("@/pages/ShopPage").then(m => ({ default: m.ShopPage })));
 const ProductDetailPage = lazy(() => import("@/pages/ProductDetailPage").then(m => ({ default: m.ProductDetailPage })));
 const CheckoutPage = lazy(() => import("@/pages/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage").then(m => ({ default: m.ProfilePage })));
+const OrdersPage = lazy(() => import("@/pages/OrdersPage").then(m => ({ default: m.OrdersPage })));
+const FaqPage = lazy(() => import("@/pages/FaqPage").then(m => ({ default: m.FaqPage })));
+const ShippingPage = lazy(() => import("@/pages/ShippingPage").then(m => ({ default: m.ShippingPage })));
+const ReturnsPage = lazy(() => import("@/pages/ReturnsPage").then(m => ({ default: m.ReturnsPage })));
+const SizeGuidePage = lazy(() => import("@/pages/SizeGuidePage").then(m => ({ default: m.SizeGuidePage })));
+const ContactPage = lazy(() => import("@/pages/ContactPage").then(m => ({ default: m.ContactPage })));
+const PrivacyPage = lazy(() => import("@/pages/PrivacyPage").then(m => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import("@/pages/TermsPage").then(m => ({ default: m.TermsPage })));
+const WishlistPage = lazy(() => import("@/pages/WishlistPage").then(m => ({ default: m.WishlistPage })));
 const AdminLayout = lazy(() => import("@/components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard").then(m => ({ default: m.AdminDashboard })));
 const AdminCategories = lazy(() => import("@/pages/admin/AdminCategories").then(m => ({ default: m.AdminCategories })));
@@ -21,6 +32,7 @@ const AdminCustomers = lazy(() => import("@/pages/admin/AdminCustomers").then(m 
 const AdminReviews = lazy(() => import("@/pages/admin/AdminReviews").then(m => ({ default: m.AdminReviews })));
 const AdminAnalytics = lazy(() => import("@/pages/admin/AdminAnalytics").then(m => ({ default: m.AdminAnalytics })));
 const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings").then(m => ({ default: m.AdminSettings })));
+const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin").then(m => ({ default: m.AdminLogin })));
 
 // Loading Fallback
 function LoadingFallback() {
@@ -37,16 +49,29 @@ function LoadingFallback() {
 function App() {
   return (
     <AuthProvider>
+      <WishlistProvider>
       <CartProvider>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             {/* Customer Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/shop" element={<ShopPage />} />
-            <Route path="/product/:slug" element={<ProductDetailPage />} />
+            <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
-            
-            {/* Admin Routes */}
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/shipping" element={<ShippingPage />} />
+            <Route path="/returns" element={<ReturnsPage />} />
+            <Route path="/size-guide" element={<SizeGuidePage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/wishlist" element={<WishlistPage />} />
+
+            {/* Admin: login (standalone, no layout) */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            {/* Admin: dashboard + nested (protected by AdminLayout) */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="categories" element={<AdminCategories />} />
@@ -67,6 +92,7 @@ function App() {
         <AuthModal />
         <Toaster position="bottom-right" richColors />
       </CartProvider>
+      </WishlistProvider>
     </AuthProvider>
   );
 }

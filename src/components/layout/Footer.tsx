@@ -21,33 +21,36 @@ const supportLinks = [
   { to: '/contact', label: 'Liên Hệ' },
 ];
 
+const SHOW_NEWSLETTER = false; // Bật lại khi cần dùng newsletter
+
 export function Footer() {
   return (
     <footer className="bg-foreground text-background" role="contentinfo">
-      {/* Newsletter */}
-      <div className="border-b border-background/10">
-        <div className="container px-4 sm:px-6 py-12 md:py-16">
-          <div className="max-w-xl mx-auto text-center">
-            <h2 className="font-display text-xl md:text-2xl font-bold mb-3">
-              Đăng Ký Nhận Tin
-            </h2>
-            <p className="text-background/75 text-sm mb-6">
-              Nhận thông tin bộ sưu tập mới và ưu đãi độc quyền
-            </p>
-            <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
-              <Input
-                type="email"
-                placeholder="Email của bạn"
-                aria-label="Email đăng ký"
-                className="bg-background/10 border-background/20 text-background placeholder:text-background/50 focus-visible:ring-primary flex-1 min-w-0"
-              />
-              <Button type="submit" className="bg-primary hover:bg-primary/90 shrink-0 rounded-lg">
-                Đăng Ký
-              </Button>
-            </form>
+      {SHOW_NEWSLETTER && (
+        <div className="border-b border-background/10">
+          <div className="container px-4 sm:px-6 py-12 md:py-16">
+            <div className="max-w-xl mx-auto text-center">
+              <h2 className="font-display text-xl md:text-2xl font-bold mb-3">
+                Đăng Ký Nhận Tin
+              </h2>
+              <p className="text-background/75 text-sm mb-6">
+                Nhận thông tin bộ sưu tập mới và ưu đãi độc quyền
+              </p>
+              <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
+                <Input
+                  type="email"
+                  placeholder="Email của bạn"
+                  aria-label="Email đăng ký"
+                  className="bg-background/10 border-background/20 text-background placeholder:text-background/50 focus-visible:ring-primary flex-1 min-w-0"
+                />
+                <Button type="submit" className="bg-primary hover:bg-primary/90 shrink-0 rounded-lg">
+                  Đăng Ký
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main footer grid */}
       <div className="container px-4 sm:px-6 py-12 md:py-16">
