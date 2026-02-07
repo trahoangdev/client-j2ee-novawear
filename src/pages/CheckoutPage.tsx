@@ -78,11 +78,62 @@ export function CheckoutPage() {
     note: '',
   });
 
+  // Validation errors state
+  const [shippingErrors, setShippingErrors] = useState<Record<string, string>>({});
+
   const handleShippingChange = (field: string, value: string) => {
     setShippingInfo((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user types
+    if (shippingErrors[field]) {
+      setShippingErrors((prev) => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const validateShippingInfo = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!shippingInfo.fullName.trim()) {
+      errors.fullName = 'Vui lòng nhập họ và tên';
+    }
+
+    if (!shippingInfo.phone.trim()) {
+      errors.phone = 'Vui lòng nhập số điện thoại';
+    } else if (!/^(0[3|5|7|8|9])+([0-9]{8})$/.test(shippingInfo.phone.trim())) {
+      errors.phone = 'Số điện thoại không hợp lệ';
+    }
+
+    if (!shippingInfo.street.trim()) {
+      errors.street = 'Vui lòng nhập địa chỉ';
+    }
+
+    if (!shippingInfo.city.trim()) {
+      errors.city = 'Vui lòng nhập tỉnh/thành phố';
+    }
+
+    if (!shippingInfo.district.trim()) {
+      errors.district = 'Vui lòng nhập quận/huyện';
+    }
+
+    if (!shippingInfo.ward.trim()) {
+      errors.ward = 'Vui lòng nhập phường/xã';
+    }
+
+    // Email validation (optional field, but validate format if provided)
+    if (shippingInfo.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(shippingInfo.email.trim())) {
+      errors.email = 'Email không hợp lệ';
+    }
+
+    setShippingErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleNextStep = () => {
+    if (currentStep === 1) {
+      if (!validateShippingInfo()) {
+        toast.warning('Vui lòng điền đầy đủ thông tin giao hàng');
+        return;
+      }
+    }
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
@@ -278,8 +329,11 @@ export function CheckoutPage() {
                             value={shippingInfo.fullName}
                             onChange={(e) => handleShippingChange('fullName', e.target.value)}
                             placeholder="Nguyễn Văn A"
-                            required
+                            className={shippingErrors.fullName ? 'border-destructive focus-visible:ring-destructive' : ''}
                           />
+                          {shippingErrors.fullName && (
+                            <p className="text-sm text-destructive">{shippingErrors.fullName}</p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="phone">Số điện thoại *</Label>
@@ -289,8 +343,11 @@ export function CheckoutPage() {
                             value={shippingInfo.phone}
                             onChange={(e) => handleShippingChange('phone', e.target.value)}
                             placeholder="0901234567"
-                            required
+                            className={shippingErrors.phone ? 'border-destructive focus-visible:ring-destructive' : ''}
                           />
+                          {shippingErrors.phone && (
+                            <p className="text-sm text-destructive">{shippingErrors.phone}</p>
+                          )}
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -301,7 +358,11 @@ export function CheckoutPage() {
                           value={shippingInfo.email}
                           onChange={(e) => handleShippingChange('email', e.target.value)}
                           placeholder="email@example.com"
+                          className={shippingErrors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
                         />
+                        {shippingErrors.email && (
+                          <p className="text-sm text-destructive">{shippingErrors.email}</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="street">Địa chỉ *</Label>
@@ -310,8 +371,11 @@ export function CheckoutPage() {
                           value={shippingInfo.street}
                           onChange={(e) => handleShippingChange('street', e.target.value)}
                           placeholder="Số nhà, tên đường"
-                          required
+                          className={shippingErrors.street ? 'border-destructive focus-visible:ring-destructive' : ''}
                         />
+                        {shippingErrors.street && (
+                          <p className="text-sm text-destructive">{shippingErrors.street}</p>
+                        )}
                       </div>
                       <div className="grid md:grid-cols-3 gap-4">
                         <div className="space-y-2">
@@ -321,8 +385,11 @@ export function CheckoutPage() {
                             value={shippingInfo.city}
                             onChange={(e) => handleShippingChange('city', e.target.value)}
                             placeholder="Hồ Chí Minh"
-                            required
+                            className={shippingErrors.city ? 'border-destructive focus-visible:ring-destructive' : ''}
                           />
+                          {shippingErrors.city && (
+                            <p className="text-sm text-destructive">{shippingErrors.city}</p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="district">Quận/Huyện *</Label>
@@ -331,8 +398,11 @@ export function CheckoutPage() {
                             value={shippingInfo.district}
                             onChange={(e) => handleShippingChange('district', e.target.value)}
                             placeholder="Quận 1"
-                            required
+                            className={shippingErrors.district ? 'border-destructive focus-visible:ring-destructive' : ''}
                           />
+                          {shippingErrors.district && (
+                            <p className="text-sm text-destructive">{shippingErrors.district}</p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="ward">Phường/Xã *</Label>
@@ -341,8 +411,11 @@ export function CheckoutPage() {
                             value={shippingInfo.ward}
                             onChange={(e) => handleShippingChange('ward', e.target.value)}
                             placeholder="Phường Bến Nghé"
-                            required
+                            className={shippingErrors.ward ? 'border-destructive focus-visible:ring-destructive' : ''}
                           />
+                          {shippingErrors.ward && (
+                            <p className="text-sm text-destructive">{shippingErrors.ward}</p>
+                          )}
                         </div>
                       </div>
                       <div className="space-y-2">

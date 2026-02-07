@@ -34,6 +34,8 @@ export interface ProductDto {
   isNew?: boolean;
   sizes?: string[];
   colors?: ProductColorDto[];
+  /** Giới tính: MALE, FEMALE, UNISEX */
+  gender?: 'MALE' | 'FEMALE' | 'UNISEX';
 }
 
 export interface OrderDetailDto {
@@ -59,6 +61,11 @@ export interface OrderDto {
   phone?: string;
   note?: string;
   orderDetails?: OrderDetailDto[];
+  /** Voucher fields */
+  voucherId?: number;
+  voucherCode?: string;
+  discountAmount?: number;
+  paymentMethod?: string;
 }
 
 export interface UserResponse {
@@ -144,3 +151,32 @@ export interface TopProductDto {
   imageUrl?: string;
   totalSold: number;
 }
+
+/** Voucher DTOs */
+export interface VoucherDto {
+  id: number;
+  code: string;
+  description?: string;
+  discountType: 'PERCENT' | 'FIXED';
+  discountValue: number;
+  minOrderValue?: number;
+  maxDiscount?: number;
+  startDate?: string;
+  endDate?: string;
+  usageLimit?: number;
+  usedCount: number;
+  usageLimitPerUser?: number;
+  active: boolean;
+  createdAt: string;
+  isValid?: boolean;
+  discountDisplay?: string;
+}
+
+export interface VoucherValidateResponse {
+  valid: boolean;
+  message: string;
+  voucher?: VoucherDto;
+  discountAmount?: number;
+  finalTotal?: number;
+}
+

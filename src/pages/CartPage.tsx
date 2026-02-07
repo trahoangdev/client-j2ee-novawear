@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Minus, Plus, Trash2, ArrowLeft, ShoppingCart } from 'lucide-react';
+import { ShoppingBag, Minus, Plus, Trash2, ArrowLeft, ShoppingCart, TicketPercent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -7,23 +8,42 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import VoucherInput from '@/components/voucher/VoucherInput';
+import { VoucherDto } from '@/types/api';
 
 export function CartPage() {
     const { state, removeItem, updateQuantity, clearCart, itemCount, subtotal } = useCart();
-    const { isAuthenticated, setShowAuthModal, setAuthMode } = useAuth();
+    const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
+
+    // Voucher state
+    const [appliedVoucher, setAppliedVoucher] = useState<VoucherDto | null>(null);
+    const [discountAmount, setDiscountAmount] = useState(0);
+
+    const handleVoucherApply = (voucher: VoucherDto | null, discount: number) => {
+        setAppliedVoucher(voucher);
+        setDiscountAmount(discount);
+    };
 
     const handleCheckout = () => {
         if (!isAuthenticated) {
-            setAuthMode('login');
-            setShowAuthModal(true);
+            navigate('/login');
         } else {
+            // Lưu voucher vào sessionStorage để checkout page sử dụng
+            if (appliedVoucher) {
+                sessionStorage.setItem('appliedVoucher', JSON.stringify({
+                    code: appliedVoucher.code,
+                    discountAmount: discountAmount
+                }));
+            } else {
+                sessionStorage.removeItem('appliedVoucher');
+            }
             navigate('/checkout');
         }
     };
 
     const shippingFee = subtotal >= 500000 ? 0 : 30000;
-    const total = subtotal + shippingFee;
+    const total = subtotal + shippingFee - discountAmount;
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
@@ -186,6 +206,12 @@ export function CartPage() {
                                 <div className="sticky top-24 rounded-2xl border border-border bg-card p-6 space-y-4">
                                     <h2 className="font-display text-lg font-semibold">Tóm tắt đơn hàng</h2>
 
+                                    {/* Voucher Input */}
+                                    <VoucherInput
+                                        orderTotal={subtotal}
+                                        onApplyVoucher={handleVoucherApply}
+                                    />
+
                                     <div className="space-y-3 text-sm">
                                         <div className="flex items-center justify-between">
                                             <span className="text-muted-foreground">Tạm tính ({itemCount} sản phẩm)</span>
@@ -197,6 +223,16 @@ export function CartPage() {
                                                 {shippingFee === 0 ? 'Miễn phí' : formatCurrency(shippingFee)}
                                             </span>
                                         </div>
+                                        {discountAmount > 0 && (
+                                            <div className="flex items-center justify-between text-green-600">
+                                                <span className="flex items-center gap-1">
+                                                    <TicketPercent className="h-4 w-4" />
+                                                    Giảm giá
+                                                    {appliedVoucher && <span className="text-xs">({appliedVoucher.code})</span>}
+                                                </span>
+                                                <span className="font-medium tabular-nums">-{formatCurrency(discountAmount)}</span>
+                                            </div>
+                                        )}
                                         {shippingFee > 0 && (
                                             <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-2.5">
                                                 💡 Miễn phí vận chuyển cho đơn hàng từ {formatCurrency(500000)}
@@ -208,7 +244,7 @@ export function CartPage() {
                                         <div className="flex items-center justify-between">
                                             <span className="font-semibold">Tổng cộng</span>
                                             <span className="font-display text-xl font-bold text-primary tabular-nums">
-                                                {formatCurrency(total)}
+                                                {formatCurrency(total > 0 ? total : 0)}
                                             </span>
                                         </div>
                                     </div>

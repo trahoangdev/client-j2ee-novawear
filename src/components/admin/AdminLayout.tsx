@@ -15,6 +15,7 @@ import {
   MenuUnfoldOutlined,
   GlobalOutlined,
   PictureOutlined,
+  GiftOutlined,
 } from '@ant-design/icons';
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -29,6 +30,7 @@ const menuItems: MenuProps['items'] = [
   { key: '/admin/products', icon: <ShoppingOutlined />, label: <Link to="/admin/products">Sản phẩm</Link> },
   { key: '/admin/orders', icon: <ShoppingCartOutlined />, label: <Link to="/admin/orders">Đơn hàng</Link> },
   { key: '/admin/customers', icon: <UserOutlined />, label: <Link to="/admin/customers">Khách hàng</Link> },
+  { key: '/admin/vouchers', icon: <GiftOutlined />, label: <Link to="/admin/vouchers">Voucher</Link> },
   { key: '/admin/reviews', icon: <StarOutlined />, label: <Link to="/admin/reviews">Đánh giá</Link> },
   {
     key: '/admin/public',

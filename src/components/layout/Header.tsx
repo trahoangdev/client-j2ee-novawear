@@ -49,7 +49,7 @@ export function Header() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { itemCount } = useCart();
   const { count: wishlistCount } = useWishlist();
-  const { isAuthenticated, user, logout, setShowAuthModal, setAuthMode, isAdmin } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -114,8 +114,7 @@ export function Header() {
   }, []);
 
   const handleAuthClick = (mode: 'login' | 'register') => {
-    setAuthMode(mode);
-    setShowAuthModal(true);
+    navigate(mode === 'login' ? '/login' : '/register');
   };
 
   const isActive = (path: string) => {

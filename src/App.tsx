@@ -5,7 +5,6 @@ import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppSettingsProvider } from "@/context/AppSettingsContext";
-import { AuthModal } from "@/components/auth/AuthModal";
 
 // Lazy load pages
 const HomePage = lazy(() => import("@/pages/HomePage").then(m => ({ default: m.HomePage })));
@@ -26,6 +25,13 @@ const ContactPage = lazy(() => import("@/pages/ContactPage").then(m => ({ defaul
 const PrivacyPage = lazy(() => import("@/pages/PrivacyPage").then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import("@/pages/TermsPage").then(m => ({ default: m.TermsPage })));
 const WishlistPage = lazy(() => import("@/pages/WishlistPage").then(m => ({ default: m.WishlistPage })));
+
+// Auth pages
+const LoginPage = lazy(() => import("@/pages/LoginPage").then(m => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() => import("@/pages/RegisterPage").then(m => ({ default: m.RegisterPage })));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage").then(m => ({ default: m.ForgotPasswordPage })));
+
+// Admin pages
 const AdminLayout = lazy(() => import("@/components/admin/AdminLayout").then(m => ({ default: m.AdminLayout })));
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard").then(m => ({ default: m.AdminDashboard })));
 const AdminCategories = lazy(() => import("@/pages/admin/AdminCategories").then(m => ({ default: m.AdminCategories })));
@@ -37,6 +43,7 @@ const AdminReviews = lazy(() => import("@/pages/admin/AdminReviews").then(m => (
 const AdminAnalytics = lazy(() => import("@/pages/admin/AdminAnalytics").then(m => ({ default: m.AdminAnalytics })));
 const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings").then(m => ({ default: m.AdminSettings })));
 const AdminBanners = lazy(() => import("@/pages/admin/AdminBanners").then(m => ({ default: m.AdminBanners })));
+const AdminVouchers = lazy(() => import("@/pages/admin/AdminVouchers").then(m => ({ default: m.AdminVouchers })));
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin").then(m => ({ default: m.AdminLogin })));
 
 // Loading Fallback
@@ -79,6 +86,11 @@ function App() {
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/wishlist" element={<WishlistPage />} />
 
+                {/* Auth Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
                 {/* Admin: login (standalone, no layout) */}
                 <Route path="/admin/login" element={<AdminLogin />} />
                 {/* Admin: dashboard + nested (protected by AdminLayout) */}
@@ -92,6 +104,7 @@ function App() {
                   <Route path="customers" element={<AdminCustomers />} />
                   <Route path="reviews" element={<AdminReviews />} />
                   <Route path="public/banners" element={<AdminBanners />} />
+                  <Route path="vouchers" element={<AdminVouchers />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
@@ -99,7 +112,6 @@ function App() {
             </Suspense>
 
             {/* Global Components */}
-            <AuthModal />
             <Toaster position="top-right" richColors expand duration={4000} />
           </CartProvider>
         </WishlistProvider>
