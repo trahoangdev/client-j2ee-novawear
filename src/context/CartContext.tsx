@@ -39,7 +39,6 @@ function cartReducer(state: CartState, action: CartAction): CartState {
               ? { ...item, quantity: item.quantity + quantity }
               : item
           ),
-          isOpen: true,
         };
       }
 
@@ -54,7 +53,6 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return {
         ...state,
         items: [...state.items, newItem],
-        isOpen: true,
       };
     }
 

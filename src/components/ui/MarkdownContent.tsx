@@ -23,10 +23,19 @@ export function MarkdownContent({ source, emptyFallback, className }: MarkdownCo
   return (
     <div
       data-color-mode="light"
-      className={cn('markdown-body product-description-markdown', className)}
-      style={{ background: 'transparent' }}
+      className={cn('product-description-markdown markdown-body', className)}
+      style={{ backgroundColor: 'transparent' }}
     >
-      <MarkdownPreview source={trimmed} />
+      <MarkdownPreview
+        source={trimmed}
+        style={{
+          backgroundColor: 'transparent',
+          padding: 0,
+        }}
+        className="!bg-transparent"
+      />
     </div>
   );
 }
+
+

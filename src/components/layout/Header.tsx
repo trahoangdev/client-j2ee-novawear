@@ -47,7 +47,7 @@ export function Header() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { toggleCart, itemCount } = useCart();
+  const { itemCount } = useCart();
   const { count: wishlistCount } = useWishlist();
   const { isAuthenticated, user, logout, setShowAuthModal, setAuthMode, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -315,15 +315,16 @@ export function Header() {
               variant="ghost"
               size="icon"
               className="relative h-10 w-10 md:h-11 md:w-11 rounded-lg hover:bg-primary/10 tap-target"
-              onClick={toggleCart}
-              aria-label={`Giỏ hàng, ${itemCount} sản phẩm`}
+              asChild
             >
-              <ShoppingBag className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center">
-                  {itemCount > 99 ? '99+' : itemCount}
-                </span>
-              )}
+              <Link to="/cart" aria-label={`Giỏ hàng, ${itemCount} sản phẩm`}>
+                <ShoppingBag className="h-5 w-5" />
+                {itemCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[1.25rem] h-5 px-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center">
+                    {itemCount > 99 ? '99+' : itemCount}
+                  </span>
+                )}
+              </Link>
             </Button>
           </div>
         </div>

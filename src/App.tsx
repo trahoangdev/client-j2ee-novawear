@@ -5,7 +5,6 @@ import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppSettingsProvider } from "@/context/AppSettingsContext";
-import { CartDrawer } from "@/components/cart/CartDrawer";
 import { AuthModal } from "@/components/auth/AuthModal";
 
 // Lazy load pages
@@ -15,6 +14,7 @@ const BestsellerPage = lazy(() => import("@/pages/BestsellerPage").then(m => ({ 
 const SalePage = lazy(() => import("@/pages/SalePage").then(m => ({ default: m.SalePage })));
 const NewArrivalsPage = lazy(() => import("@/pages/NewArrivalsPage").then(m => ({ default: m.NewArrivalsPage })));
 const ProductDetailPage = lazy(() => import("@/pages/ProductDetailPage").then(m => ({ default: m.ProductDetailPage })));
+const CartPage = lazy(() => import("@/pages/CartPage").then(m => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import("@/pages/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage").then(m => ({ default: m.ProfilePage })));
 const OrdersPage = lazy(() => import("@/pages/OrdersPage").then(m => ({ default: m.OrdersPage })));
@@ -55,57 +55,58 @@ function App() {
   return (
     <AuthProvider>
       <AppSettingsProvider>
-      <WishlistProvider>
-      <CartProvider>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            {/* Customer Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/shop" element={<ShopPage />} />
-            <Route path="/bestseller" element={<BestsellerPage />} />
-            <Route path="/sale" element={<SalePage />} />
-            <Route path="/new-arrivals" element={<NewArrivalsPage />} />
-            <Route path="/product/:slug" element={<ProductDetailPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/faq" element={<FaqPage />} />
-            <Route path="/shipping" element={<ShippingPage />} />
-            <Route path="/returns" element={<ReturnsPage />} />
-            <Route path="/size-guide" element={<SizeGuidePage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/wishlist" element={<WishlistPage />} />
+        <WishlistProvider>
+          <CartProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                {/* Customer Routes */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/shop" element={<ShopPage />} />
+                <Route path="/bestseller" element={<BestsellerPage />} />
+                <Route path="/sale" element={<SalePage />} />
+                <Route path="/new-arrivals" element={<NewArrivalsPage />} />
+                <Route path="/product/:slug" element={<ProductDetailPage />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/faq" element={<FaqPage />} />
+                <Route path="/shipping" element={<ShippingPage />} />
+                <Route path="/returns" element={<ReturnsPage />} />
+                <Route path="/size-guide" element={<SizeGuidePage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/wishlist" element={<WishlistPage />} />
 
-            {/* Admin: login (standalone, no layout) */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            {/* Admin: dashboard + nested (protected by AdminLayout) */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="categories" element={<AdminCategories />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="products/new" element={<AdminProductForm />} />
-              <Route path="products/:id/edit" element={<AdminProductForm />} />
-              <Route path="orders" element={<AdminOrders />} />
-              <Route path="customers" element={<AdminCustomers />} />
-              <Route path="reviews" element={<AdminReviews />} />
-              <Route path="public/banners" element={<AdminBanners />} />
-              <Route path="analytics" element={<AdminAnalytics />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
-          </Routes>
-        </Suspense>
-        
-        {/* Global Components */}
-        <CartDrawer />
-        <AuthModal />
-        <Toaster position="top-right" richColors expand duration={4000} />
-      </CartProvider>
-      </WishlistProvider>
+                {/* Admin: login (standalone, no layout) */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                {/* Admin: dashboard + nested (protected by AdminLayout) */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="categories" element={<AdminCategories />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="products/new" element={<AdminProductForm />} />
+                  <Route path="products/:id/edit" element={<AdminProductForm />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="customers" element={<AdminCustomers />} />
+                  <Route path="reviews" element={<AdminReviews />} />
+                  <Route path="public/banners" element={<AdminBanners />} />
+                  <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                </Route>
+              </Routes>
+            </Suspense>
+
+            {/* Global Components */}
+            <AuthModal />
+            <Toaster position="top-right" richColors expand duration={4000} />
+          </CartProvider>
+        </WishlistProvider>
       </AppSettingsProvider>
     </AuthProvider>
   );
 }
 
 export default App;
+

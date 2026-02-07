@@ -225,7 +225,6 @@ export function ProductDetailPage() {
               <div className="flex items-center gap-3 mb-6">
                 <span className="font-display text-3xl font-bold text-primary">{formatCurrency(product.price)}</span>
               </div>
-              <MarkdownContent source={product.description ?? ''} className="mb-8" />
 
               <div className="mb-6">
                 <h4 className="font-semibold mb-3">Màu sắc</h4>
@@ -285,14 +284,36 @@ export function ProductDetailPage() {
             </div>
           </div>
 
+          {/* Product Description & Reviews Tabs */}
           <div className="mt-16">
             <Tabs defaultValue="description" className="w-full">
-              <TabsList className="w-full justify-start border-b rounded-none bg-transparent h-auto p-0 gap-8">
-                <TabsTrigger value="description" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-0 pb-4">Mô tả</TabsTrigger>
-                <TabsTrigger value="reviews" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-0 pb-4">Đánh giá ({reviews.length})</TabsTrigger>
+              <TabsList className="w-full flex justify-start border-b rounded-none bg-transparent h-auto p-0 gap-0">
+                <TabsTrigger
+                  value="description"
+                  className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary px-6 py-4 font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Mô tả sản phẩm
+                </TabsTrigger>
+                <TabsTrigger
+                  value="reviews"
+                  className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary px-6 py-4 font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Đánh giá ({reviews.length})
+                </TabsTrigger>
               </TabsList>
+
               <TabsContent value="description" className="pt-8">
-                <MarkdownContent source={product.description ?? ''} emptyFallback="Không có mô tả." className="text-muted-foreground leading-relaxed" />
+                <div className="max-w-4xl">
+                  {product.description ? (
+                    <div className="bg-card border border-border rounded-2xl p-6 md:p-8">
+                      <MarkdownContent source={product.description} />
+                    </div>
+                  ) : (
+                    <div className="bg-muted/30 border border-border/50 rounded-2xl p-8 text-center">
+                      <p className="text-muted-foreground">Chưa có mô tả chi tiết cho sản phẩm này.</p>
+                    </div>
+                  )}
+                </div>
               </TabsContent>
               <TabsContent value="reviews" className="pt-8">
                 {reviews.length === 0 && !isAuthenticated && (
