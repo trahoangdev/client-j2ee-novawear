@@ -20,7 +20,21 @@ export const categoriesApi = {
 };
 
 export const productsApi = {
-  list: (params?: { page?: number; size?: number; categoryId?: number; search?: string; onSale?: boolean; bestseller?: boolean; isNew?: boolean; gender?: string }) =>
+  list: (params?: {
+    page?: number;
+    size?: number;
+    categoryId?: number;
+    search?: string;
+    onSale?: boolean;
+    bestseller?: boolean;
+    isNew?: boolean;
+    gender?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sizes?: string[];
+    colors?: string[];
+    rating?: number;
+  }) =>
     api.get<Page<ProductDto>>('/api/products', {
       params: {
         page: params?.page ?? 0,
@@ -31,12 +45,18 @@ export const productsApi = {
         ...(params?.bestseller === true && { bestseller: true }),
         ...(params?.isNew === true && { isNew: true }),
         ...(params?.gender != null && params.gender !== '' && { gender: params.gender }),
+        ...(params?.minPrice != null && { minPrice: params.minPrice }),
+        ...(params?.maxPrice != null && { maxPrice: params.maxPrice }),
+        ...(params?.sizes != null && params.sizes.length > 0 && { sizes: params.sizes.join(',') }),
+        ...(params?.colors != null && params.colors.length > 0 && { colors: params.colors.join(',') }),
+        ...(params?.rating != null && { rating: params.rating }),
       },
     }),
   featured: () => api.get<ProductDto[]>('/api/products/featured'),
   bestseller: () => api.get<ProductDto[]>('/api/products/bestseller'),
   getById: (id: number) => api.get<ProductDto>(`/api/products/${id}`),
   getBySlug: (slug: string) => api.get<ProductDto>(`/api/products/slug/${slug}`),
+  getFilters: () => api.get<import('@/types/api').ProductFiltersDto>('/api/products/filters'),
 };
 
 export const reviewsApi = {

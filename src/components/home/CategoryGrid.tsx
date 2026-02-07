@@ -54,7 +54,7 @@ export function CategoryGrid() {
               style={{ animationDelay: `${index * 80}ms` }}
             >
               <img
-                src={PLACEHOLDER_IMAGE}
+                src={category.imageUrl || PLACEHOLDER_IMAGE}
                 alt=""
                 className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 group-focus-visible:scale-105"
               />

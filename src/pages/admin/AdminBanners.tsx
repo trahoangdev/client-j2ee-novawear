@@ -13,6 +13,7 @@ export function AdminBanners() {
   const [form] = Form.useForm();
   const [dataSource, setDataSource] = useState<BannerDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [messageApi, contextHolder] = message.useMessage();
 
   const fetchBanners = async () => {
     setLoading(true);
@@ -20,7 +21,7 @@ export function AdminBanners() {
       const { data } = await adminBannersApi.list();
       setDataSource(data);
     } catch {
-      message.error('Không tải được danh sách banner');
+      messageApi.error('Không tải được danh sách banner');
     } finally {
       setLoading(false);
     }
@@ -29,6 +30,25 @@ export function AdminBanners() {
   useEffect(() => {
     fetchBanners();
   }, []);
+
+  useEffect(() => {
+    if (modalOpen) {
+      if (editing) {
+        form.setFieldsValue({
+          title: editing.title ?? '',
+          subtitle: editing.subtitle ?? '',
+          imageUrl: editing.imageUrl ?? '',
+          linkUrl: editing.linkUrl ?? '',
+          ctaText: editing.ctaText ?? '',
+          sortOrder: editing.sortOrder ?? 0,
+          active: editing.active !== false,
+        });
+      } else {
+        form.resetFields();
+        form.setFieldsValue({ sortOrder: dataSource.length, active: true });
+      }
+    }
+  }, [modalOpen, editing, form, dataSource.length]);
 
   const handleSave = async () => {
     try {
@@ -44,18 +64,17 @@ export function AdminBanners() {
       };
       if (editing) {
         await adminBannersApi.update(editing.id, payload);
-        message.success('Đã cập nhật banner');
+        messageApi.success('Đã cập nhật banner');
       } else {
         await adminBannersApi.create(payload);
-        message.success('Đã thêm banner');
+        messageApi.success('Đã thêm banner');
       }
       setModalOpen(false);
       setEditing(null);
-      form.resetFields();
       fetchBanners();
     } catch (e: unknown) {
       if (e && typeof e === 'object' && 'errorFields' in e) return;
-      message.error(editing ? 'Cập nhật thất bại' : 'Thêm banner thất bại');
+      messageApi.error(editing ? 'Cập nhật thất bại' : 'Thêm banner thất bại');
     }
   };
 
@@ -69,10 +88,10 @@ export function AdminBanners() {
       onOk: async () => {
         try {
           await adminBannersApi.delete(record.id);
-          message.success('Đã xóa banner');
+          messageApi.success('Đã xóa banner');
           fetchBanners();
         } catch {
-          message.error('Xóa thất bại');
+          messageApi.error('Xóa thất bại');
         }
       },
     });
@@ -124,15 +143,6 @@ export function AdminBanners() {
                 icon: <EditOutlined />,
                 onClick: () => {
                   setEditing(record);
-                  form.setFieldsValue({
-                    title: record.title ?? '',
-                    subtitle: record.subtitle ?? '',
-                    imageUrl: record.imageUrl ?? '',
-                    linkUrl: record.linkUrl ?? '',
-                    ctaText: record.ctaText ?? '',
-                    sortOrder: record.sortOrder ?? 0,
-                    active: record.active !== false,
-                  });
                   setModalOpen(true);
                 },
               },
@@ -155,6 +165,7 @@ export function AdminBanners() {
 
   return (
     <div>
+      {contextHolder}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <Typography.Title level={4} style={{ margin: 0, color: 'var(--admin-text)' }}>
           Quản lý Banner
@@ -164,8 +175,6 @@ export function AdminBanners() {
           icon={<PlusOutlined />}
           onClick={() => {
             setEditing(null);
-            form.resetFields();
-            form.setFieldsValue({ sortOrder: dataSource.length, active: true });
             setModalOpen(true);
           }}
         >
@@ -191,11 +200,9 @@ export function AdminBanners() {
         onCancel={() => {
           setModalOpen(false);
           setEditing(null);
-          form.resetFields();
         }}
         okText="Lưu"
         cancelText="Hủy"
-        destroyOnClose
         width={520}
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
@@ -223,14 +230,14 @@ export function AdminBanners() {
                 accept="image/*"
                 customRequest={async ({ file, onSuccess, onError }) => {
                   try {
-                    const hide = message.loading('Đang upload...', 0);
+                    const hide = messageApi.loading('Đang upload...', 0);
                     const { data } = await adminUploadApi.upload(file as File);
                     hide();
                     form.setFieldValue('imageUrl', data.url);
-                    message.success('Upload thành công');
+                    messageApi.success('Upload thành công');
                     onSuccess?.(data);
                   } catch (err) {
-                    message.error('Upload thất bại');
+                    messageApi.error('Upload thất bại');
                     onError?.(err as Error);
                   }
                 }}
@@ -257,3 +264,4 @@ export function AdminBanners() {
     </div>
   );
 }
+

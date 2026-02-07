@@ -26,6 +26,10 @@ import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { PriceRangeSlider } from '@/components/shop/PriceRangeSlider';
+import { ColorFilter } from '@/components/shop/ColorFilter';
+import { SizeFilter } from '@/components/shop/SizeFilter';
+import { RatingFilter } from '@/components/shop/RatingFilter';
 
 export function ShopPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -45,6 +49,19 @@ export function ShopPage() {
   const onSale = searchParams.get('sale') === 'true' || searchParams.get('onSale') === 'true';
   const isNew = searchParams.get('isNew') === 'true';
   const bestseller = searchParams.get('bestseller') === 'true';
+
+  const minPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined;
+  const maxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined;
+  const sizes = useMemo(() => searchParams.get('sizes')?.split(',').filter(Boolean) ?? [], [searchParams]);
+  const colors = useMemo(() => searchParams.get('colors')?.split(',').filter(Boolean) ?? [], [searchParams]);
+  const rating = searchParams.get('rating') ? Number(searchParams.get('rating')) : undefined;
+
+  const [availableFilters, setAvailableFilters] = useState<import('@/types/api').ProductFiltersDto | null>(null);
+
+  useEffect(() => {
+    productsApi.getFilters().then(({ data }) => setAvailableFilters(data)).catch(console.error);
+  }, []);
+
   // Determine gender from path or search param
   const genderParam = useMemo(() => {
     if (location.pathname === '/nam') return 'MALE';
@@ -83,6 +100,11 @@ export function ShopPage() {
         gender: genderParam || undefined,
         isNew: isNew || undefined,
         bestseller: bestseller || undefined,
+        minPrice,
+        maxPrice,
+        sizes,
+        colors,
+        rating
       })
       .then(({ data }) => {
         setProducts(data.content.map(productDtoToDisplay));
@@ -94,7 +116,7 @@ export function ShopPage() {
         toast.error('Không tải được sản phẩm. Vui lòng thử lại.');
       })
       .finally(() => setLoading(false));
-  }, [page, effectiveCategoryId, searchQuery, onSale, genderParam, isNew, bestseller]);
+  }, [page, effectiveCategoryId, searchQuery, onSale, genderParam, isNew, bestseller, minPrice, maxPrice, sizes, colors, rating]);
 
   const sortedProducts = useMemo(() => {
     const list = [...products];
@@ -137,13 +159,26 @@ export function ShopPage() {
     setSearchParams(searchParams);
   };
 
+  const updateFilters = (newParams: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams);
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === null) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+    setSearchParams(params);
+    setPage(0);
+  };
+
   const clearFilters = () => {
     setSearchParams({});
     setPage(0);
   };
 
   const selectedCategoryId = effectiveCategoryId ?? null;
-  const hasActiveFilters = selectedCategoryId != null || searchQuery || onSale || genderParam || isNew || bestseller;
+  const hasActiveFilters = selectedCategoryId != null || searchQuery || onSale || genderParam || isNew || bestseller || minPrice || maxPrice || sizes.length > 0 || colors.length > 0 || rating;
 
   /* Hide Gender Filter if pre-selected by path */
   const hideGenderFilter = location.pathname === '/nam' || location.pathname === '/nu' || location.pathname === '/unisex';
@@ -195,6 +230,70 @@ export function ShopPage() {
         </div>
 
       )}
+
+      {/* Price Range Filter */}
+      <div>
+        <h4 className="font-semibold mb-3">Khoảng Giá</h4>
+        <div className="px-2">
+          <PriceRangeSlider
+            value={[minPrice || availableFilters?.minPrice || 0, maxPrice || availableFilters?.maxPrice || 10000000]}
+            min={availableFilters?.minPrice || 0}
+            max={availableFilters?.maxPrice || 10000000}
+            step={50000}
+            onValueChange={(val) => {
+              // Debounce logic is better, but here simple implementation
+            }}
+            onValueCommit={(val) => {
+              updateFilters({
+                minPrice: String(val[0]),
+                maxPrice: String(val[1])
+              });
+            }}
+            className="mb-4"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{formatCurrency(minPrice || availableFilters?.minPrice || 0)}</span>
+            <span>{formatCurrency(maxPrice || availableFilters?.maxPrice || 10000000)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Colors Filter */}
+      {availableFilters?.colors && availableFilters.colors.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Màu sắc</h4>
+          <ColorFilter
+            colors={availableFilters.colors}
+            selectedColors={colors}
+            onChange={(newColors) => {
+              updateFilters({ colors: newColors.length > 0 ? newColors.join(',') : null });
+            }}
+          />
+        </div>
+      )}
+
+      {/* Sizes Filter */}
+      {availableFilters?.sizes && availableFilters.sizes.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Kích thước</h4>
+          <SizeFilter
+            sizes={availableFilters.sizes}
+            selectedSizes={sizes}
+            onChange={(newSizes) => {
+              updateFilters({ sizes: newSizes.length > 0 ? newSizes.join(',') : null });
+            }}
+          />
+        </div>
+      )}
+
+      {/* Rating Filter */}
+      <div>
+        <h4 className="font-semibold mb-3">Đánh giá</h4>
+        <RatingFilter
+          rating={rating}
+          onChange={(val) => updateFilters({ rating: val ? String(val) : null })}
+        />
+      </div>
 
       {/* Special Filters */}
       <div>

@@ -180,3 +180,10 @@ export interface VoucherValidateResponse {
   finalTotal?: number;
 }
 
+
+export interface ProductFiltersDto {
+  minPrice: number | null;
+  maxPrice: number | null;
+  sizes: string[];
+  colors: string[];
+}
