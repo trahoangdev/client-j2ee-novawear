@@ -1,4 +1,5 @@
-import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { OrderDto } from '@/types/api';
 
@@ -10,6 +11,9 @@ export const ORDER_STATUS_MAP: Record<string, { label: string; className: string
   DELIVERED: { label: 'Đã giao', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   CANCELLED: { label: 'Đã hủy', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 };
+
+// Chỉ cho phép hủy khi đơn ở trạng thái này
+const CANCELLABLE_STATUSES = ['PENDING', 'CONFIRMED'];
 
 export function OrderStatusBadge({ status }: { status: string }) {
   const config = ORDER_STATUS_MAP[status] ?? { label: status, className: 'bg-muted text-muted-foreground' };
@@ -25,14 +29,17 @@ export function OrderCard({
   expanded,
   onToggle,
   detail,
+  onCancelClick,
 }: {
   order: OrderDto;
   expanded: boolean;
   onToggle: () => void;
   detail: OrderDto | null;
+  onCancelClick?: () => void;
 }) {
   const details = detail?.orderDetails ?? order.orderDetails ?? [];
   const orderNumber = order.orderNumber ?? String(order.id).padStart(6, '0');
+  const canCancel = CANCELLABLE_STATUSES.includes(order.status);
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -53,7 +60,7 @@ export function OrderCard({
         {expanded ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
       </button>
       {expanded && (
-        <div className="border-t border-border bg-muted/30 px-4 py-3 space-y-2">
+        <div className="border-t border-border bg-muted/30 px-4 py-3 space-y-3">
           {details.length === 0 ? (
             <p className="text-sm text-muted-foreground">Không có chi tiết đơn hàng.</p>
           ) : (
@@ -65,6 +72,36 @@ export function OrderCard({
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Thông tin giao hàng nếu có */}
+          {(detail?.recipientName || detail?.address || detail?.phone) && (
+            <div className="pt-3 border-t border-border">
+              <h4 className="text-sm font-medium mb-2">Thông tin giao hàng</h4>
+              <div className="text-sm text-muted-foreground space-y-1">
+                {detail?.recipientName && <p>Người nhận: {detail.recipientName}</p>}
+                {detail?.phone && <p>SĐT: {detail.phone}</p>}
+                {detail?.address && <p>Địa chỉ: {detail.address}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Nút hủy đơn */}
+          {canCancel && onCancelClick && (
+            <div className="pt-3 border-t border-border flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:border-red-800 dark:hover:bg-red-900/20"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancelClick();
+                }}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Hủy đơn hàng
+              </Button>
+            </div>
           )}
         </div>
       )}

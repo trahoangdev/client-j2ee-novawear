@@ -20,7 +20,7 @@ export const categoriesApi = {
 };
 
 export const productsApi = {
-  list: (params?: { page?: number; size?: number; categoryId?: number; search?: string; onSale?: boolean; bestseller?: boolean; isNew?: boolean }) =>
+  list: (params?: { page?: number; size?: number; categoryId?: number; search?: string; onSale?: boolean; bestseller?: boolean; isNew?: boolean; gender?: string }) =>
     api.get<Page<ProductDto>>('/api/products', {
       params: {
         page: params?.page ?? 0,
@@ -30,6 +30,7 @@ export const productsApi = {
         ...(params?.onSale === true && { onSale: true }),
         ...(params?.bestseller === true && { bestseller: true }),
         ...(params?.isNew === true && { isNew: true }),
+        ...(params?.gender != null && params.gender !== '' && { gender: params.gender }),
       },
     }),
   featured: () => api.get<ProductDto[]>('/api/products/featured'),
@@ -79,4 +80,6 @@ export const ordersApi = {
         note: shipping.note,
       }),
     }),
+  cancel: (id: number, reason: string) =>
+    api.post<OrderDto>(`/api/orders/${id}/cancel`, null, { params: { reason } }),
 };

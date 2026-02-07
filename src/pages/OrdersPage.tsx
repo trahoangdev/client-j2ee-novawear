@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Package, Loader2, ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react';
+import { Package, ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -9,6 +9,7 @@ import { ordersApi } from '@/lib/customerApi';
 import { toast } from '@/lib/toast';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { OrderCardSkeleton } from '@/components/orders/OrderCardSkeleton';
+import { CancelOrderModal } from '@/components/orders/CancelOrderModal';
 import type { OrderDto, Page } from '@/types/api';
 
 const PAGE_SIZE = 10;
@@ -21,22 +22,29 @@ export function OrdersPage() {
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [orderDetails, setOrderDetails] = useState<Record<number, OrderDto>>({});
 
-  useEffect(() => {
+  // Cancel order states
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancellingOrder, setCancellingOrder] = useState<OrderDto | null>(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  const loadOrders = () => {
     if (!isAuthenticated) return;
-    let cancelled = false;
     setLoading(true);
     ordersApi
       .myOrders({ page, size: PAGE_SIZE })
       .then(({ data }) => {
-        if (!cancelled) setOrdersPage(data);
+        setOrdersPage(data);
       })
       .catch(() => {
-        if (!cancelled) toast.error('Không tải được đơn hàng. Vui lòng thử lại.');
+        toast.error('Không tải được đơn hàng. Vui lòng thử lại.');
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       });
-    return () => { cancelled = true; };
+  };
+
+  useEffect(() => {
+    loadOrders();
   }, [isAuthenticated, page]);
 
   const loadOrderDetail = (id: number) => {
@@ -49,6 +57,35 @@ export function OrdersPage() {
   const toggleOrder = (id: number) => {
     setExpandedOrderId((prev) => (prev === id ? null : id));
     if (expandedOrderId !== id) loadOrderDetail(id);
+  };
+
+  const handleCancelClick = (order: OrderDto) => {
+    setCancellingOrder(order);
+    setCancelModalOpen(true);
+  };
+
+  const handleCancelConfirm = async (reason: string) => {
+    if (!cancellingOrder) return;
+    setCancelLoading(true);
+    try {
+      await ordersApi.cancel(cancellingOrder.id, reason);
+      toast.success(`Đơn hàng #${cancellingOrder.orderNumber ?? cancellingOrder.id} đã được hủy thành công`);
+      setCancelModalOpen(false);
+      setCancellingOrder(null);
+      // Reload orders to refresh status
+      loadOrders();
+      // Clear cached detail
+      setOrderDetails((prev) => {
+        const copy = { ...prev };
+        delete copy[cancellingOrder.id];
+        return copy;
+      });
+    } catch (err: any) {
+      const message = err?.response?.data?.message || 'Không thể hủy đơn hàng. Vui lòng thử lại.';
+      toast.error(message);
+    } finally {
+      setCancelLoading(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -95,6 +132,7 @@ export function OrdersPage() {
                     expanded={expandedOrderId === order.id}
                     onToggle={() => toggleOrder(order.id)}
                     detail={orderDetails[order.id] ?? null}
+                    onCancelClick={() => handleCancelClick(order)}
                   />
                 ))}
               </div>
@@ -133,6 +171,18 @@ export function OrdersPage() {
       </main>
 
       <Footer />
+
+      {/* Cancel Order Modal */}
+      <CancelOrderModal
+        isOpen={cancelModalOpen}
+        onClose={() => {
+          setCancelModalOpen(false);
+          setCancellingOrder(null);
+        }}
+        onConfirm={handleCancelConfirm}
+        orderNumber={cancellingOrder?.orderNumber ?? String(cancellingOrder?.id ?? '').padStart(6, '0')}
+        loading={cancelLoading}
+      />
     </div>
   );
 }

@@ -316,44 +316,73 @@ export function ProductDetailPage() {
                 </div>
               </TabsContent>
               <TabsContent value="reviews" className="pt-8">
-                {reviews.length === 0 && !isAuthenticated && (
-                  <p className="text-muted-foreground mb-4">Chưa có đánh giá. Đăng nhập để viết đánh giá.</p>
-                )}
-                {isAuthenticated && (
-                  <div className="mb-8 p-4 border rounded-lg">
-                    <h4 className="font-semibold mb-3">Viết đánh giá</h4>
-                    <div className="flex gap-2 mb-2">
-                      {[1, 2, 3, 4, 5].map((r) => (
-                        <button key={r} type="button" onClick={() => setReviewForm((f) => ({ ...f, rating: r }))}>
-                          <Star className={cn('h-6 w-6', r <= reviewForm.rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground')} />
-                        </button>
-                      ))}
-                    </div>
-                    <textarea className="w-full min-h-[80px] p-3 border rounded-lg text-sm" placeholder="Nội dung đánh giá" value={reviewForm.comment} onChange={(e) => setReviewForm((f) => ({ ...f, comment: e.target.value }))} />
-                    <Button className="mt-2" onClick={handleSubmitReview} disabled={!reviewForm.comment.trim() || submittingReview}>Gửi đánh giá</Button>
+                {/* Write Review Form - hiển thị cho tất cả, yêu cầu đăng nhập khi gửi */}
+                <div className="mb-8 p-6 bg-muted/30 border rounded-xl">
+                  <h4 className="font-semibold mb-4">Viết đánh giá của bạn</h4>
+                  <div className="flex gap-2 mb-4">
+                    {[1, 2, 3, 4, 5].map((r) => (
+                      <button key={r} type="button" onClick={() => setReviewForm((f) => ({ ...f, rating: r }))}>
+                        <Star className={cn('h-7 w-7 transition-colors', r <= reviewForm.rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground hover:text-amber-300')} />
+                      </button>
+                    ))}
                   </div>
-                )}
-                <div className="space-y-6">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-border pb-6 last:border-0">
-                      <div className="flex items-start gap-4">
-                        <Avatar><AvatarFallback>{review.username?.charAt(0) ?? '?'}</AvatarFallback></Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{review.username}</span>
-                            <span className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</span>
+                  <textarea
+                    className="w-full min-h-[100px] p-4 border rounded-lg text-sm bg-background resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                    value={reviewForm.comment}
+                    onChange={(e) => setReviewForm((f) => ({ ...f, comment: e.target.value }))}
+                  />
+                  {isAuthenticated ? (
+                    <>
+                      <Button className="mt-3" onClick={handleSubmitReview} disabled={!reviewForm.comment.trim() || submittingReview}>
+                        {submittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">* Đánh giá của bạn sẽ được hiển thị sau khi được duyệt</p>
+                    </>
+                  ) : (
+                    <>
+                      <Button className="mt-3" asChild>
+                        <Link to="/login">Đăng nhập để gửi đánh giá</Link>
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">Bạn cần đăng nhập để gửi đánh giá</p>
+                    </>
+                  )}
+                </div>
+
+                {/* Reviews List */}
+                {reviews.length > 0 ? (
+                  <div className="space-y-6">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="border-b border-border pb-6 last:border-0">
+                        <div className="flex items-start gap-4">
+                          <Avatar className="h-12 w-12">
+                            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                              {review.username?.charAt(0).toUpperCase() ?? '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium">{review.username}</span>
+                              <span className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</span>
+                            </div>
+                            <div className="flex items-center gap-1 mb-3">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star key={star} className={cn('h-4 w-4', star <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-muted')} />
+                              ))}
+                            </div>
+                            <p className="text-foreground">{review.comment}</p>
                           </div>
-                          <div className="flex items-center gap-1 mb-3">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star key={star} className={cn('h-4 w-4', star <= review.rating ? 'fill-amber-400 text-amber-400' : 'text-muted')} />
-                            ))}
-                          </div>
-                          <p className="text-muted-foreground">{review.comment}</p>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed">
+                    <Star className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground font-medium mb-2">Chưa có đánh giá nào</p>
+                    <p className="text-sm text-muted-foreground">Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>

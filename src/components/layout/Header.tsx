@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingBag, User, Menu, X, Heart, Loader2 } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, X, Heart, Loader2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
@@ -18,13 +18,14 @@ import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { useAppSettingsReadOnly } from '@/context/AppSettingsContext';
+import { categoriesApi } from '@/lib/customerApi';
+import type { CategoryDto } from '@/types/api';
 
 const navLinks = [
   { to: '/shop', label: 'Bộ Sưu Tập' },
-  { to: '/shop?category=tops', label: 'Áo' },
-  { to: '/shop?category=pants', label: 'Quần' },
-  { to: '/shop?category=dresses', label: 'Váy' },
-  { to: '/shop?category=accessories', label: 'Phụ Kiện' },
+  { to: '/nam', label: 'Nam' },
+  { to: '/nu', label: 'Nữ' },
+  { to: '/unisex', label: 'Unisex' },
 ];
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -35,6 +36,99 @@ function BrandName({ name }: { name: string }) {
     return <>NOVA<span className="text-primary">WEAR</span></>;
   }
   return <span>{name}</span>;
+}
+
+function GenderMenu({ gender, label, categories, isActive, path }: { gender: string; label: string; categories: CategoryDto[]; isActive: boolean; path: string }) {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setOpen(false);
+    }, 150);
+  };
+
+  return (
+    <div
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="relative"
+    >
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <button
+            onClick={() => navigate(path)}
+            className={cn(
+              'flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              isActive
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+            )}
+          >
+            {label}
+            <ChevronDown className="h-4 w-4 opacity-50" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="w-[600px] p-4 rounded-xl shadow-soft-lg"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          sideOffset={0}
+        >
+          <div className="grid grid-cols-3 gap-4">
+            <div className="col-span-1 space-y-2">
+              <h4 className="font-semibold text-foreground mb-2">{label}</h4>
+              <Link
+                to={path}
+                className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Xem tất cả
+              </Link>
+              <Link
+                to={`${path}?isNew=true`}
+                className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Hàng Mới Về
+              </Link>
+              <Link
+                to={`${path}?bestseller=true`}
+                className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Bán Chạy Nhất
+              </Link>
+              <Link
+                to={`${path}?onSale=true`}
+                className="block text-sm text-destructive hover:underline transition-colors font-medium"
+              >
+                Đang Khuyến Mãi
+              </Link>
+            </div>
+            <div className="col-span-2">
+              <h4 className="font-semibold text-foreground mb-3">Danh Mục</h4>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                {categories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    to={`${path}?categoryId=${cat.id}`}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 }
 
 export function Header() {
@@ -52,6 +146,13 @@ export function Header() {
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [categories, setCategories] = useState<CategoryDto[]>([]);
+
+  useEffect(() => {
+    categoriesApi.list()
+      .then(({ data }) => setCategories(data))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
@@ -154,20 +255,20 @@ export function Header() {
 
           {/* Desktop Navigation with active state */}
           <nav className="hidden md:flex items-center gap-1" aria-label="Menu chính">
-            {navLinks.map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                className={cn(
-                  'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                  isActive(to)
-                    ? 'text-primary bg-primary/10'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
-                )}
-              >
-                {label}
-              </Link>
-            ))}
+            <Link
+              to="/shop"
+              className={cn(
+                'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                isActive('/shop')
+                  ? 'text-primary bg-primary/10'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+              )}
+            >
+              Bộ Sưu Tập
+            </Link>
+            <GenderMenu gender="MALE" label="Nam" categories={categories} isActive={isActive('/nam')} path="/nam" />
+            <GenderMenu gender="FEMALE" label="Nữ" categories={categories} isActive={isActive('/nu')} path="/nu" />
+            <GenderMenu gender="UNISEX" label="Unisex" categories={categories} isActive={isActive('/unisex')} path="/unisex" />
           </nav>
 
           {/* Right Actions */}

@@ -69,6 +69,9 @@ function App() {
                 {/* Customer Routes */}
                 <Route path="/" element={<HomePage />} />
                 <Route path="/shop" element={<ShopPage />} />
+                <Route path="/nam" element={<ShopPage />} />
+                <Route path="/nu" element={<ShopPage />} />
+                <Route path="/unisex" element={<ShopPage />} />
                 <Route path="/bestseller" element={<BestsellerPage />} />
                 <Route path="/sale" element={<SalePage />} />
                 <Route path="/new-arrivals" element={<NewArrivalsPage />} />

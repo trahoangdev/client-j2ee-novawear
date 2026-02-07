@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { SlidersHorizontal, Grid3X3, LayoutGrid, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 
 export function ShopPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [gridCols, setGridCols] = useState<2 | 3 | 4>(3);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [products, setProducts] = useState<ProductDisplay[]>([]);
@@ -41,7 +42,16 @@ export function ShopPage() {
   const categorySlug = searchParams.get('category') ?? '';
   const searchQuery = searchParams.get('search') ?? '';
   const sortBy = searchParams.get('sort') || 'newest';
-  const onSale = searchParams.get('sale') === 'true';
+  const onSale = searchParams.get('sale') === 'true' || searchParams.get('onSale') === 'true';
+  const isNew = searchParams.get('isNew') === 'true';
+  const bestseller = searchParams.get('bestseller') === 'true';
+  // Determine gender from path or search param
+  const genderParam = useMemo(() => {
+    if (location.pathname === '/nam') return 'MALE';
+    if (location.pathname === '/nu') return 'FEMALE';
+    if (location.pathname === '/unisex') return 'UNISEX';
+    return searchParams.get('gender') ?? '';
+  }, [location.pathname, searchParams]);
 
   const slugToName: Record<string, string> = { tops: 'Áo', pants: 'Quần', dresses: 'Váy', accessories: 'Phụ Kiện' };
   const effectiveCategoryId = useMemo(() => {
@@ -70,6 +80,9 @@ export function ShopPage() {
         categoryId: effectiveCategoryId,
         search: searchQuery || undefined,
         onSale: onSale || undefined,
+        gender: genderParam || undefined,
+        isNew: isNew || undefined,
+        bestseller: bestseller || undefined,
       })
       .then(({ data }) => {
         setProducts(data.content.map(productDtoToDisplay));
@@ -81,7 +94,7 @@ export function ShopPage() {
         toast.error('Không tải được sản phẩm. Vui lòng thử lại.');
       })
       .finally(() => setLoading(false));
-  }, [page, effectiveCategoryId, searchQuery, onSale]);
+  }, [page, effectiveCategoryId, searchQuery, onSale, genderParam, isNew, bestseller]);
 
   const sortedProducts = useMemo(() => {
     const list = [...products];
@@ -108,6 +121,17 @@ export function ShopPage() {
     setPage(0);
   };
 
+  const handleGenderChange = (gender: string | null) => {
+    if (gender) {
+      searchParams.set('gender', gender);
+    } else {
+      searchParams.delete('gender');
+    }
+    searchParams.delete('category');
+    setSearchParams(searchParams);
+    setPage(0);
+  };
+
   const handleSortChange = (value: string) => {
     searchParams.set('sort', value);
     setSearchParams(searchParams);
@@ -119,13 +143,97 @@ export function ShopPage() {
   };
 
   const selectedCategoryId = effectiveCategoryId ?? null;
-  const hasActiveFilters = selectedCategoryId != null || searchQuery || onSale;
+  const hasActiveFilters = selectedCategoryId != null || searchQuery || onSale || genderParam || isNew || bestseller;
+
+  /* Hide Gender Filter if pre-selected by path */
+  const hideGenderFilter = location.pathname === '/nam' || location.pathname === '/nu' || location.pathname === '/unisex';
 
   const FilterContent = () => (
     <div className="space-y-6">
+      {/* Gender Filter */}
+      {!hideGenderFilter && (
+        <div>
+          <h4 className="font-semibold mb-3">Giới tính</h4>
+          <div className="space-y-2">
+            <div
+              className={cn(
+                'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
+                !genderParam ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+              )}
+              onClick={() => handleGenderChange(null)}
+            >
+              <span className="text-sm">Tất cả</span>
+            </div>
+            <div
+              className={cn(
+                'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
+                genderParam === 'MALE' ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+              )}
+              onClick={() => handleGenderChange('MALE')}
+            >
+              <span className="text-sm">Nam</span>
+            </div>
+            <div
+              className={cn(
+                'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
+                genderParam === 'FEMALE' ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+              )}
+              onClick={() => handleGenderChange('FEMALE')}
+            >
+              <span className="text-sm">Nữ</span>
+            </div>
+            <div
+              className={cn(
+                'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
+                genderParam === 'UNISEX' ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+              )}
+              onClick={() => handleGenderChange('UNISEX')}
+            >
+              <span className="text-sm">Unisex</span>
+            </div>
+          </div>
+        </div>
+
+      )}
+
+      {/* Special Filters */}
       <div>
-        <h4 className="font-semibold mb-3">Khuyến mãi</h4>
-        <div className="space-y-2 mb-4">
+        <h4 className="font-semibold mb-3">Đặc biệt</h4>
+        <div className="space-y-2">
+          <div
+            className={cn(
+              'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
+              isNew ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+            )}
+            onClick={() => {
+              if (isNew) {
+                searchParams.delete('isNew');
+              } else {
+                searchParams.set('isNew', 'true');
+              }
+              setSearchParams(searchParams);
+              setPage(0);
+            }}
+          >
+            <span className="text-sm">Hàng Mới Về</span>
+          </div>
+          <div
+            className={cn(
+              'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
+              bestseller ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+            )}
+            onClick={() => {
+              if (bestseller) {
+                searchParams.delete('bestseller');
+              } else {
+                searchParams.set('bestseller', 'true');
+              }
+              setSearchParams(searchParams);
+              setPage(0);
+            }}
+          >
+            <span className="text-sm">Bán Chạy Nhất</span>
+          </div>
           <div
             className={cn(
               'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
@@ -134,24 +242,27 @@ export function ShopPage() {
             onClick={() => {
               if (onSale) {
                 searchParams.delete('sale');
-                setSearchParams(searchParams);
-                setPage(0);
+                searchParams.delete('onSale');
               } else {
-                searchParams.set('sale', 'true');
-                setSearchParams(searchParams);
-                setPage(0);
+                searchParams.set('onSale', 'true');
               }
+              setSearchParams(searchParams);
+              setPage(0);
             }}
           >
-            <span className="text-sm">Chỉ sản phẩm khuyến mãi</span>
+            <span className="text-sm">Đang Khuyến Mãi</span>
           </div>
         </div>
+      </div>
+
+      {/* Category Filter */}
+      <div>
         <h4 className="font-semibold mb-3">Danh Mục</h4>
         <div className="space-y-2">
           <div
             className={cn(
               'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
-              selectedCategoryId == null && !onSale ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
+              selectedCategoryId == null && !onSale && !genderParam ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
             )}
             onClick={() => handleCategoryChange(null)}
           >
@@ -182,6 +293,7 @@ export function ShopPage() {
   );
 
   const categoryName = selectedCategoryId != null ? categories.find((c) => c.id === selectedCategoryId)?.name : null;
+  const genderName = genderParam === 'MALE' ? 'Nam' : genderParam === 'FEMALE' ? 'Nữ' : genderParam === 'UNISEX' ? 'Unisex' : null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -191,7 +303,10 @@ export function ShopPage() {
         <div className="bg-muted/40 border-b border-border/50 py-6 md:py-8">
           <div className="container px-4 sm:px-6">
             <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold">
-              {categoryName ?? (onSale ? 'Khuyến Mãi' : searchQuery ? `Kết quả cho "${searchQuery}"` : 'Bộ Sưu Tập')}
+              {genderName ? `Thời trang ${genderName}${isNew ? ' - Hàng Mới Về' :
+                bestseller ? ' - Bán Chạy Nhất' :
+                  onSale ? ' - Khuyến Mãi' : ''
+                }` : (categoryName ?? (isNew ? 'Hàng Mới Về' : bestseller ? 'Bán Chạy Nhất' : onSale ? 'Khuyến Mãi' : searchQuery ? `Kết quả cho "${searchQuery}"` : 'Bộ Sưu Tập'))}
             </h1>
             <p className="text-muted-foreground mt-1.5 text-sm sm:text-base">
               {loading ? 'Đang tải...' : `${total} sản phẩm`}
