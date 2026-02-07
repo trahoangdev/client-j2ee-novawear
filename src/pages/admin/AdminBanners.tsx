@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Typography, Modal, Form, Input, InputNumber, Switch, message, Spin, Image } from 'antd';
+import { Card, Table, Button, Space, Typography, Modal, Form, Input, InputNumber, Switch, message, Spin, Image, Upload, Dropdown } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { adminBannersApi } from '@/lib/adminApi';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, MoreOutlined } from '@ant-design/icons';
+import { adminBannersApi, adminUploadApi } from '@/lib/adminApi';
 import type { BannerDto } from '@/types/api';
 
 const IMAGE_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='40' viewBox='0 0 64 40'%3E%3Crect fill='%23e2e8f0' width='64' height='40'/%3E%3Ctext fill='%2394a3b8' x='32' y='22' text-anchor='middle' font-size='10'%3E?%3C/text%3E%3C/svg%3E";
@@ -112,33 +112,43 @@ export function AdminBanners() {
     {
       title: 'Thao tác',
       key: 'action',
-      width: 140,
+      width: 80,
+      align: 'center',
       render: (_, record) => (
-        <Space>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => {
-              setEditing(record);
-              form.setFieldsValue({
-                title: record.title ?? '',
-                subtitle: record.subtitle ?? '',
-                imageUrl: record.imageUrl ?? '',
-                linkUrl: record.linkUrl ?? '',
-                ctaText: record.ctaText ?? '',
-                sortOrder: record.sortOrder ?? 0,
-                active: record.active !== false,
-              });
-              setModalOpen(true);
-            }}
-          >
-            Sửa
-          </Button>
-          <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
-            Xóa
-          </Button>
-        </Space>
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'edit',
+                label: 'Sửa',
+                icon: <EditOutlined />,
+                onClick: () => {
+                  setEditing(record);
+                  form.setFieldsValue({
+                    title: record.title ?? '',
+                    subtitle: record.subtitle ?? '',
+                    imageUrl: record.imageUrl ?? '',
+                    linkUrl: record.linkUrl ?? '',
+                    ctaText: record.ctaText ?? '',
+                    sortOrder: record.sortOrder ?? 0,
+                    active: record.active !== false,
+                  });
+                  setModalOpen(true);
+                },
+              },
+              {
+                key: 'delete',
+                label: 'Xóa',
+                icon: <DeleteOutlined />,
+                danger: true,
+                onClick: () => handleDelete(record),
+              },
+            ],
+          }}
+          trigger={['click']}
+        >
+          <Button type="text" icon={<MoreOutlined style={{ fontSize: 18 }} />} />
+        </Dropdown>
       ),
     },
   ];
@@ -195,9 +205,41 @@ export function AdminBanners() {
           <Form.Item name="subtitle" label="Phụ đề">
             <Input placeholder="Mô tả ngắn dưới tiêu đề" maxLength={301} showCount />
           </Form.Item>
-          <Form.Item name="imageUrl" label="URL ảnh" rules={[{ required: true, message: 'Nhập URL ảnh' }]}>
-            <Input placeholder="https://..." maxLength={501} />
+
+          <Form.Item
+            label="URL ảnh (Upload hoặc dán link)"
+            extra="Khuyến nghị: 1920x600px"
+          >
+            <Space.Compact style={{ width: '100%' }}>
+              <Form.Item
+                name="imageUrl"
+                noStyle
+                rules={[{ required: true, message: 'Nhập URL ảnh' }]}
+              >
+                <Input placeholder="https://..." maxLength={501} />
+              </Form.Item>
+              <Upload
+                showUploadList={false}
+                accept="image/*"
+                customRequest={async ({ file, onSuccess, onError }) => {
+                  try {
+                    const hide = message.loading('Đang upload...', 0);
+                    const { data } = await adminUploadApi.upload(file as File);
+                    hide();
+                    form.setFieldValue('imageUrl', data.url);
+                    message.success('Upload thành công');
+                    onSuccess?.(data);
+                  } catch (err) {
+                    message.error('Upload thất bại');
+                    onError?.(err as Error);
+                  }
+                }}
+              >
+                <Button icon={<UploadOutlined />}>Upload</Button>
+              </Upload>
+            </Space.Compact>
           </Form.Item>
+
           <Form.Item name="linkUrl" label="Link khi bấm (CTA)">
             <Input placeholder="/shop hoặc /shop?sale=true" maxLength={501} />
           </Form.Item>

@@ -180,7 +180,7 @@ export function AdminReviews() {
     {
       title: 'Thao tác',
       key: 'action',
-      width: 100,
+      width: 80,
       align: 'center',
       render: (_, record) => {
         const menuItems: MenuProps['items'] = [
@@ -190,10 +190,8 @@ export function AdminReviews() {
           { key: 'delete', icon: <DeleteOutlined />, label: 'Xóa', danger: true, onClick: () => handleDelete(record) },
         ];
         return (
-          <Dropdown menu={{ items: menuItems, triggerSubMenuAction: 'click' }} trigger={['click']}>
-            <Button type="link" size="small" icon={<MoreOutlined />}>
-              Thao tác
-            </Button>
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
+            <Button type="text" icon={<MoreOutlined style={{ fontSize: 18 }} />} />
           </Dropdown>
         );
       },

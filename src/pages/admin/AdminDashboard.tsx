@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Row, Col, Statistic, Table, Tag, Typography, Spin, Empty } from 'antd';
+import { Card, Row, Col, Statistic, Table, Tag, Typography, Spin, Empty, Button, Tooltip as AntTooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   DollarOutlined,
@@ -11,6 +11,7 @@ import {
   StarOutlined,
   PictureOutlined,
   SettingOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import {
   AreaChart,
@@ -22,6 +23,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
+  Legend,
 } from 'recharts';
 import {
   adminStatsApi,
@@ -31,7 +34,7 @@ import {
   adminCategoriesApi,
   adminReviewsApi,
 } from '@/lib/adminApi';
-import type { OrderDto } from '@/types/api';
+import type { OrderDto, TopProductDto } from '@/types/api';
 
 function formatCurrency(n: number) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
@@ -90,57 +93,57 @@ export function AdminDashboard() {
   const [pendingReviewsCount, setPendingReviewsCount] = useState<number>(0);
   const [byDay, setByDay] = useState<{ date: string; revenue: number; orders: number }[]>([]);
   const [recentOrders, setRecentOrders] = useState<OrderDto[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProductDto[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [
+        statsRes,
+        ordersRes,
+        usersRes,
+        productsRes,
+        categoriesRes,
+        reviewsRes,
+        topProductsRes,
+      ] = await Promise.all([
+        adminStatsApi.revenue(),
+        adminOrdersApi.list({ page: 0, size: 5 }),
+        adminUsersApi.list({ page: 0, size: 1 }),
+        productsApi.list({ page: 0, size: 1 }),
+        adminCategoriesApi.list(),
+        adminReviewsApi.list({ page: 0, size: 500 }),
+        adminStatsApi.topProducts({ limit: 5 }),
+      ]);
 
-    async function load() {
-      try {
-        const [
-          statsRes,
-          ordersRes,
-          usersRes,
-          productsRes,
-          categoriesRes,
-          reviewsRes,
-        ] = await Promise.all([
-          adminStatsApi.revenue(),
-          adminOrdersApi.list({ page: 0, size: 5 }),
-          adminUsersApi.list({ page: 0, size: 1 }),
-          productsApi.list({ page: 0, size: 1 }),
-          adminCategoriesApi.list(),
-          adminReviewsApi.list({ page: 0, size: 500 }),
-        ]);
-
-        if (cancelled) return;
-        const s = statsRes.data;
-        setRevenue(Number(s.totalRevenue));
-        setTotalOrders(s.totalOrders ?? 0);
-        setByDay(
-          (s.byDay ?? []).map((d) => ({
-            date: d.date,
-            revenue: Number(d.revenue),
-            orders: d.orderCount ?? 0,
-          }))
-        );
-        setRecentOrders(ordersRes.data.content);
-        setTotalCustomers(usersRes.data.totalElements);
-        setTotalProducts(productsRes.data.totalElements);
-        setTotalCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data.length : 0);
-        const pending = (reviewsRes.data.content ?? []).filter((r) => !r.approved).length;
-        setPendingReviewsCount(pending);
-      } catch {
-        if (!cancelled) setByDay([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      const s = statsRes.data;
+      setRevenue(Number(s.totalRevenue));
+      setTotalOrders(s.totalOrders ?? 0);
+      setByDay(
+        (s.byDay ?? []).map((d) => ({
+          date: d.date,
+          revenue: Number(d.revenue),
+          orders: d.orderCount ?? 0,
+        }))
+      );
+      setRecentOrders(ordersRes.data.content);
+      setTotalCustomers(usersRes.data.totalElements);
+      setTotalProducts(productsRes.data.totalElements);
+      setTotalCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data.length : 0);
+      const pending = (reviewsRes.data.content ?? []).filter((r) => !r.approved).length;
+      setPendingReviewsCount(pending);
+      setTopProducts(topProductsRes.data);
+    } catch {
+      // Ignore error
+    } finally {
+      setLoading(false);
     }
-    load();
-    return () => {
-      cancelled = true;
-    };
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const chartGrid = { stroke: 'var(--admin-border)' };
   const chartTick = { fill: 'var(--admin-text-muted)', fontSize: 12 };
@@ -163,12 +166,23 @@ export function AdminDashboard() {
   return (
     <Spin spinning={loading} tip="Đang tải...">
       <div style={{ marginBottom: 24 }}>
-        <Typography.Title level={4} style={{ marginBottom: 4, color: 'var(--admin-text)' }}>
-          Tổng quan
-        </Typography.Title>
-        <Typography.Text type="secondary" style={{ marginBottom: 24, display: 'block', color: 'var(--admin-text-secondary)' }}>
-          Dữ liệu từ API. Doanh thu & đơn hàng 30 ngày gần nhất.
-        </Typography.Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 24 }}>
+          <div>
+            <Typography.Title level={4} style={{ margin: 0, color: 'var(--admin-text)' }}>
+              Tổng quan
+            </Typography.Title>
+            <Typography.Text type="secondary" style={{ color: 'var(--admin-text-secondary)' }}>
+              Doanh thu & đơn hàng 30 ngày gần nhất.
+            </Typography.Text>
+          </div>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={loadData}
+            loading={loading}
+          >
+            Làm mới
+          </Button>
+        </div>
 
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           {stats.map((s) => (
@@ -213,18 +227,33 @@ export function AdminDashboard() {
             </Card>
           </Col>
           <Col xs={24} lg={12}>
-            <Card title="Đơn hàng theo ngày" size="small">
+            <Card title="Top 5 Sản phẩm bán chạy (30 ngày)" size="small">
               <div style={{ height: 280 }}>
-                {byDay.length === 0 ? (
+                {topProducts.length === 0 ? (
                   chartEmpty
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={byDay}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} />
-                      <XAxis dataKey="date" stroke={chartGrid.stroke} tick={chartTick} tickFormatter={(v) => (v && String(v).slice(5)) || v} />
-                      <YAxis stroke={chartGrid.stroke} tick={chartTick} />
-                      <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [value, 'Đơn hàng']} />
-                      <Bar dataKey="orders" fill="var(--admin-primary-hover)" radius={[4, 4, 0, 0]} />
+                    <BarChart layout="vertical" data={topProducts} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} horizontal={false} />
+                      <XAxis type="number" stroke={chartGrid.stroke} tick={chartTick} allowDecimals={false} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={100}
+                        stroke={chartGrid.stroke}
+                        tick={{ ...chartTick, fontSize: 11 }}
+                        interval={0}
+                        tickFormatter={(val) => val.length > 15 ? val.slice(0, 15) + '...' : val}
+                      />
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        cursor={{ fill: 'var(--admin-bg-layout)' }}
+                      />
+                      <Bar dataKey="totalSold" name="Đã bán" fill="#82ca9d" radius={[0, 4, 4, 0]}>
+                        {topProducts.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE'][index % 5]} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 )}

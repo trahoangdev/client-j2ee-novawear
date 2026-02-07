@@ -34,7 +34,7 @@ type ProfileTab = 'overview' | 'orders' | 'wishlist' | 'settings';
 
 const NOTIFY_PREFS_KEY = 'novawear_notify_prefs';
 
-function getNotifyPrefs(userId: number): { emailOrders: boolean; emailPromo: boolean } {
+function getNotifyPrefs(userId: string | number): { emailOrders: boolean; emailPromo: boolean } {
   try {
     const raw = localStorage.getItem(NOTIFY_PREFS_KEY);
     if (!raw) return { emailOrders: true, emailPromo: false };
@@ -45,7 +45,7 @@ function getNotifyPrefs(userId: number): { emailOrders: boolean; emailPromo: boo
   }
 }
 
-function setNotifyPrefs(userId: number, prefs: { emailOrders: boolean; emailPromo: boolean }) {
+function setNotifyPrefs(userId: string | number, prefs: { emailOrders: boolean; emailPromo: boolean }) {
   try {
     const raw = localStorage.getItem(NOTIFY_PREFS_KEY);
     const all = (raw ? JSON.parse(raw) : {}) as Record<string, { emailOrders: boolean; emailPromo: boolean }>;

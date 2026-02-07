@@ -23,9 +23,10 @@ export interface ProductDisplay {
 
 export function productDtoToDisplay(dto: ProductDto): ProductDisplay {
   const price = Number(dto.price);
-  const salePrice = dto.salePrice != null && dto.salePrice !== '' ? Number(dto.salePrice) : undefined;
+  const salePriceRaw = dto.salePrice;
+  const salePrice = salePriceRaw != null ? Number(salePriceRaw) : undefined;
   // Use images array if available, otherwise fallback to imageUrl
-  const images = dto.images && dto.images.length > 0 
+  const images = dto.images && dto.images.length > 0
     ? dto.images.filter((url) => url && url.trim() !== '')
     : (dto.imageUrl ? [dto.imageUrl] : []);
   return {
@@ -41,7 +42,7 @@ export function productDtoToDisplay(dto: ProductDto): ProductDisplay {
     rating: 0,
     reviewCount: 0,
     featured: !!dto.featured,
-    isNew: !!(dto.isNew ?? (dto as Record<string, unknown>).new),
+    isNew: !!dto.isNew,
     bestseller: !!dto.bestseller,
     colors: dto.colors?.length ? dto.colors.map((c) => ({ name: c.name, hex: c.hex })) : [],
     sizes: dto.sizes?.length ? dto.sizes : ['S', 'M', 'L'],

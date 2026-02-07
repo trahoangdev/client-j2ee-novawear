@@ -64,6 +64,19 @@ export const ordersApi = {
       params: { page: params?.page ?? 0, size: params?.size ?? 10 },
     }),
   getById: (id: number) => api.get<OrderDto>(`/api/orders/${id}`),
-  checkout: (paymentMethod: string, items: { productId: number; quantity: number }[]) =>
-    api.post<OrderDto>('/api/orders/checkout', { paymentMethod, items }),
+  checkout: (
+    paymentMethod: string,
+    items: { productId: number; quantity: number }[],
+    shipping?: { recipientName: string; address: string; phone: string; note: string }
+  ) =>
+    api.post<OrderDto>('/api/orders/checkout', {
+      paymentMethod,
+      items,
+      ...(shipping && {
+        recipientName: shipping.recipientName,
+        address: shipping.address,
+        phone: shipping.phone,
+        note: shipping.note,
+      }),
+    }),
 };

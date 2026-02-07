@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
-import { ConfigProvider, Layout, Menu, Dropdown, Space, Typography } from 'antd';
+import { ConfigProvider, Layout, Menu, Dropdown, Space, Typography, Spin, App } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   DashboardOutlined,
@@ -91,88 +91,99 @@ export function AdminLayout() {
 
   return (
     <ConfigProvider theme={getAdminTheme()}>
-      <Layout className="admin-theme" style={{ minHeight: '100vh', background: 'var(--admin-bg-layout)' }}>
-        <Sider
-          trigger={null}
-          collapsible
-          collapsed={collapsed}
-          width={240}
-          style={{ background: 'var(--admin-bg-container)', borderRight: '1px solid var(--admin-border)' }}
-        >
-          <div
-            style={{
-              height: 64,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: collapsed ? 'center' : 'flex-start',
-              paddingLeft: collapsed ? 0 : 24,
-              borderBottom: '1px solid var(--admin-border)',
-            }}
+      <App>
+        <Layout className="admin-theme" style={{ minHeight: '100vh', background: 'var(--admin-bg-layout)' }}>
+          <Sider
+            trigger={null}
+            collapsible
+            collapsed={collapsed}
+            width={240}
+            style={{ background: 'var(--admin-bg-container)', borderRight: '1px solid var(--admin-border)' }}
           >
-            <Link to="/" style={{ color: 'var(--admin-text)', textDecoration: 'none' }}>
-              <Typography.Title level={4} style={{ color: 'var(--admin-text)', margin: 0 }}>
-                NOVA<span style={{ color: 'var(--admin-primary)' }}>WEAR</span>
-              </Typography.Title>
-            </Link>
-          </div>
-          <Menu
-            theme="light"
-            mode="inline"
-            selectedKeys={[location.pathname]}
-            defaultOpenKeys={['/admin/public']}
-            items={menuItems}
-            style={{ borderRight: 0, marginTop: 16, background: 'transparent' }}
-          />
-        </Sider>
-        <Layout style={{ background: 'var(--admin-bg-layout)' }}>
-          <Header
-            style={{
-              padding: '0 24px',
-              background: 'var(--admin-bg-container)',
-              borderBottom: '1px solid var(--admin-border)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <Space>
-              {collapsed ? (
-                <MenuUnfoldOutlined
-                  style={{ color: 'var(--admin-text-secondary)', fontSize: 18, cursor: 'pointer' }}
-                  onClick={() => setCollapsed(false)}
-                />
-              ) : (
-                <MenuFoldOutlined
-                  style={{ color: 'var(--admin-text-secondary)', fontSize: 18, cursor: 'pointer' }}
-                  onClick={() => setCollapsed(true)}
-                />
-              )}
-            </Space>
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <Space style={{ cursor: 'pointer', color: 'var(--admin-text)' }}>
-                <img
-                  src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80'}
-                  alt=""
-                  style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }}
-                />
-                <span style={{ color: 'var(--admin-text)' }}>{user?.name || 'Admin'}</span>
+            {/* ... Sider content ... */}
+            <div
+              style={{
+                height: 64,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                paddingLeft: collapsed ? 0 : 24,
+                borderBottom: '1px solid var(--admin-border)',
+              }}
+            >
+              <Link to="/" style={{ color: 'var(--admin-text)', textDecoration: 'none' }}>
+                <Typography.Title level={4} style={{ color: 'var(--admin-text)', margin: 0 }}>
+                  NOVA<span style={{ color: 'var(--admin-primary)' }}>WEAR</span>
+                </Typography.Title>
+              </Link>
+            </div>
+            <Menu
+              theme="light"
+              mode="inline"
+              selectedKeys={[location.pathname]}
+              defaultOpenKeys={['/admin/public']}
+              items={menuItems}
+              style={{ borderRight: 0, marginTop: 16, background: 'transparent' }}
+            />
+          </Sider>
+          <Layout style={{ background: 'var(--admin-bg-layout)' }}>
+            <Header
+              style={{
+                padding: '0 24px',
+                background: 'var(--admin-bg-container)',
+                borderBottom: '1px solid var(--admin-border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Space>
+                {collapsed ? (
+                  <MenuUnfoldOutlined
+                    style={{ color: 'var(--admin-text-secondary)', fontSize: 18, cursor: 'pointer' }}
+                    onClick={() => setCollapsed(false)}
+                  />
+                ) : (
+                  <MenuFoldOutlined
+                    style={{ color: 'var(--admin-text-secondary)', fontSize: 18, cursor: 'pointer' }}
+                    onClick={() => setCollapsed(true)}
+                  />
+                )}
               </Space>
-            </Dropdown>
-          </Header>
-          <Content
-            style={{
-              margin: 24,
-              minHeight: 280,
-              background: 'var(--admin-bg-container)',
-              borderRadius: 8,
-              padding: 24,
-              border: '1px solid var(--admin-border)',
-            }}
-          >
-            <Outlet />
-          </Content>
+              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                <Space style={{ cursor: 'pointer', color: 'var(--admin-text)' }}>
+                  <img
+                    src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80'}
+                    alt=""
+                    style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                  <span style={{ color: 'var(--admin-text)' }}>{user?.name || 'Admin'}</span>
+                </Space>
+              </Dropdown>
+            </Header>
+            <Content
+              style={{
+                margin: 24,
+                minHeight: 280,
+                background: 'var(--admin-bg-container)',
+                borderRadius: 8,
+                padding: 24,
+                border: '1px solid var(--admin-border)',
+              }}
+            >
+              <Suspense fallback={
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: 400 }}>
+                  <Spin size="large" tip="Đang tải trang...">
+                    <div style={{ padding: 50 }} />
+                  </Spin>
+                </div>
+              }>
+                <Outlet />
+              </Suspense>
+            </Content>
+          </Layout>
         </Layout>
-      </Layout>
+      </App>
     </ConfigProvider>
   );
 }

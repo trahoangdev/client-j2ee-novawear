@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Card, Table, Typography, Image, Button, Space, Modal, message, Spin, Input, Select, Tag } from 'antd';
+import { Card, Table, Typography, Image, Button, Space, Modal, message, Spin, Input, Select, Tag, Dropdown } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, MoreOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { productsApi, adminProductsApi, adminCategoriesApi } from '@/lib/adminApi';
 import type { ProductDto, CategoryDto } from '@/types/api';
@@ -19,6 +19,7 @@ export function AdminProducts() {
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
+  const [lowStock, setLowStock] = useState(false);
   const pageSize = 10;
 
   const fetchProducts = useCallback(async (pageNum = 0) => {
@@ -29,6 +30,7 @@ export function AdminProducts() {
         size: pageSize,
         ...(categoryId != null && { categoryId }),
         ...(search.trim() && { search: search.trim() }),
+        lowStock,
       });
       setDataSource(data.content);
       setTotal(data.totalElements);
@@ -37,7 +39,7 @@ export function AdminProducts() {
     } finally {
       setLoading(false);
     }
-  }, [pageSize, categoryId, search]);
+  }, [pageSize, categoryId, search, lowStock]);
 
   useEffect(() => {
     adminCategoriesApi.list().then(({ data }) => setCategories(data)).catch(() => setCategories([]));
@@ -124,27 +126,47 @@ export function AdminProducts() {
         </Space>
       ),
     },
-    { title: 'Tồn', dataIndex: 'stock', key: 'stock', width: 70, align: 'center' },
+    {
+      title: 'Tồn',
+      dataIndex: 'stock',
+      key: 'stock',
+      width: 80,
+      align: 'center',
+      render: (stock: number) => (
+        <span style={{ color: stock < 10 ? '#ef4444' : 'inherit', fontWeight: stock < 10 ? 'bold' : 'normal' }}>
+          {stock}
+        </span>
+      ),
+    },
     {
       title: 'Thao tác',
       key: 'action',
-      width: 120,
+      width: 80,
       align: 'center',
       fixed: 'right',
       render: (_, record) => (
-        <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/admin/products/${record.id}/edit`)}
-          >
-            Sửa
-          </Button>
-          <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)}>
-            Xóa
-          </Button>
-        </Space>
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: 'edit',
+                label: 'Sửa',
+                icon: <EditOutlined />,
+                onClick: () => navigate(`/admin/products/${record.id}/edit`),
+              },
+              {
+                key: 'delete',
+                label: 'Xóa',
+                icon: <DeleteOutlined />,
+                danger: true,
+                onClick: () => handleDelete(record),
+              },
+            ],
+          }}
+          trigger={['click']}
+        >
+          <Button type="text" icon={<MoreOutlined style={{ fontSize: 18 }} />} />
+        </Dropdown>
       ),
     },
   ];
@@ -178,8 +200,15 @@ export function AdminProducts() {
             style={{ width: 200 }}
             allowClear
           />
+          <Button
+            type={lowStock ? 'primary' : 'default'}
+            danger={lowStock}
+            onClick={() => { setLowStock(!lowStock); setPage(0); }}
+          >
+            {lowStock ? 'Đang lọc: Sắp hết hàng' : 'Lọc: Sắp hết hàng (<10)'}
+          </Button>
           <Button type="primary" onClick={() => { setPage(0); fetchProducts(0); }}>
-            Lọc
+            Tìm kiếm
           </Button>
         </Space>
       </Card>

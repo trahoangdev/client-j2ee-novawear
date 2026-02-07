@@ -136,7 +136,6 @@ export function Header() {
             variant="ghost"
             size="icon"
             className="md:hidden tap-target h-11 w-11 rounded-lg"
-            aria-label="Menu"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-expanded={isMobileMenuOpen}
             aria-label={isMobileMenuOpen ? 'Đóng menu' : 'Mở menu'}

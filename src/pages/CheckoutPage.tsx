@@ -67,6 +67,17 @@ export function CheckoutPage() {
   const minOrderAmount = general.minOrderAmount ?? 0;
   const belowMinOrder = minOrderAmount > 0 && subtotal < minOrderAmount;
 
+  const [shippingInfo, setShippingInfo] = useState({
+    fullName: '',
+    phone: '',
+    email: '',
+    street: '',
+    city: '',
+    district: '',
+    ward: '',
+    note: '',
+  });
+
   const handleShippingChange = (field: string, value: string) => {
     setShippingInfo((prev) => ({ ...prev, [field]: value }));
   };
@@ -111,7 +122,16 @@ export function CheckoutPage() {
     setCheckoutError('');
     setIsProcessing(true);
     try {
-      const { data } = await ordersApi.checkout(PAYMENT_MAP[paymentMethod] ?? PAYMENT_MAP[defaultPayment] ?? 'COD', items);
+      const { data } = await ordersApi.checkout(
+        PAYMENT_MAP[paymentMethod] ?? PAYMENT_MAP[defaultPayment] ?? 'COD',
+        items,
+        {
+          recipientName: shippingInfo.fullName,
+          address: `${shippingInfo.street}, ${shippingInfo.ward}, ${shippingInfo.district}, ${shippingInfo.city}`,
+          phone: shippingInfo.phone,
+          note: shippingInfo.note,
+        }
+      );
       setOrderId(data.orderNumber ?? String(data.id).padStart(6, '0'));
       setOrderComplete(true);
       clearCart();
@@ -205,8 +225,8 @@ export function CheckoutPage() {
                     currentStep === step.id
                       ? 'bg-primary text-primary-foreground'
                       : currentStep > step.id
-                      ? 'bg-success text-white'
-                      : 'bg-muted text-muted-foreground'
+                        ? 'bg-success text-white'
+                        : 'bg-muted text-muted-foreground'
                   )}
                 >
                   <div
@@ -215,8 +235,8 @@ export function CheckoutPage() {
                       currentStep === step.id
                         ? 'bg-primary-foreground/20'
                         : currentStep > step.id
-                        ? 'bg-white/20'
-                        : 'bg-muted-foreground/20'
+                          ? 'bg-white/20'
+                          : 'bg-muted-foreground/20'
                     )}
                   >
                     {currentStep > step.id ? (

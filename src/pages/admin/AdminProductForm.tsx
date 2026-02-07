@@ -9,18 +9,19 @@ import {
   Button,
   Typography,
   Space,
-  message,
+  App,
   Spin,
   Row,
   Col,
   Image,
   Switch,
+  Upload,
 } from 'antd';
-import { ArrowLeftOutlined, PictureOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, PictureOutlined, PlusOutlined, DeleteOutlined, UploadOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { ProductColorDto } from '@/types/api';
 import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
-import { adminProductsApi, adminCategoriesApi } from '@/lib/adminApi';
+import { adminProductsApi, adminCategoriesApi, adminUploadApi } from '@/lib/adminApi';
 import type { CategoryDto, ProductDto } from '@/types/api';
 import type { AxiosError } from 'axios';
 
@@ -95,6 +96,7 @@ function getServerErrorMessage(e: unknown): string | null {
 }
 
 export function AdminProductForm() {
+  const { message } = App.useApp();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -126,7 +128,7 @@ export function AdminProductForm() {
       .then(({ data }) => {
         setProduct(data);
         // Use images array if available, otherwise fallback to imageUrl
-        const imageList = data.images && data.images.length > 0 
+        const imageList = data.images && data.images.length > 0
           ? data.images.filter((url: string) => url && url.trim() !== '')
           : (data.imageUrl ? [data.imageUrl] : []);
         form.setFieldsValue({
@@ -154,29 +156,29 @@ export function AdminProductForm() {
     try {
       const values = await form.validateFields();
       const sizesList = (values.sizes ?? []).filter((s: string) => s != null && String(s).trim() !== '');
-        const colorsList: ProductColorDto[] = (values.colors ?? [])
-          .filter((c: { name?: string; hex?: string }) => c?.name != null && String(c.name).trim() !== '' && c?.hex != null && String(c.hex).trim() !== '')
-          .map((c: { name: string; hex: string }) => ({ name: String(c.name).trim(), hex: String(c.hex).trim() }));
-        const imagesList = (values.images ?? [])
-          .filter((url: string) => url != null && String(url).trim() !== '')
-          .map((url: string) => String(url).trim());
-        const slugValue = values.slug?.trim() || generateSlug(values.name || '');
-        const body = {
-          name: String(values.name ?? '').trim(),
-          slug: slugValue || undefined,
-          price: Number(values.price),
-          description: values.description != null ? String(values.description).trim() : undefined,
-          images: imagesList.length > 0 ? imagesList : undefined,
-          imageUrl: imagesList.length > 0 ? imagesList[0] : undefined, // Backward compatibility
-          categoryId: values.categoryId,
-          stock: Math.max(0, Math.floor(Number(values.stock) || 0)),
-          salePrice: values.salePrice != null && values.salePrice !== '' ? Number(values.salePrice) : null,
-          featured: !!values.featured,
-          bestseller: !!values.bestseller,
-          isNew: !!values.isNew,
-          sizes: sizesList,
-          colors: colorsList,
-        };
+      const colorsList: ProductColorDto[] = (values.colors ?? [])
+        .filter((c: { name?: string; hex?: string }) => c?.name != null && String(c.name).trim() !== '' && c?.hex != null && String(c.hex).trim() !== '')
+        .map((c: { name: string; hex: string }) => ({ name: String(c.name).trim(), hex: String(c.hex).trim() }));
+      const imagesList = (values.images ?? [])
+        .filter((url: string) => url != null && String(url).trim() !== '')
+        .map((url: string) => String(url).trim());
+      const slugValue = values.slug?.trim() || generateSlug(values.name || '');
+      const body = {
+        name: String(values.name ?? '').trim(),
+        slug: slugValue || undefined,
+        price: Number(values.price),
+        description: values.description != null ? String(values.description).trim() : undefined,
+        images: imagesList.length > 0 ? imagesList : undefined,
+        imageUrl: imagesList.length > 0 ? imagesList[0] : undefined, // Backward compatibility
+        categoryId: values.categoryId,
+        stock: Math.max(0, Math.floor(Number(values.stock) || 0)),
+        salePrice: values.salePrice != null && values.salePrice !== '' ? Number(values.salePrice) : null,
+        featured: !!values.featured,
+        bestseller: !!values.bestseller,
+        isNew: !!values.isNew,
+        sizes: sizesList,
+        colors: colorsList,
+      };
 
       setSubmitting(true);
       if (isNew) {
@@ -257,9 +259,9 @@ export function AdminProductForm() {
                 ]}
                 extra={`Tối đa ${NAME_MAX} ký tự`}
               >
-                <Input 
-                  placeholder="Ví dụ: Áo Blazer Premium" 
-                  maxLength={NAME_MAX + 1} 
+                <Input
+                  placeholder="Ví dụ: Áo Blazer Premium"
+                  maxLength={NAME_MAX + 1}
                   showCount
                   onChange={(e) => {
                     const name = e.target.value;
@@ -280,23 +282,23 @@ export function AdminProductForm() {
                 ]}
                 extra="Đường dẫn URL thân thiện (tự động tạo từ tên). Ví dụ: ao-blazer-premium"
               >
-                <Input 
-                  placeholder="ao-blazer-premium" 
-                  maxLength={SLUG_MAX + 1}
-                  addonAfter={
-                    <Button
-                      type="text"
-                      size="small"
-                      onClick={() => {
-                        const name = form.getFieldValue('name') || '';
-                        form.setFieldsValue({ slug: generateSlug(name) });
-                      }}
-                      style={{ padding: '0 8px', height: '100%' }}
-                    >
-                      Tạo tự động
-                    </Button>
-                  }
-                />
+                <Space.Compact style={{ width: '100%' }}>
+                  <Input
+                    placeholder="ao-blazer-premium"
+                    maxLength={SLUG_MAX + 1}
+                  />
+                  <Button
+                    type="text"
+                    size="small"
+                    onClick={() => {
+                      const name = form.getFieldValue('name') || '';
+                      form.setFieldsValue({ slug: generateSlug(name) });
+                    }}
+                    style={{ padding: '0 8px', height: '100%', borderLeft: '1px solid #d9d9d9' }}
+                  >
+                    Tạo tự động
+                  </Button>
+                </Space.Compact>
               </Form.Item>
               <Form.Item name="categoryId" label="Danh mục" rules={[{ required: true, message: 'Chọn danh mục' }]}>
                 <Select
@@ -327,14 +329,16 @@ export function AdminProductForm() {
                       { type: 'number', min: 0, message: 'Giá phải ≥ 0' },
                     ]}
                   >
-                    <InputNumber
-                      min={0}
-                      step={1000}
-                      style={{ width: '100%' }}
-                      addonAfter="₫"
-                      formatter={(v) => (v != null ? `${Number(v).toLocaleString('vi-VN')}` : '')}
-                      parser={(v) => (v ? Number(v.replace(/\s|\.|,/g, '')) : 0)}
-                    />
+                    <Space.Compact style={{ width: '100%' }}>
+                      <InputNumber<number>
+                        min={0}
+                        step={1000}
+                        style={{ width: '100%' }}
+                        formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '')}
+                        parser={(v) => (v ? Number(v.replace(/\./g, '')) : 0)}
+                      />
+                      <Button disabled style={{ cursor: 'default', backgroundColor: '#fafafa', color: 'rgba(0, 0, 0, 0.45)', width: 40, padding: 0 }}>₫</Button>
+                    </Space.Compact>
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12}>
@@ -343,7 +347,7 @@ export function AdminProductForm() {
                     label="Số lượng tồn kho"
                     rules={[
                       { required: true, message: 'Nhập số lượng tồn kho' },
-                      { type: 'number', min: 0, integer: true, message: 'Số lượng phải là số nguyên ≥ 0' },
+                      { type: 'integer', min: 0, message: 'Số lượng phải là số nguyên ≥ 0' },
                     ]}
                   >
                     <InputNumber min={0} step={1} style={{ width: '100%' }} placeholder="0" />
@@ -361,14 +365,14 @@ export function AdminProductForm() {
                     extra="Để trống = không giảm. Hiển thị nhãn Sale khi giá KM < giá gốc."
                     rules={[{ type: 'number', min: 0, message: 'Giá khuyến mãi ≥ 0' }]}
                   >
-                    <InputNumber
+                    <InputNumber<number>
                       min={0}
                       step={1000}
                       style={{ width: '100%' }}
                       addonAfter="₫"
                       placeholder="Trống = không sale"
-                      formatter={(v) => (v != null && v !== '' ? `${Number(v).toLocaleString('vi-VN')}` : '')}
-                      parser={(v) => (v ? Number(v.replace(/\s|\.|,/g, '')) : (undefined as unknown as number))}
+                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '')}
+                      parser={(v) => (v ? Number(v.replace(/\./g, '')) : undefined) as unknown as number}
                     />
                   </Form.Item>
                 </Col>
@@ -438,48 +442,78 @@ export function AdminProductForm() {
             <Card size="small" title="Hình ảnh" style={{ marginBottom: 16 }}>
               <Form.Item
                 label="URL hình ảnh"
-                extra="Nhập từng URL hình ảnh. Hình đầu tiên sẽ là hình chính. Hình thứ 2 sẽ hiển thị khi hover."
+                extra="Nhập URL hoặc upload ảnh từ máy tính. Hình đầu tiên là hình chính."
               >
                 <Form.List name="images">
                   {(fields, { add, remove }) => (
                     <>
                       {fields.map(({ key, name, ...rest }) => (
-                        <div key={key} style={{ marginBottom: 8 }}>
+                        <div key={key} style={{ marginBottom: 16 }}>
+                          <Space.Compact style={{ width: '100%' }}>
+                            <Form.Item
+                              {...rest}
+                              name={name}
+                              rules={[{ max: IMAGE_URL_MAX, message: `URL tối đa ${IMAGE_URL_MAX} ký tự` }]}
+                              style={{ marginBottom: 0, width: '100%' }}
+                            >
+                              <Input
+                                placeholder={`Hình ${name + 1}: https://...`}
+                                maxLength={IMAGE_URL_MAX + 1}
+                              />
+                            </Form.Item>
+                            <Upload
+                              showUploadList={false}
+                              accept="image/*"
+                              customRequest={async ({ file, onSuccess, onError }) => {
+                                try {
+                                  const hide = message.loading('Đang upload...', 0);
+                                  const { data } = await adminUploadApi.upload(file as File);
+                                  hide();
+
+                                  const currentImages = form.getFieldValue('images');
+                                  currentImages[name] = data.url;
+                                  form.setFieldsValue({ images: [...currentImages] });
+                                  message.success('Upload thành công');
+                                  onSuccess?.(data);
+                                } catch (err) {
+                                  message.error('Upload thất bại');
+                                  onError?.(err as Error);
+                                }
+                              }}
+                            >
+                              <Button icon={<UploadOutlined />}>Up ảnh</Button>
+                            </Upload>
+                            {fields.length > 1 && (
+                              <Button
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={() => remove(name)}
+                                aria-label="Xóa"
+                              />
+                            )}
+                          </Space.Compact>
+
+                          {/* Preview Image */}
                           <Form.Item
-                            {...rest}
-                            name={name}
-                            rules={[{ max: IMAGE_URL_MAX, message: `URL tối đa ${IMAGE_URL_MAX} ký tự` }]}
+                            shouldUpdate={(prev, curr) => prev.images?.[name] !== curr.images?.[name]}
                             style={{ marginBottom: 0 }}
                           >
-                            <Input
-                              placeholder={`Hình ${name + 1}: https://example.com/image.jpg`}
-                              maxLength={IMAGE_URL_MAX + 1}
-                              addonAfter={
-                                fields.length > 1 ? (
-                                  <Button
-                                    type="text"
-                                    danger
-                                    size="small"
-                                    icon={<DeleteOutlined />}
-                                    onClick={() => remove(name)}
-                                    aria-label="Xóa hình"
+                            {({ getFieldValue }) => {
+                              const imgUrl = getFieldValue(['images', name]);
+                              return imgUrl && imgUrl.trim() ? (
+                                <div style={{ marginTop: 8 }}>
+                                  <Image
+                                    src={imgUrl.trim()}
+                                    alt={`Preview ${name + 1}`}
+                                    width={120}
+                                    height={150}
+                                    style={{ objectFit: 'cover', borderRadius: 8 }}
+                                    fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='150' viewBox='0 0 120 150'%3E%3Crect fill='%23334155' width='120' height='150'/%3E%3Ctext fill='%2394a3b8' x='60' y='78' text-anchor='middle' font-size='12'%3ELỗi%3C/text%3E%3C/svg%3E"
                                   />
-                                ) : null
-                              }
-                            />
+                                </div>
+                              ) : null;
+                            }}
                           </Form.Item>
-                          {images?.[name] && images[name].trim() && (
-                            <div style={{ marginTop: 8, marginLeft: 0 }}>
-                              <Image
-                                src={images[name].trim()}
-                                alt={`Preview ${name + 1}`}
-                                width={120}
-                                height={150}
-                                style={{ objectFit: 'cover', borderRadius: 8 }}
-                                fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='150' viewBox='0 0 120 150'%3E%3Crect fill='%23334155' width='120' height='150'/%3E%3Ctext fill='%2394a3b8' x='60' y='78' text-anchor='middle' font-size='12'%3EKhông tải được%3C/text%3E%3C/svg%3E"
-                              />
-                            </div>
-                          )}
                         </div>
                       ))}
                       <Button type="dashed" onClick={() => add('')} icon={<PlusOutlined />} style={{ width: '100%' }}>

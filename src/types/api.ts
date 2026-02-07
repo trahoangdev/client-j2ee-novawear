@@ -54,6 +54,10 @@ export interface OrderDto {
   totalAmount: number;
   status: string;
   orderDate: string;
+  recipientName?: string;
+  address?: string;
+  phone?: string;
+  note?: string;
   orderDetails?: OrderDetailDto[];
 }
 
@@ -132,4 +136,11 @@ export interface CartItemDto {
   price: number;
   quantity: number;
   subtotal: number;
+}
+
+export interface TopProductDto {
+  id: number;
+  name: string;
+  imageUrl?: string;
+  totalSold: number;
 }

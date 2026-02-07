@@ -27,7 +27,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const discountPercent = hasDiscount
     ? Math.round(((priceNum - salePriceNum!) / priceNum) * 100)
     : 0;
-  const slug = 'slug' in product ? product.slug : String(product.id);
+  const slug = 'slug' in product ? (product as ProductDisplay).slug : String((product as Product).id);
   const images = product.images?.length ? product.images : (product as ProductDisplay).images ?? [];
   const hasMultipleImages = images.length >= 2;
   const categoryName = product.category?.name ?? '';

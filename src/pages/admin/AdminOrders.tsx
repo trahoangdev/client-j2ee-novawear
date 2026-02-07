@@ -1,14 +1,110 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Select, Button, Typography, Modal, Descriptions, message, Spin, Tag, Dropdown, Space } from 'antd';
+import { Card, Table, Select, Button, Typography, Modal, Descriptions, message, Spin, Tag, Dropdown, Space, Input, DatePicker } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined, EditOutlined } from '@ant-design/icons';
+import { EyeOutlined, EditOutlined, SearchOutlined, PrinterOutlined, MoreOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { adminOrdersApi } from '@/lib/adminApi';
 import type { OrderDto } from '@/types/api';
+import dayjs from 'dayjs';
+
+const { RangePicker } = DatePicker;
 
 function formatCurrency(n: number) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
 }
+
+const printInvoice = (order: OrderDto) => {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) return;
+
+  const date = order.orderDate ? new Date(order.orderDate).toLocaleDateString('vi-VN') : '';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Hóa đơn #${order.id}</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; padding: 40px; max-width: 800px; mx-auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .store-name { font-size: 24px; font-weight: bold; text-transform: uppercase; }
+        .invoice-title { font-size: 20px; font-weight: bold; margin: 20px 0; }
+        .info-group { margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .customer-info { margin-bottom: 20px; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+        th { background-color: #f0f0f0; }
+        .total-section { text-align: right; font-weight: bold; font-size: 16px; }
+        .footer { margin-top: 50px; text-align: center; font-style: italic; }
+        @media print {
+          @page { margin: 2cm; }
+          body { -webkit-print-color-adjust: exact; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="store-name">NOVAWEAR FASHION</div>
+        <div>Địa chỉ: 123 Đường ABC, Quận XYZ, TP.HCM</div>
+        <div>Hotline: 0123.456.789</div>
+      </div>
+      
+      <div style="text-align: center;">
+        <div class="invoice-title">HÓA ĐƠN BÁN HÀNG</div>
+        <div>Mã đơn: #${order.id}</div>
+        <div>Ngày đặt: ${date}</div>
+      </div>
+
+      <div class="customer-info">
+        <p><strong>Khách hàng:</strong> ${order.recipientName || order.username}</p>
+        <p><strong>Số điện thoại:</strong> ${order.phone || '---'}</p>
+        <p><strong>Địa chỉ:</strong> ${order.address || '---'}</p>
+        <p><strong>Ghi chú:</strong> ${order.note || '---'}</p>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 50px; text-align: center;">STT</th>
+            <th>Sản phẩm</th>
+            <th style="width: 80px; text-align: center;">SL</th>
+            <th style="width: 120px; text-align: right;">Đơn giá</th>
+            <th style="width: 120px; text-align: right;">Thành tiền</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${order.orderDetails?.map((item, index) => `
+            <tr>
+              <td style="text-align: center;">${index + 1}</td>
+              <td>${item.productName}</td>
+              <td style="text-align: center;">${item.quantity}</td>
+              <td style="text-align: right;">${formatCurrency(item.price)}</td>
+              <td style="text-align: right;">${formatCurrency(item.subtotal)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="total-section">
+        <p>Tổng cộng: ${formatCurrency(order.totalAmount)}</p>
+      </div>
+
+      <div class="footer">
+        <p>Cảm ơn quý khách đã mua sắm tại NOVAWEAR!</p>
+        <p>Hẹn gặp lại quý khách.</p>
+      </div>
+
+      <script>
+        window.onload = function() { window.print(); }
+      </script>
+    </body>
+    </html>
+  `;
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+};
 
 const orderStatusOptions = [
   { value: 'PENDING', label: 'Chờ xác nhận' },
@@ -35,7 +131,12 @@ export function AdminOrders() {
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [detailOrder, setDetailOrder] = useState<OrderDto | null>(null);
+
+  // Filters
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [searchText, setSearchText] = useState('');
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+
   const pageSize = 10;
 
   const fetchOrders = async (pageNum = 0) => {
@@ -45,6 +146,9 @@ export function AdminOrders() {
         page: pageNum,
         size: pageSize,
         status: statusFilter,
+        search: searchText,
+        fromDate: dateRange?.[0]?.toISOString(),
+        toDate: dateRange?.[1]?.toISOString(),
       });
       setOrders(data.content);
       setTotal(data.totalElements);
@@ -56,8 +160,13 @@ export function AdminOrders() {
   };
 
   useEffect(() => {
-    fetchOrders(page);
-  }, [page, statusFilter]);
+    fetchOrders(0);
+    setPage(0);
+  }, [statusFilter, searchText, dateRange]);
+
+  useEffect(() => {
+    if (page > 0) fetchOrders(page);
+  }, [page]);
 
   const handleStatusChange = async (orderId: number, status: string) => {
     try {
@@ -116,25 +225,43 @@ export function AdminOrders() {
     {
       title: 'Thao tác',
       key: 'action',
-      width: 140,
+      width: 80,
       align: 'center',
       render: (_, record) => {
-        const editMenu: MenuProps['items'] = orderStatusOptions.map((opt) => ({
-          key: opt.value,
+        const statusMenuItems = orderStatusOptions.map((opt) => ({
+          key: `status-${opt.value}`,
           label: opt.label,
           onClick: () => handleStatusChange(record.id, opt.value),
         }));
         return (
-          <Space size="small">
-            <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => setDetailOrder(record)}>
-              Chi tiết
-            </Button>
-            <Dropdown menu={{ items: editMenu, triggerSubMenuAction: 'click' }} trigger={['click']}>
-              <Button type="link" size="small" icon={<EditOutlined />}>
-                Sửa
-              </Button>
-            </Dropdown>
-          </Space>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'view',
+                  label: 'Chi tiết',
+                  icon: <EyeOutlined />,
+                  onClick: () => setDetailOrder(record),
+                },
+                {
+                  key: 'print',
+                  label: 'In hóa đơn',
+                  icon: <PrinterOutlined />,
+                  onClick: () => printInvoice(record),
+                },
+                { type: 'divider' },
+                {
+                  key: 'status',
+                  label: 'Cập nhật trạng thái',
+                  icon: <EditOutlined />,
+                  children: statusMenuItems,
+                },
+              ],
+            }}
+            trigger={['click']}
+          >
+            <Button type="text" icon={<MoreOutlined style={{ fontSize: 18 }} />} />
+          </Dropdown>
         );
       },
     },
@@ -142,18 +269,33 @@ export function AdminOrders() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0, color: 'var(--admin-text)' }}>
+      <div style={{ marginBottom: 16 }}>
+        <Typography.Title level={4} style={{ margin: '0 0 16px', color: 'var(--admin-text)' }}>
           Quản lý đơn hàng
         </Typography.Title>
-        <Select
-          placeholder="Lọc trạng thái"
-          allowClear
-          style={{ width: 160 }}
-          value={statusFilter}
-          onChange={setStatusFilter}
-          options={orderStatusOptions}
-        />
+        <Space wrap>
+          <Input
+            placeholder="Tìm theo ID, Tên, SĐT,..."
+            prefix={<SearchOutlined />}
+            allowClear
+            style={{ width: 250 }}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <Select
+            placeholder="Lọc trạng thái"
+            allowClear
+            style={{ width: 160 }}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={orderStatusOptions}
+          />
+          <RangePicker
+            placeholder={['Từ ngày', 'Đến ngày']}
+            value={dateRange}
+            onChange={setDateRange}
+          />
+        </Space>
       </div>
       <Card>
         <Spin spinning={loading}>
@@ -185,6 +327,11 @@ export function AdminOrders() {
       >
         {detailOrder && (
           <>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+              <Button icon={<PrinterOutlined />} onClick={() => printInvoice(detailOrder)}>
+                In hóa đơn
+              </Button>
+            </div>
             <Descriptions column={1} size="small" bordered style={{ marginBottom: 16 }}>
               <Descriptions.Item label="ID">#{detailOrder.id}</Descriptions.Item>
               <Descriptions.Item label="Khách hàng">{detailOrder.username}</Descriptions.Item>
@@ -196,6 +343,10 @@ export function AdminOrders() {
               <Descriptions.Item label="Ngày đặt">
                 {detailOrder.orderDate ? new Date(detailOrder.orderDate).toLocaleString('vi-VN') : '—'}
               </Descriptions.Item>
+              <Descriptions.Item label="Người nhận">{detailOrder.recipientName || '—'}</Descriptions.Item>
+              <Descriptions.Item label="SĐT">{detailOrder.phone || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Địa chỉ">{detailOrder.address || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Ghi chú">{detailOrder.note || '—'}</Descriptions.Item>
             </Descriptions>
             <Typography.Text strong style={{ color: 'var(--admin-text)', display: 'block', marginBottom: 8 }}>
               Sản phẩm
