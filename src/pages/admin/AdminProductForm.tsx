@@ -265,11 +265,8 @@ export function AdminProductForm() {
                   showCount
                   onChange={(e) => {
                     const name = e.target.value;
-                    const currentSlug = form.getFieldValue('slug');
-                    // Auto-generate slug if slug is empty or matches previous name
-                    if (!currentSlug || currentSlug === generateSlug(form.getFieldValue('name') || '')) {
-                      form.setFieldsValue({ slug: generateSlug(name) });
-                    }
+                    // Auto-generate slug in realtime from product name
+                    form.setFieldsValue({ slug: generateSlug(name) });
                   }}
                 />
               </Form.Item>
@@ -282,23 +279,10 @@ export function AdminProductForm() {
                 ]}
                 extra="Đường dẫn URL thân thiện (tự động tạo từ tên). Ví dụ: ao-blazer-premium"
               >
-                <Space.Compact style={{ width: '100%' }}>
-                  <Input
-                    placeholder="ao-blazer-premium"
-                    maxLength={SLUG_MAX + 1}
-                  />
-                  <Button
-                    type="text"
-                    size="small"
-                    onClick={() => {
-                      const name = form.getFieldValue('name') || '';
-                      form.setFieldsValue({ slug: generateSlug(name) });
-                    }}
-                    style={{ padding: '0 8px', height: '100%', borderLeft: '1px solid #d9d9d9' }}
-                  >
-                    Tạo tự động
-                  </Button>
-                </Space.Compact>
+                <Input
+                  placeholder="ao-blazer-premium"
+                  maxLength={SLUG_MAX + 1}
+                />
               </Form.Item>
               <Form.Item name="categoryId" label="Danh mục" rules={[{ required: true, message: 'Chọn danh mục' }]}>
                 <Select
@@ -324,6 +308,16 @@ export function AdminProductForm() {
                   <Form.Item
                     name="price"
                     label="Giá (VNĐ)"
+                    normalize={(value) => {
+                      if (value === null || value === undefined || value === '') return 0;
+                      // If value is already a number, return it
+                      if (typeof value === 'number') return value;
+                      // If value is a string, parse it
+                      const cleaned = String(value).replace(/\./g, '').replace(/\s/g, '');
+                      if (cleaned === '') return 0;
+                      const num = parseInt(cleaned, 10);
+                      return isNaN(num) ? 0 : num;
+                    }}
                     rules={[
                       { required: true, message: 'Nhập giá' },
                       { type: 'number', min: 0, message: 'Giá phải ≥ 0' },
@@ -334,8 +328,25 @@ export function AdminProductForm() {
                         min={0}
                         step={1000}
                         style={{ width: '100%' }}
-                        formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '')}
-                        parser={(v) => (v ? Number(v.replace(/\./g, '')) : 0)}
+                        controls={false}
+                        precision={0}
+                        decimalSeparator=""
+                        formatter={(value) => {
+                          if (value === null || value === undefined) return '';
+                          const str = String(value);
+                          // Remove any existing dots first, then add formatting
+                          const cleaned = str.replace(/\./g, '');
+                          if (cleaned === '') return '';
+                          return cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        }}
+                        parser={(value) => {
+                          if (!value || value === '') return 0;
+                          // Remove all dots - in Vietnamese format, dots are thousands separators only
+                          const cleaned = String(value).replace(/\./g, '').replace(/\s/g, '');
+                          if (cleaned === '') return 0;
+                          const num = parseInt(cleaned, 10);
+                          return isNaN(num) ? 0 : num;
+                        }}
                       />
                       <Button disabled style={{ cursor: 'default', backgroundColor: '#fafafa', color: 'rgba(0, 0, 0, 0.45)', width: 40, padding: 0 }}>₫</Button>
                     </Space.Compact>
@@ -363,6 +374,16 @@ export function AdminProductForm() {
                     name="salePrice"
                     label="Sale – Giá khuyến mãi (VNĐ)"
                     extra="Để trống = không giảm. Hiển thị nhãn Sale khi giá KM < giá gốc."
+                    normalize={(value) => {
+                      if (value === null || value === undefined || value === '') return undefined;
+                      // If value is already a number, return it
+                      if (typeof value === 'number') return value;
+                      // If value is a string, parse it
+                      const cleaned = String(value).replace(/\./g, '').replace(/\s/g, '');
+                      if (cleaned === '') return undefined;
+                      const num = parseInt(cleaned, 10);
+                      return isNaN(num) ? undefined : num;
+                    }}
                     rules={[{ type: 'number', min: 0, message: 'Giá khuyến mãi ≥ 0' }]}
                   >
                     <InputNumber<number>
@@ -371,8 +392,25 @@ export function AdminProductForm() {
                       style={{ width: '100%' }}
                       addonAfter="₫"
                       placeholder="Trống = không sale"
-                      formatter={(v) => (v ? `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '')}
-                      parser={(v) => (v ? Number(v.replace(/\./g, '')) : undefined) as unknown as number}
+                      controls={false}
+                      precision={0}
+                      decimalSeparator=""
+                      formatter={(value) => {
+                        if (value === null || value === undefined) return '';
+                        const str = String(value);
+                        // Remove any existing dots first, then add formatting
+                        const cleaned = str.replace(/\./g, '');
+                        if (cleaned === '') return '';
+                        return cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                      }}
+                      parser={(value) => {
+                        if (!value || value === '') return undefined as unknown as number;
+                        // Remove all dots - in Vietnamese format, dots are thousands separators only
+                        const cleaned = String(value).replace(/\./g, '').replace(/\s/g, '');
+                        if (cleaned === '') return undefined as unknown as number;
+                        const num = parseInt(cleaned, 10);
+                        return (isNaN(num) ? undefined : num) as unknown as number;
+                      }}
                     />
                   </Form.Item>
                 </Col>

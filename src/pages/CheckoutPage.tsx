@@ -21,7 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppSettingsReadOnly } from '@/context/AppSettingsContext';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/lib/toast';
-import { ordersApi } from '@/lib/customerApi';
+import { ordersApi, vnpayApi } from '@/lib/customerApi';
 import { cn } from '@/lib/utils';
 
 const steps = [
@@ -30,8 +30,8 @@ const steps = [
   { id: 3, name: 'Xác nhận đơn hàng', icon: Check },
 ];
 
-const PAYMENT_MAP: Record<string, string> = { cod: 'COD', momo: 'MOMO', paypal: 'PAYPAL' };
-type PaymentKey = 'cod' | 'momo' | 'paypal';
+const PAYMENT_MAP: Record<string, string> = { cod: 'COD', momo: 'MOMO', paypal: 'PAYPAL', vnpay: 'VNPAY' };
+type PaymentKey = 'cod' | 'momo' | 'paypal' | 'vnpay';
 
 export function CheckoutPage() {
   const { state, subtotal, clearCart } = useCart();
@@ -42,6 +42,7 @@ export function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState('');
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null); // Lưu mã đơn sau khi tạo
   const [checkoutError, setCheckoutError] = useState('');
 
   const paymentOptions = useMemo((): PaymentKey[] => {
@@ -49,6 +50,8 @@ export function CheckoutPage() {
     if (general.paymentCodEnabled) out.push('cod');
     if (general.paymentMomoEnabled) out.push('momo');
     if (general.paymentPayPalEnabled) out.push('paypal');
+    // VNPAY luôn enabled (có thể thêm vào settings sau)
+    out.push('vnpay');
     return out;
   }, [general.paymentCodEnabled, general.paymentMomoEnabled, general.paymentPayPalEnabled]);
 
@@ -173,8 +176,10 @@ export function CheckoutPage() {
     setCheckoutError('');
     setIsProcessing(true);
     try {
+      const paymentMethodValue = PAYMENT_MAP[paymentMethod] ?? PAYMENT_MAP[defaultPayment] ?? 'COD';
+      
       const { data } = await ordersApi.checkout(
-        PAYMENT_MAP[paymentMethod] ?? PAYMENT_MAP[defaultPayment] ?? 'COD',
+        paymentMethodValue,
         items,
         {
           recipientName: shippingInfo.fullName,
@@ -183,13 +188,37 @@ export function CheckoutPage() {
           note: shippingInfo.note,
         }
       );
+      
+      // Lưu mã đơn hàng để hiển thị
+      const orderCode = data.orderNumber ?? String(data.id).padStart(6, '0');
+      setCreatedOrderId(orderCode);
+      
+      // Nếu là VNPAY, redirect đến trang thanh toán
+      if (paymentMethod === 'vnpay') {
+        try {
+          const { data: paymentData } = await vnpayApi.createPaymentUrl(data.id);
+          if (paymentData.code === '00' && paymentData.data) {
+            // Redirect đến VNPAY
+            window.location.href = paymentData.data;
+            return; // Không clear cart ở đây, sẽ clear sau khi thanh toán thành công
+          } else {
+            throw new Error(paymentData.message || 'Không thể tạo URL thanh toán');
+          }
+        } catch (error: any) {
+          setCheckoutError('Không thể tạo URL thanh toán VNPAY: ' + (error.message || 'Lỗi không xác định'));
+          toast.error('Không thể tạo URL thanh toán VNPAY');
+          return;
+        }
+      }
+      
+      // Các phương thức thanh toán khác (COD, MOMO, PayPal - chưa tích hợp thật)
       setOrderId(data.orderNumber ?? String(data.id).padStart(6, '0'));
       setOrderComplete(true);
       clearCart();
       toast.success('Đặt hàng thành công! Mã đơn: ' + (data.orderNumber ?? String(data.id).padStart(6, '0')));
-    } catch {
+    } catch (error: any) {
       setCheckoutError('Đặt hàng thất bại. Vui lòng thử lại.');
-      toast.error('Đặt hàng thất bại. Vui lòng thử lại.');
+      toast.error('Đặt hàng thất bại: ' + (error.message || 'Lỗi không xác định'));
     } finally {
       setIsProcessing(false);
     }
@@ -516,6 +545,29 @@ export function CheckoutPage() {
                             </div>
                           </label>
                         )}
+                        {paymentOptions.includes('vnpay') && (
+                          <label
+                            className={cn(
+                              'flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors',
+                              paymentMethod === 'vnpay'
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/50'
+                            )}
+                          >
+                            <RadioGroupItem value="vnpay" id="vnpay" />
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="h-8 w-20 bg-blue-600 text-white rounded flex items-center justify-center text-xs font-bold">
+                                VNPAY
+                              </div>
+                              <div>
+                                <p className="font-medium">VNPAY</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Thanh toán qua cổng VNPAY (ATM, thẻ quốc tế, ví điện tử)
+                                </p>
+                              </div>
+                            </div>
+                          </label>
+                        )}
                       </RadioGroup>
                     )}
                   </div>
@@ -555,9 +607,25 @@ export function CheckoutPage() {
                         </Button>
                       </div>
                       <div className="bg-muted/50 rounded-lg p-4 text-sm">
-                        {paymentMethod === 'cod' && 'Thanh toán khi nhận hàng (COD)'}
-                        {paymentMethod === 'momo' && 'Ví điện tử Momo'}
-                        {paymentMethod === 'paypal' && 'PayPal'}
+                        {createdOrderId ? (
+                          <div>
+                            <p className="font-medium mb-1">Mã đơn hàng:</p>
+                            <p className="font-mono font-semibold text-primary">{createdOrderId}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {paymentMethod === 'cod' && 'Thanh toán khi nhận hàng (COD)'}
+                              {paymentMethod === 'momo' && 'Ví điện tử Momo'}
+                              {paymentMethod === 'paypal' && 'PayPal'}
+                              {paymentMethod === 'vnpay' && 'Thanh toán qua VNPAY'}
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            {paymentMethod === 'cod' && 'Thanh toán khi nhận hàng (COD)'}
+                            {paymentMethod === 'momo' && 'Ví điện tử Momo'}
+                            {paymentMethod === 'paypal' && 'PayPal'}
+                            {paymentMethod === 'vnpay' && 'Thanh toán qua VNPAY'}
+                          </>
+                        )}
                       </div>
                     </div>
 

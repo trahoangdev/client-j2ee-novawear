@@ -15,6 +15,7 @@ const NewArrivalsPage = lazy(() => import("@/pages/NewArrivalsPage").then(m => (
 const ProductDetailPage = lazy(() => import("@/pages/ProductDetailPage").then(m => ({ default: m.ProductDetailPage })));
 const CartPage = lazy(() => import("@/pages/CartPage").then(m => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import("@/pages/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
+const PaymentReturnPage = lazy(() => import("@/pages/PaymentReturnPage").then(m => ({ default: m.PaymentReturnPage })));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage").then(m => ({ default: m.ProfilePage })));
 const OrdersPage = lazy(() => import("@/pages/OrdersPage").then(m => ({ default: m.OrdersPage })));
 const FaqPage = lazy(() => import("@/pages/FaqPage").then(m => ({ default: m.FaqPage })));
@@ -78,6 +79,7 @@ function App() {
                 <Route path="/product/:slug" element={<ProductDetailPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/payment/vnpay/return" element={<PaymentReturnPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/orders" element={<OrdersPage />} />
                 <Route path="/faq" element={<FaqPage />} />

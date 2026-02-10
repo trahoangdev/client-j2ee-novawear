@@ -103,3 +103,23 @@ export const ordersApi = {
   cancel: (id: number, reason: string) =>
     api.post<OrderDto>(`/api/orders/${id}/cancel`, null, { params: { reason } }),
 };
+
+/** VNPAY Payment */
+export const vnpayApi = {
+  createPaymentUrl: (orderId: number) =>
+    api.post<{ code: string; message: string; data: string }>(
+      '/api/payment/vnpay/create-payment-url',
+      null,
+      { params: { orderId } }
+    ),
+  processReturn: (params: Record<string, string>) =>
+    api.get<{
+      success: boolean;
+      orderId?: number;
+      orderCode?: string;
+      amount?: number;
+      responseCode?: string;
+      transactionNo?: string;
+      message: string;
+    }>('/api/payment/vnpay/return', { params }),
+};
