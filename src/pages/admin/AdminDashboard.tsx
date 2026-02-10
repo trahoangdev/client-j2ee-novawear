@@ -1,12 +1,18 @@
+import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { Card, Row, Col, Statistic, Table, Tag, Typography, Spin, Empty, Button, Tooltip as AntTooltip } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  ShoppingCart,
-  Users,
-  Package,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  DollarOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
+  ShoppingOutlined,
+  FolderOutlined,
+  StarOutlined,
+  PictureOutlined,
+  SettingOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
 import {
   AreaChart,
   Area,
@@ -17,293 +23,295 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
+  Legend,
 } from 'recharts';
-import { dashboardStats, salesData, topProducts, mockOrders, formatCurrency } from '@/data/mock-data';
-import { cn } from '@/lib/utils';
+import {
+  adminStatsApi,
+  adminOrdersApi,
+  adminUsersApi,
+  productsApi,
+  adminCategoriesApi,
+  adminReviewsApi,
+} from '@/lib/adminApi';
+import type { OrderDto, TopProductDto } from '@/types/api';
 
-const statsCards = [
+function formatCurrency(n: number) {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
+}
+
+function formatDate(iso: string) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+const statusColors: Record<string, string> = {
+  PENDING: 'gold',
+  CONFIRMED: 'blue',
+  PROCESSING: 'purple',
+  SHIPPED: 'cyan',
+  DELIVERED: 'green',
+  CANCELLED: 'red',
+};
+
+const orderColumns: ColumnsType<OrderDto> = [
+  { title: 'ID', dataIndex: 'id', key: 'id', width: 72, render: (t) => <Typography.Text code>#{t}</Typography.Text> },
+  { title: 'Ngày đặt', dataIndex: 'orderDate', key: 'orderDate', width: 100, render: (v: string) => formatDate(v) },
+  { title: 'Khách hàng', dataIndex: 'username', key: 'username' },
+  { title: 'Tổng tiền', dataIndex: 'totalAmount', key: 'totalAmount', render: (v: number) => formatCurrency(v) },
   {
-    title: 'Doanh Thu',
-    value: dashboardStats.totalRevenue,
-    change: dashboardStats.revenueChange,
-    icon: DollarSign,
-    format: 'currency',
-    gradient: 'from-cyan/20 to-cyan/5',
-    iconBg: 'bg-cyan/20',
-    iconColor: 'text-cyan',
-  },
-  {
-    title: 'Đơn Hàng',
-    value: dashboardStats.totalOrders,
-    change: dashboardStats.ordersChange,
-    icon: ShoppingCart,
-    format: 'number',
-    gradient: 'from-magenta/20 to-magenta/5',
-    iconBg: 'bg-magenta/20',
-    iconColor: 'text-magenta',
-  },
-  {
-    title: 'Khách Hàng',
-    value: dashboardStats.totalCustomers,
-    change: dashboardStats.customersChange,
-    icon: Users,
-    format: 'number',
-    gradient: 'from-gold/20 to-gold/5',
-    iconBg: 'bg-gold/20',
-    iconColor: 'text-gold',
-  },
-  {
-    title: 'Sản Phẩm',
-    value: dashboardStats.totalProducts,
-    change: dashboardStats.productsChange,
-    icon: Package,
-    format: 'number',
-    gradient: 'from-success/20 to-success/5',
-    iconBg: 'bg-success/20',
-    iconColor: 'text-success',
+    title: 'Trạng thái',
+    dataIndex: 'status',
+    key: 'status',
+    render: (status: string) => <Tag color={statusColors[status] ?? 'default'}>{status}</Tag>,
   },
 ];
 
-const orderStatusColors: Record<string, string> = {
-  pending: 'bg-yellow-500/20 text-yellow-500',
-  confirmed: 'bg-blue-500/20 text-blue-500',
-  processing: 'bg-purple-500/20 text-purple-500',
-  shipped: 'bg-cyan/20 text-cyan',
-  delivered: 'bg-success/20 text-success',
-  cancelled: 'bg-destructive/20 text-destructive',
-};
-
-const orderStatusLabels: Record<string, string> = {
-  pending: 'Chờ xác nhận',
-  confirmed: 'Đã xác nhận',
-  processing: 'Đang xử lý',
-  shipped: 'Đang giao',
-  delivered: 'Đã giao',
-  cancelled: 'Đã hủy',
-};
+const quickLinks = [
+  { to: '/admin/orders', icon: <ShoppingCartOutlined />, label: 'Đơn hàng' },
+  { to: '/admin/customers', icon: <UserOutlined />, label: 'Khách hàng' },
+  { to: '/admin/products', icon: <ShoppingOutlined />, label: 'Sản phẩm' },
+  { to: '/admin/reviews', icon: <StarOutlined />, label: 'Đánh giá' },
+  { to: '/admin/public/banners', icon: <PictureOutlined />, label: 'Banner' },
+  { to: '/admin/settings', icon: <SettingOutlined />, label: 'Cài đặt' },
+];
 
 export function AdminDashboard() {
-  return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="font-display text-2xl md:text-3xl font-bold text-white mb-1">
-          Tổng Quan
-        </h1>
-        <p className="text-white/50">Chào mừng trở lại! Đây là tình hình kinh doanh của bạn.</p>
-      </div>
+  const [revenue, setRevenue] = useState<number>(0);
+  const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [totalCustomers, setTotalCustomers] = useState<number | null>(null);
+  const [totalProducts, setTotalProducts] = useState<number | null>(null);
+  const [totalCategories, setTotalCategories] = useState<number | null>(null);
+  const [pendingReviewsCount, setPendingReviewsCount] = useState<number>(0);
+  const [byDay, setByDay] = useState<{ date: string; revenue: number; orders: number }[]>([]);
+  const [recentOrders, setRecentOrders] = useState<OrderDto[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProductDto[]>([]);
+  const [loading, setLoading] = useState(true);
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statsCards.map((stat) => (
-          <Card
-            key={stat.title}
-            className={cn(
-              'bg-gradient-to-br border-white/10',
-              stat.gradient
-            )}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-white/70 mb-1">{stat.title}</p>
-                  <p className="font-display text-2xl font-bold text-white">
-                    {stat.format === 'currency'
-                      ? formatCurrency(stat.value)
-                      : stat.value.toLocaleString()}
-                  </p>
-                  <div
-                    className={cn(
-                      'flex items-center gap-1 mt-2 text-sm',
-                      stat.change >= 0 ? 'text-success' : 'text-destructive'
-                    )}
-                  >
-                    {stat.change >= 0 ? (
-                      <TrendingUp className="h-4 w-4" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4" />
-                    )}
-                    <span>{Math.abs(stat.change)}%</span>
-                    <span className="text-white/50">so với tháng trước</span>
-                  </div>
-                </div>
-                <div className={cn('p-3 rounded-xl', stat.iconBg)}>
-                  <stat.icon className={cn('h-6 w-6', stat.iconColor)} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [
+        statsRes,
+        ordersRes,
+        usersRes,
+        productsRes,
+        categoriesRes,
+        reviewsRes,
+        topProductsRes,
+      ] = await Promise.all([
+        adminStatsApi.revenue(),
+        adminOrdersApi.list({ page: 0, size: 5 }),
+        adminUsersApi.list({ page: 0, size: 1 }),
+        productsApi.list({ page: 0, size: 1 }),
+        adminCategoriesApi.list(),
+        adminReviewsApi.list({ page: 0, size: 500 }),
+        adminStatsApi.topProducts({ limit: 5 }),
+      ]);
 
-      {/* Charts Row */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
-        <Card className="bg-navy-light border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Doanh Thu</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={salesData}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00D9FF" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#00D9FF" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis
-                    dataKey="date"
-                    stroke="rgba(255,255,255,0.5)"
-                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-                    tickFormatter={(value) => value.slice(5)}
-                  />
-                  <YAxis
-                    stroke="rgba(255,255,255,0.5)"
-                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-                    tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1A1F36',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
-                    }}
-                    labelStyle={{ color: '#fff' }}
-                    formatter={(value: number) => [formatCurrency(value), 'Doanh thu']}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#00D9FF"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorRevenue)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+      const s = statsRes.data;
+      setRevenue(Number(s.totalRevenue));
+      setTotalOrders(s.totalOrders ?? 0);
+      setByDay(
+        (s.byDay ?? []).map((d) => ({
+          date: d.date,
+          revenue: Number(d.revenue),
+          orders: d.orderCount ?? 0,
+        }))
+      );
+      setRecentOrders(ordersRes.data.content);
+      setTotalCustomers(usersRes.data.totalElements);
+      setTotalProducts(productsRes.data.totalElements);
+      setTotalCategories(Array.isArray(categoriesRes.data) ? categoriesRes.data.length : 0);
+      const pending = (reviewsRes.data.content ?? []).filter((r) => !r.approved).length;
+      setPendingReviewsCount(pending);
+      setTopProducts(topProductsRes.data);
+    } catch {
+      // Ignore error
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-        {/* Orders Chart */}
-        <Card className="bg-navy-light border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Đơn Hàng</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis
-                    dataKey="date"
-                    stroke="rgba(255,255,255,0.5)"
-                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-                    tickFormatter={(value) => value.slice(5)}
-                  />
-                  <YAxis
-                    stroke="rgba(255,255,255,0.5)"
-                    tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1A1F36',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
-                    }}
-                    labelStyle={{ color: '#fff' }}
-                    formatter={(value: number) => [value, 'Đơn hàng']}
-                  />
-                  <Bar dataKey="orders" fill="#FF006E" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-      {/* Bottom Row */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
-        <Card className="bg-navy-light border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Đơn Hàng Gần Đây</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockOrders.slice(0, 5).map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between p-3 bg-white/5 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-cyan/10 flex items-center justify-center">
-                      <ShoppingCart className="h-5 w-5 text-cyan" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-white font-mono text-sm">
-                        {order.orderNumber}
-                      </p>
-                      <p className="text-sm text-white/50">{order.user.name}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-white">
-                      {formatCurrency(order.total)}
-                    </p>
-                    <span
-                      className={cn(
-                        'inline-flex px-2 py-0.5 rounded-full text-xs font-medium',
-                        orderStatusColors[order.status]
-                      )}
-                    >
-                      {orderStatusLabels[order.status]}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+  const chartGrid = { stroke: 'var(--admin-border)' };
+  const chartTick = { fill: 'var(--admin-text-muted)', fontSize: 12 };
+  const tooltipStyle = { background: 'var(--admin-bg-container)', border: '1px solid var(--admin-border)', borderRadius: 8 };
 
-        {/* Top Products */}
-        <Card className="bg-navy-light border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Sản Phẩm Bán Chạy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {topProducts.slice(0, 5).map((item, index) => (
-                <div
-                  key={item.product.id}
-                  className="flex items-center gap-4 p-3 bg-white/5 rounded-lg"
-                >
-                  <span className="font-display text-lg font-bold text-white/30 w-6">
-                    #{index + 1}
-                  </span>
-                  <img
-                    src={item.product.images[0]}
-                    alt={item.product.name}
-                    className="h-12 w-10 object-cover rounded-md"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white text-sm line-clamp-1">
-                      {item.product.name}
-                    </p>
-                    <p className="text-xs text-white/50">{item.sales} đã bán</p>
-                  </div>
-                  <p className="font-medium text-cyan">
-                    {formatCurrency(item.revenue)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+  const stats = [
+    { title: 'Doanh thu', value: revenue, prefix: <DollarOutlined />, formatter: (v: number) => formatCurrency(v) },
+    { title: 'Đơn hàng', value: totalOrders, prefix: <ShoppingCartOutlined />, formatter: null },
+    { title: 'Khách hàng', value: totalCustomers ?? '—', prefix: <UserOutlined />, formatter: null },
+    { title: 'Sản phẩm', value: totalProducts ?? '—', prefix: <ShoppingOutlined />, formatter: null },
+    { title: 'Danh mục', value: totalCategories ?? '—', prefix: <FolderOutlined />, formatter: null },
+  ];
+
+  const chartEmpty = (
+    <div style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Empty description="Chưa có dữ liệu" image={Empty.PRESENTED_IMAGE_SIMPLE} />
     </div>
+  );
+
+  return (
+    <Spin spinning={loading} tip="Đang tải...">
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 24 }}>
+          <div>
+            <Typography.Title level={4} style={{ margin: 0, color: 'var(--admin-text)' }}>
+              Tổng quan
+            </Typography.Title>
+            <Typography.Text type="secondary" style={{ color: 'var(--admin-text-secondary)' }}>
+              Doanh thu & đơn hàng 30 ngày gần nhất.
+            </Typography.Text>
+          </div>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={loadData}
+            loading={loading}
+          >
+            Làm mới
+          </Button>
+        </div>
+
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          {stats.map((s) => (
+            <Col xs={24} sm={12} lg={8} key={s.title}>
+              <Card size="small">
+                <Statistic
+                  title={<span style={{ color: 'var(--admin-text-secondary)' }}>{s.title}</span>}
+                  value={s.value}
+                  prefix={s.prefix}
+                  formatter={s.formatter ? (_, v) => s.formatter(Number(v)) : undefined}
+                  valueStyle={{ color: 'var(--admin-text)' }}
+                />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={24} lg={12}>
+            <Card title="Doanh thu theo ngày" size="small">
+              <div style={{ height: 280 }}>
+                {byDay.length === 0 ? (
+                  chartEmpty
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={byDay}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--admin-primary-hover)" stopOpacity={0.35} />
+                          <stop offset="95%" stopColor="var(--admin-primary-hover)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} />
+                      <XAxis dataKey="date" stroke={chartGrid.stroke} tick={chartTick} tickFormatter={(v) => (v && String(v).slice(5)) || v} />
+                      <YAxis stroke={chartGrid.stroke} tick={chartTick} tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [formatCurrency(value), 'Doanh thu']} />
+                      <Area type="monotone" dataKey="revenue" stroke="var(--admin-primary-hover)" strokeWidth={2} fill="url(#colorRevenue)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} lg={12}>
+            <Card title="Top 5 Sản phẩm bán chạy (30 ngày)" size="small">
+              <div style={{ height: 280 }}>
+                {topProducts.length === 0 ? (
+                  chartEmpty
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={topProducts} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={chartGrid.stroke} horizontal={false} />
+                      <XAxis type="number" stroke={chartGrid.stroke} tick={chartTick} allowDecimals={false} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={100}
+                        stroke={chartGrid.stroke}
+                        tick={{ ...chartTick, fontSize: 11 }}
+                        interval={0}
+                        tickFormatter={(val) => val.length > 15 ? val.slice(0, 15) + '...' : val}
+                      />
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        cursor={{ fill: 'var(--admin-bg-layout)' }}
+                      />
+                      <Bar dataKey="totalSold" name="Đã bán" fill="#82ca9d" radius={[0, 4, 4, 0]}>
+                        {topProducts.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE'][index % 5]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </Card>
+          </Col>
+        </Row>
+
+        <Row gutter={[16, 16]}>
+          <Col xs={24} lg={12}>
+            <Card title="Đơn hàng gần đây" size="small">
+              <Table
+                dataSource={recentOrders}
+                columns={orderColumns}
+                rowKey="id"
+                pagination={false}
+                size="small"
+                loading={loading}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} lg={12}>
+            <Card
+              title="Hành động nhanh"
+              size="small"
+              extra={
+                pendingReviewsCount > 0 ? (
+                  <Link to="/admin/reviews">
+                    <Tag color="orange">{pendingReviewsCount} đánh giá chờ duyệt</Tag>
+                  </Link>
+                ) : null
+              }
+            >
+              <Row gutter={[8, 8]}>
+                {quickLinks.map(({ to, icon, label }) => (
+                  <Col span={12} key={to}>
+                    <Link
+                      to={to}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        color: 'var(--admin-text)',
+                        background: 'var(--admin-bg-layout)',
+                      }}
+                    >
+                      {icon}
+                      <span>{label}</span>
+                    </Link>
+                  </Col>
+                ))}
+              </Row>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    </Spin>
   );
 }

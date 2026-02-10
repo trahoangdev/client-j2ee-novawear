@@ -1,3 +1,13 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build
+dist
+dist-ssr
+*.local
+
 # Logs
 logs
 *.log
@@ -7,14 +17,28 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Environment
+.env
+.env.*
+!.env.example
 
-# Editor directories and files
+# Testing / Coverage
+coverage
+*.lcov
+.nyc_output
+
+# Cache
+.npm
+.npm-cache/
+.eslintcache
+*.tsbuildinfo
+.cache
+.vite
+
+# Editor / OS
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
@@ -22,14 +46,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
 
-!node_modules/.vite
-
-**/tempobook/dynamic/
-**/tempobook/storyboards/
-
-core
-
-.github/
-
-**/tempobook/**
+# Optional (uncomment if used)
+# **/tempobook/
+# .turbo
+# .vercel

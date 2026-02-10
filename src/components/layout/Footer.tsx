@@ -1,192 +1,164 @@
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useAppSettingsReadOnly } from '@/context/AppSettingsContext';
+
+const shopLinks = [
+  { to: '/shop', label: 'Tất Cả Sản Phẩm' },
+  { to: '/nam', label: 'Nam' },
+  { to: '/nu', label: 'Nữ' },
+  { to: '/unisex', label: 'Unisex' },
+  { to: '/new-arrivals', label: 'Hàng Mới Về' },
+  { to: '/bestseller', label: 'Bán Chạy Nhất' },
+  { to: '/sale', label: 'Khuyến Mãi', highlight: true },
+];
+
+const supportLinks = [
+  { to: '/faq', label: 'Câu Hỏi Thường Gặp' },
+  { to: '/size-guide', label: 'Hướng Dẫn Chọn Size' },
+  { to: '/shipping', label: 'Chính Sách Vận Chuyển' },
+  { to: '/returns', label: 'Chính Sách Đổi Trả' },
+  { to: '/terms', label: 'Điều Khoản Sử Dụng' },
+  { to: '/privacy', label: 'Chính Sách Bảo Mật' },
+];
+
+function BrandName({ name }: { name: string }) {
+  if (name === 'NOVAWEAR') {
+    return <>NOVA<span className="text-primary">WEAR</span></>;
+  }
+  return <span>{name}</span>;
+}
 
 export function Footer() {
-  return (
-    <footer className="bg-foreground text-background">
-      {/* Newsletter Section */}
-      <div className="border-b border-background/10">
-        <div className="container py-12 md:py-16">
-          <div className="max-w-xl mx-auto text-center">
-            <h3 className="font-display text-2xl md:text-3xl font-bold mb-3">
-              Đăng Ký Nhận Tin
-            </h3>
-            <p className="text-background/70 mb-6">
-              Nhận thông tin về các bộ sưu tập mới và ưu đãi độc quyền
-            </p>
-            <form className="flex gap-2 max-w-md mx-auto">
-              <Input
-                type="email"
-                placeholder="Email của bạn"
-                className="bg-background/10 border-background/20 text-background placeholder:text-background/50 focus-visible:ring-primary"
-              />
-              <Button className="bg-primary hover:bg-primary/90 shrink-0">
-                Đăng Ký
-              </Button>
-            </form>
-          </div>
-        </div>
-      </div>
+  const { store, general } = useAppSettingsReadOnly();
+  const telHref = store.hotline ? `tel:${store.hotline.replace(/\s/g, '')}` : undefined;
+  const mailHref = store.supportEmail ? `mailto:${store.supportEmail}` : undefined;
 
-      {/* Main Footer */}
-      <div className="container py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
-          {/* Brand */}
-          <div className="lg:col-span-1">
-            <Link to="/" className="inline-block mb-4">
-              <h2 className="font-display text-2xl font-bold">
-                NOVA<span className="text-primary">WEAR</span>
-              </h2>
+  return (
+    <footer className="bg-[#0a0a0a] text-white pt-16 pb-8 border-t border-white/5" role="contentinfo">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-16">
+          {/* Brand Column (2 cols wide on LG) */}
+          <div className="lg:col-span-2 space-y-6">
+            <Link to="/" className="inline-block">
+              <span className="font-display text-2xl md:text-3xl font-bold tracking-tight">
+                <BrandName name={store.storeName || 'NOVAWEAR'} />
+              </span>
             </Link>
-            <p className="text-background/70 text-sm mb-6 leading-relaxed">
-              Thời trang Việt Nam hiện đại, kết hợp hoàn hảo giữa phong cách đương đại và chất lượng cao cấp.
+            <p className="text-gray-400 text-sm leading-relaxed max-w-sm">
+              {store.tagline || 'Thời trang phong cách, chất lượng cao cấp. Khám phá bộ sưu tập mới nhất của chúng tôi ngay hôm nay.'}
             </p>
+
             <div className="flex gap-4">
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors"
-              >
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors"
-              >
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a
-                href="https://zalo.me"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors"
-              >
-                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 16.894c-.198.198-.518.198-.716 0l-2.122-2.122c-.198-.198-.518-.198-.716 0l-2.122 2.122c-.198.198-.518.198-.716 0-.198-.198-.198-.518 0-.716l2.122-2.122c.198-.198.198-.518 0-.716l-2.122-2.122c-.198-.198-.198-.518 0-.716.198-.198.518-.198.716 0l2.122 2.122c.198.198.518.198.716 0l2.122-2.122c.198-.198.518-.198.716 0 .198.198.198.518 0 .716l-2.122 2.122c-.198.198-.198.518 0 .716l2.122 2.122c.198.198.198.518 0 .716z"/>
-                </svg>
-              </a>
+              {store.facebookUrl && (
+                <a href={store.facebookUrl} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 group ring-1 ring-white/10 hover:ring-primary" aria-label="Facebook">
+                  <Facebook className="h-5 w-5 opacity-70 group-hover:opacity-100" />
+                </a>
+              )}
+              {store.instagramUrl && (
+                <a href={store.instagramUrl} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 group ring-1 ring-white/10 hover:ring-primary" aria-label="Instagram">
+                  <Instagram className="h-5 w-5 opacity-70 group-hover:opacity-100" />
+                </a>
+              )}
+              {store.zaloUrl && (
+                <a href={store.zaloUrl.startsWith('http') ? store.zaloUrl : `https://zalo.me/${store.zaloUrl.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 group ring-1 ring-white/10 hover:ring-primary" aria-label="Zalo">
+                  <svg className="h-5 w-5 opacity-70 group-hover:opacity-100" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" /></svg>
+                </a>
+              )}
             </div>
           </div>
 
-          {/* Shop */}
-          <div>
-            <h4 className="font-semibold mb-4">Mua Sắm</h4>
+          {/* Shop Links */}
+          <div className="space-y-6">
+            <h3 className="font-semibold text-lg tracking-wide text-white/90">Mua Sắm</h3>
             <ul className="space-y-3">
-              <li>
-                <Link to="/shop" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Tất Cả Sản Phẩm
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?category=tops" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Áo
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?category=pants" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Quần
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?category=dresses" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Váy
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?category=accessories" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Phụ Kiện
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?sale=true" className="text-primary hover:text-primary/80 text-sm transition-colors font-medium">
-                  Khuyến Mãi
-                </Link>
-              </li>
+              {shopLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className={cn(
+                      "text-sm transition-colors block py-0.5",
+                      link.highlight
+                        ? "text-red-400 font-medium hover:text-red-300"
+                        : "text-gray-400 hover:text-primary hover:translate-x-1 transition-transform"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Support */}
-          <div>
-            <h4 className="font-semibold mb-4">Hỗ Trợ</h4>
+          {/* Support Links */}
+          <div className="space-y-6">
+            <h3 className="font-semibold text-lg tracking-wide text-white/90">Hỗ Trợ</h3>
             <ul className="space-y-3">
-              <li>
-                <Link to="/faq" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Câu Hỏi Thường Gặp
-                </Link>
-              </li>
-              <li>
-                <Link to="/shipping" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Chính Sách Vận Chuyển
-                </Link>
-              </li>
-              <li>
-                <Link to="/returns" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Đổi Trả & Hoàn Tiền
-                </Link>
-              </li>
-              <li>
-                <Link to="/size-guide" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Hướng Dẫn Chọn Size
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-background/70 hover:text-background text-sm transition-colors">
-                  Liên Hệ
-                </Link>
-              </li>
+              {supportLinks.map((link) => (
+                <li key={link.to}>
+                  <Link to={link.to} className="text-gray-400 hover:text-primary transition-colors text-sm hover:translate-x-1 transition-transform block py-0.5">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact */}
-          <div>
-            <h4 className="font-semibold mb-4">Liên Hệ</h4>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span className="text-background/70 text-sm">
-                  123 Nguyễn Huệ, Quận 1,<br />TP. Hồ Chí Minh
-                </span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-primary shrink-0" />
-                <a href="tel:1900123456" className="text-background/70 hover:text-background text-sm transition-colors">
-                  1900 123 456
-                </a>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-primary shrink-0" />
-                <a href="mailto:support@novawear.vn" className="text-background/70 hover:text-background text-sm transition-colors">
-                  support@novawear.vn
-                </a>
-              </li>
+          {/* Contact & Newsletter */}
+          <div className="space-y-6">
+            <h3 className="font-semibold text-lg tracking-wide text-white/90">Liên Hệ</h3>
+            <ul className="space-y-4 text-sm text-gray-400">
+              {store.address && (
+                <li className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5 relative top-0.5" />
+                  <span className="leading-relaxed">{store.address}</span>
+                </li>
+              )}
+              {store.hotline && (
+                <li>
+                  <a href={telHref} className="flex items-center gap-3 hover:text-white transition-colors">
+                    <Phone className="h-5 w-5 text-primary shrink-0" /> <span className="font-medium">{store.hotline}</span>
+                  </a>
+                </li>
+              )}
+              {store.supportEmail && (
+                <li>
+                  <a href={mailHref} className="flex items-center gap-3 hover:text-white transition-colors break-all">
+                    <Mail className="h-5 w-5 text-primary shrink-0" /> <span>{store.supportEmail}</span>
+                  </a>
+                </li>
+              )}
             </ul>
+
+            {general.newsletterEnabled && (
+              <div className="pt-2">
+                <form className="relative" onSubmit={(e) => e.preventDefault()}>
+                  <Input
+                    type="email"
+                    placeholder="Email nhận tin..."
+                    className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 rounded-lg pr-12 focus-visible:ring-primary focus-visible:border-primary/50"
+                  />
+                  <Button size="icon" type="submit" className="absolute right-0 top-0 h-full w-10 bg-trasparent hover:bg-primary/20 text-primary hover:text-primary rounded-r-lg transition-colors">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-background/10">
-        <div className="container py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-background/50 text-sm">
-            © 2024 NOVAWEAR. Đã đăng ký bản quyền.
+        {/* Bottom Bar */}
+        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <p className="text-gray-500 text-xs sm:text-sm text-center md:text-left">
+            © {new Date().getFullYear()} {store.storeName || 'NOVAWEAR'}. Đã đăng ký bản quyền.
           </p>
-          <div className="flex items-center gap-4">
-            <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Icon-VNPAY-QR.png" alt="VNPay" className="h-6 opacity-70" />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-6 opacity-70" />
-            <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="Momo" className="h-6 opacity-70" />
-          </div>
-          <div className="flex items-center gap-4 text-sm text-background/50">
-            <Link to="/privacy" className="hover:text-background transition-colors">
-              Chính Sách Bảo Mật
-            </Link>
-            <Link to="/terms" className="hover:text-background transition-colors">
-              Điều Khoản
-            </Link>
+
+          <div className="flex items-center gap-4 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+            <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Icon-VNPAY-QR.png" alt="VNPay" className="h-8 w-auto object-contain bg-white rounded px-1 py-0.5" />
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-8 w-auto object-contain bg-white rounded px-1 py-0.5" />
+            <img src="/images/momo.svg" alt="Momo" className="h-8 w-auto object-contain bg-white rounded px-1 py-0.5" />
           </div>
         </div>
       </div>

@@ -1,0 +1,314 @@
+/**
+ * Admin theme – nền sáng, dễ nhìn
+ * Dùng cho toàn bộ /admin (ConfigProvider + class .admin-theme).
+ * Design token: đồng bộ giá trị với admin-tokens.ts khi đổi màu.
+ */
+.admin-theme {
+  /* Nền */
+  --admin-bg-layout: #f1f5f9;
+  --admin-bg-container: #ffffff;
+  --admin-bg-elevated: #f8fafc;
+  --admin-bg-hover: rgba(0, 0, 0, 0.04);
+  /* Viền */
+  --admin-border: #e2e8f0;
+  --admin-border-subtle: #e2e8f0;
+  /* Chữ */
+  --admin-text: #0f172a;
+  --admin-text-secondary: #475569;
+  --admin-text-muted: #64748b;
+  /* Accent */
+  --admin-primary: #0ea5e9;
+  --admin-primary-hover: #38bdf8;
+  --admin-primary-active: #0284c7;
+  /* Semantic */
+  --admin-success: #16a34a;
+  --admin-warning: #ca8a04;
+  --admin-error: #dc2626;
+}
+
+.admin-theme .ant-table {
+  --ant-table-bg: var(--admin-bg-container);
+  --ant-table-header-bg: var(--admin-bg-elevated);
+  --ant-table-row-hover-bg: var(--admin-bg-hover);
+  color: var(--admin-text);
+}
+.admin-theme .ant-table-thead > tr > th {
+  color: var(--admin-text-secondary);
+  border-bottom-color: var(--admin-border-subtle);
+  background: var(--admin-bg-elevated) !important;
+  padding: 12px 16px;
+}
+.admin-theme .ant-table-tbody > tr > td {
+  border-bottom-color: var(--admin-border-subtle);
+  padding: 12px 16px;
+}
+.admin-theme .ant-table-tbody > tr:hover > td {
+  background: var(--admin-bg-hover) !important;
+}
+.admin-theme .ant-card {
+  background: var(--admin-bg-container) !important;
+  border-color: var(--admin-border-subtle) !important;
+  color: var(--admin-text);
+}
+.admin-theme .ant-card-head {
+  color: var(--admin-text) !important;
+  border-bottom-color: var(--admin-border-subtle) !important;
+}
+.admin-theme .ant-statistic-title {
+  color: var(--admin-text-secondary) !important;
+}
+.admin-theme .ant-statistic-content {
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-typography {
+  color: var(--admin-text);
+}
+.admin-theme .ant-typography.ant-typography-secondary {
+  color: var(--admin-text-secondary);
+}
+.admin-theme .ant-select-selector,
+.admin-theme .ant-input,
+.admin-theme .ant-input-affix-wrapper {
+  background: var(--admin-bg-elevated) !important;
+  border-color: var(--admin-border) !important;
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-select-selector .ant-select-selection-item,
+.admin-theme .ant-select-selector .ant-select-selection-placeholder,
+.admin-theme .ant-select-selector .ant-select-selection-search input {
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-select-selector::placeholder,
+.admin-theme .ant-input::placeholder {
+  color: var(--admin-text-muted);
+}
+.admin-theme .ant-modal-content {
+  background: var(--admin-bg-elevated) !important;
+  border: 1px solid var(--admin-border-subtle);
+}
+.admin-theme .ant-modal-header {
+  background: transparent !important;
+  border-bottom-color: var(--admin-border-subtle) !important;
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-modal-title {
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-modal-close-x {
+  color: var(--admin-text-secondary);
+}
+.admin-theme .ant-form-item-label > label {
+  color: var(--admin-text-secondary) !important;
+}
+
+/* Nút: đồng bộ màu, primary phải nổi bật */
+.admin-theme .ant-btn-default {
+  background: var(--admin-bg-elevated) !important;
+  border-color: var(--admin-border) !important;
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-btn-default:hover {
+  border-color: var(--admin-primary) !important;
+  color: var(--admin-primary) !important;
+}
+.admin-theme .ant-btn-primary {
+  background: var(--admin-primary) !important;
+  border-color: var(--admin-primary) !important;
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-btn-primary:hover {
+  background: var(--admin-primary-hover) !important;
+  border-color: var(--admin-primary-hover) !important;
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-btn-link {
+  color: var(--admin-primary-active) !important;
+  opacity: 1;
+}
+.admin-theme .ant-btn-link:hover {
+  color: #0369a1 !important;
+  opacity: 1;
+}
+
+/* Mã đơn / code */
+.admin-theme .ant-typography code,
+.admin-theme .ant-typography.ant-typography-code {
+  background: var(--admin-bg-elevated) !important;
+  color: var(--admin-text) !important;
+  border: 1px solid var(--admin-border-subtle);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+/* Dropdown render ra body khi mở từ admin – chỉ khi body có class .admin-body */
+body.admin-body .ant-dropdown-menu {
+  background: #ffffff !important;
+  border: 1px solid var(--admin-border) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+body.admin-body .ant-dropdown-menu-item {
+  color: #0f172a !important;
+  font-weight: 500;
+  opacity: 1;
+}
+body.admin-body .ant-dropdown-menu-item:hover {
+  background: var(--admin-bg-hover) !important;
+  color: #0f172a !important;
+  opacity: 1;
+}
+body.admin-body .ant-dropdown-menu-item-divider {
+  background: var(--admin-border-subtle) !important;
+}
+body.admin-body .ant-dropdown-menu-item-danger {
+  color: var(--admin-error) !important;
+}
+body.admin-body .ant-dropdown-menu-item-danger:hover {
+  color: var(--admin-error) !important;
+  background: rgba(248, 113, 113, 0.12) !important;
+}
+
+/* Modal mở từ admin */
+body.admin-body .ant-modal-content {
+  background: var(--admin-bg-elevated) !important;
+  border: 1px solid var(--admin-border) !important;
+}
+body.admin-body .ant-modal-header {
+  background: transparent !important;
+  border-bottom-color: var(--admin-border) !important;
+}
+body.admin-body .ant-modal-title {
+  color: var(--admin-text) !important;
+}
+body.admin-body .ant-modal-close-x {
+  color: var(--admin-text-secondary);
+}
+body.admin-body .ant-modal-body {
+  color: var(--admin-text);
+}
+body.admin-body .ant-modal-footer {
+  border-top-color: var(--admin-border) !important;
+}
+body.admin-body .ant-modal-footer .ant-btn-default {
+  background: var(--admin-bg-elevated) !important;
+  border-color: var(--admin-border) !important;
+  color: var(--admin-text) !important;
+}
+body.admin-body .ant-modal-footer .ant-btn-primary {
+  background: var(--admin-primary) !important;
+  border-color: var(--admin-primary) !important;
+  color: var(--admin-text) !important;
+}
+body.admin-body .ant-modal-footer .ant-btn-primary:hover {
+  background: var(--admin-primary-hover) !important;
+  border-color: var(--admin-primary-hover) !important;
+  color: var(--admin-text) !important;
+}
+body.admin-body .ant-modal .ant-input,
+body.admin-body .ant-modal .ant-select-selector {
+  background: var(--admin-bg-elevated) !important;
+  border-color: var(--admin-border) !important;
+  color: var(--admin-text) !important;
+}
+body.admin-body .ant-modal .ant-select-selector .ant-select-selection-placeholder,
+body.admin-body .ant-modal .ant-select-selector .ant-select-selection-item {
+  color: var(--admin-text) !important;
+}
+body.admin-body .ant-modal .ant-input::placeholder {
+  color: var(--admin-text-secondary);
+}
+body.admin-body .ant-modal .ant-form-item-label > label {
+  color: var(--admin-text-secondary) !important;
+}
+body.admin-body .ant-descriptions-item-label {
+  background: var(--admin-bg-elevated) !important;
+  color: var(--admin-text-secondary) !important;
+  border-color: var(--admin-border-subtle) !important;
+}
+body.admin-body .ant-descriptions-item-content {
+  background: var(--admin-bg-container) !important;
+  color: var(--admin-text) !important;
+  border-color: var(--admin-border-subtle) !important;
+}
+
+/* Select dropdown (render ra body) – nền đặc, chữ đậm, không trong suốt */
+body.admin-body .ant-select-dropdown,
+body.admin-body .ant-select-dropdown .rc-virtual-list,
+body.admin-body .ant-select-dropdown .rc-virtual-list-holder,
+body.admin-body .ant-select-dropdown .rc-virtual-list-holder-inner {
+  background: #ffffff !important;
+}
+body.admin-body .ant-select-dropdown {
+  border: 1px solid var(--admin-border) !important;
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+/* Mỗi option có nền đặc để chữ không đè lên nhau */
+body.admin-body .ant-select-item {
+  background: #ffffff !important;
+  color: var(--admin-text) !important;
+}
+body.admin-body .ant-select-item-option-active,
+body.admin-body .ant-select-item-option-selected {
+  background: #f1f5f9 !important;
+  color: var(--admin-text) !important;
+}
+body.admin-body .ant-select-item-option-selected {
+  color: var(--admin-text) !important;
+}
+body.admin-body .ant-select-item-option-state {
+  color: var(--admin-text-secondary);
+}
+
+/* Pagination trong admin */
+.admin-theme .ant-pagination .ant-pagination-item a,
+.admin-theme .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+.admin-theme .ant-pagination .ant-pagination-next .ant-pagination-item-link {
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-pagination .ant-pagination-item {
+  background: var(--admin-bg-elevated) !important;
+  border-color: var(--admin-border) !important;
+}
+.admin-theme .ant-pagination .ant-pagination-item-active a {
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-pagination .ant-pagination-options .ant-select-selector {
+  background: var(--admin-bg-elevated) !important;
+  border-color: var(--admin-border) !important;
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-pagination .ant-pagination-options .ant-select-selector .ant-select-selection-item,
+.admin-theme .ant-pagination .ant-pagination-options .ant-select-selector .ant-select-selection-placeholder,
+.admin-theme .ant-pagination .ant-pagination-options .ant-select-selector .ant-select-selection-search input {
+  color: var(--admin-text) !important;
+}
+.admin-theme .ant-pagination .ant-pagination-total-text {
+  color: var(--admin-text-secondary) !important;
+}
+
+/* Markdown editor cho Mô tả sản phẩm */
+.admin-theme .admin-description-editor .w-md-editor {
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.admin-theme .admin-description-editor .w-md-editor-toolbar {
+  background: var(--admin-bg-elevated);
+  border-bottom: 1px solid var(--admin-border);
+}
+.admin-theme .admin-description-editor .w-md-editor-content {
+  background: var(--admin-bg-container);
+}
+.admin-theme .admin-description-editor .w-md-editor-text-pre,
+.admin-theme .admin-description-editor .w-md-editor-text-input,
+.admin-theme .admin-description-editor .wmde-markdown {
+  color: var(--admin-text);
+}
+.admin-theme .admin-description-editor .w-md-editor-preview {
+  background: var(--admin-bg-elevated);
+}
+.admin-theme .admin-description-editor .wmde-markdown p,
+.admin-theme .admin-description-editor .wmde-markdown li {
+  color: var(--admin-text);
+}
