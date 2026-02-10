@@ -127,9 +127,9 @@ export const adminStatsApi = {
 export const adminBannersApi = {
   list: () => api.get<BannerDto[]>('/api/admin/banners'),
   getById: (id: number) => api.get<BannerDto>(`/api/admin/banners/${id}`),
-  create: (data: { title?: string; subtitle?: string; imageUrl: string; linkUrl?: string; ctaText?: string; sortOrder?: number; active?: boolean }) =>
+  create: (data: { title?: string; subtitle?: string; imageUrl: string; linkUrl?: string; ctaText?: string; description?: string; ctaText2?: string; linkUrl2?: string; badgeText?: string; bannerType?: string; sortOrder?: number; active?: boolean }) =>
     api.post<BannerDto>('/api/admin/banners', data),
-  update: (id: number, data: { title?: string; subtitle?: string; imageUrl?: string; linkUrl?: string; ctaText?: string; sortOrder?: number; active?: boolean }) =>
+  update: (id: number, data: { title?: string; subtitle?: string; imageUrl?: string; linkUrl?: string; ctaText?: string; description?: string; ctaText2?: string; linkUrl2?: string; badgeText?: string; bannerType?: string; sortOrder?: number; active?: boolean }) =>
     api.put<BannerDto>(`/api/admin/banners/${id}`, data),
   delete: (id: number) => api.delete(`/api/admin/banners/${id}`),
 };

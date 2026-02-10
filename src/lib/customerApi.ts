@@ -12,6 +12,7 @@ import type {
 /** Public – không cần đăng nhập */
 export const bannersApi = {
   listActive: () => api.get<BannerDto[]>('/api/banners'),
+  getPromo: () => api.get<BannerDto>('/api/banners/promo'),
 };
 
 export const categoriesApi = {
@@ -88,7 +89,8 @@ export const ordersApi = {
   checkout: (
     paymentMethod: string,
     items: { productId: number; quantity: number }[],
-    shipping?: { recipientName: string; address: string; phone: string; note: string }
+    shipping?: { recipientName: string; address: string; phone: string; note: string },
+    voucherCode?: string
   ) =>
     api.post<OrderDto>('/api/orders/checkout', {
       paymentMethod,
@@ -99,6 +101,7 @@ export const ordersApi = {
         phone: shipping.phone,
         note: shipping.note,
       }),
+      ...(voucherCode && { voucherCode }),
     }),
   cancel: (id: number, reason: string) =>
     api.post<OrderDto>(`/api/orders/${id}/cancel`, null, { params: { reason } }),

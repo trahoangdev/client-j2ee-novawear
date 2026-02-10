@@ -85,9 +85,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    const wasAdmin = user?.role === 'admin';
     clearToken();
     setUser(null);
     toast.success('Đã đăng xuất');
+    // Redirect về trang login sau khi đăng xuất thành công
+    setTimeout(() => {
+      if (wasAdmin) {
+        window.location.href = '/admin/login';
+      } else {
+        window.location.href = '/login';
+      }
+    }, 100);
   };
 
   return (

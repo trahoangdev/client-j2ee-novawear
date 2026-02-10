@@ -117,7 +117,13 @@ function App() {
             </Suspense>
 
             {/* Global Components */}
-            <Toaster position="top-right" richColors expand duration={4000} />
+            <Toaster 
+              position="top-right" 
+              richColors 
+              expand 
+              duration={4000} 
+              offset={{ top: 80 }} 
+            />
           </CartProvider>
         </WishlistProvider>
       </AppSettingsProvider>

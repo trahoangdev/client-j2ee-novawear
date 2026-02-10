@@ -108,6 +108,11 @@ export interface BannerDto {
   imageUrl: string;
   linkUrl?: string;
   ctaText?: string;
+  description?: string;
+  ctaText2?: string;
+  linkUrl2?: string;
+  badgeText?: string;
+  bannerType?: 'CAROUSEL' | 'PROMO';
   sortOrder: number;
   active: boolean;
   createdAt?: string;

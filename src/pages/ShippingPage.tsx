@@ -10,7 +10,7 @@ export function ShippingPage() {
         </section>
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">Phí vận chuyển</h2>
-          <p>Đơn từ 500.000₫ trở lên được miễn phí vận chuyển. Dưới 500.000₫ phí 30.000₫. Một số khu vực xa có thể áp dụng phí bổ sung (sẽ thông báo khi đặt hàng).</p>
+          <p>Đơn từ 200.000₫ trở lên được miễn phí vận chuyển. Dưới 200.000₫ phí 30.000₫. Một số khu vực xa có thể áp dụng phí bổ sung (sẽ thông báo khi đặt hàng).</p>
         </section>
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">Theo dõi đơn hàng</h2>

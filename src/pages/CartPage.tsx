@@ -42,7 +42,7 @@ export function CartPage() {
         }
     };
 
-    const shippingFee = subtotal >= 500000 ? 0 : 30000;
+    const shippingFee = subtotal >= 200000 ? 0 : 30000;
     const total = subtotal + shippingFee - discountAmount;
 
     return (
@@ -235,7 +235,7 @@ export function CartPage() {
                                         )}
                                         {shippingFee > 0 && (
                                             <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-2.5">
-                                                💡 Miễn phí vận chuyển cho đơn hàng từ {formatCurrency(500000)}
+                                                💡 Miễn phí vận chuyển cho đơn hàng từ {formatCurrency(200000)}
                                             </p>
                                         )}
                                     </div>

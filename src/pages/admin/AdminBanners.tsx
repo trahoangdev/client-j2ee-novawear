@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Space, Typography, Modal, Form, Input, InputNumber, Switch, message, Spin, Image, Upload, Dropdown } from 'antd';
+import { Card, Table, Button, Space, Typography, Modal, Form, Input, InputNumber, Switch, message, Spin, Image, Upload, Dropdown, Select } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined, MoreOutlined } from '@ant-design/icons';
 import { adminBannersApi, adminUploadApi } from '@/lib/adminApi';
@@ -40,12 +40,17 @@ export function AdminBanners() {
           imageUrl: editing.imageUrl ?? '',
           linkUrl: editing.linkUrl ?? '',
           ctaText: editing.ctaText ?? '',
+          description: editing.description ?? '',
+          ctaText2: editing.ctaText2 ?? '',
+          linkUrl2: editing.linkUrl2 ?? '',
+          badgeText: editing.badgeText ?? '',
+          bannerType: editing.bannerType ?? 'CAROUSEL',
           sortOrder: editing.sortOrder ?? 0,
           active: editing.active !== false,
         });
       } else {
         form.resetFields();
-        form.setFieldsValue({ sortOrder: dataSource.length, active: true });
+        form.setFieldsValue({ sortOrder: dataSource.length, active: true, bannerType: 'CAROUSEL' });
       }
     }
   }, [modalOpen, editing, form, dataSource.length]);
@@ -59,6 +64,11 @@ export function AdminBanners() {
         imageUrl: values.imageUrl?.trim() || '',
         linkUrl: values.linkUrl?.trim() || undefined,
         ctaText: values.ctaText?.trim() || undefined,
+        description: values.description?.trim() || undefined,
+        ctaText2: values.ctaText2?.trim() || undefined,
+        linkUrl2: values.linkUrl2?.trim() || undefined,
+        badgeText: values.badgeText?.trim() || undefined,
+        bannerType: values.bannerType || 'CAROUSEL',
         sortOrder: values.sortOrder ?? 0,
         active: values.active !== false,
       };
@@ -119,6 +129,17 @@ export function AdminBanners() {
     { title: 'Tiêu đề', dataIndex: 'title', key: 'title', width: 160, ellipsis: true, render: (t) => t?.replace(/\n/g, ' ') ?? '—' },
     { title: 'Phụ đề', dataIndex: 'subtitle', key: 'subtitle', ellipsis: true, render: (t) => t ?? '—' },
     { title: 'Link', dataIndex: 'linkUrl', key: 'linkUrl', width: 120, ellipsis: true, render: (t) => t ?? '—' },
+    { 
+      title: 'Loại', 
+      dataIndex: 'bannerType', 
+      key: 'bannerType', 
+      width: 120, 
+      render: (t) => {
+        if (!t || t === 'CAROUSEL') return <Typography.Text>Carousel</Typography.Text>;
+        if (t === 'PROMO') return <Typography.Text type="warning">Promo</Typography.Text>;
+        return <Typography.Text>{t}</Typography.Text>;
+      }
+    },
     { title: 'Thứ tự', dataIndex: 'sortOrder', key: 'sortOrder', width: 80, align: 'center' },
     {
       title: 'Hiển thị',
@@ -212,6 +233,26 @@ export function AdminBanners() {
           <Form.Item name="subtitle" label="Phụ đề">
             <Input placeholder="Mô tả ngắn dưới tiêu đề" maxLength={301} showCount />
           </Form.Item>
+          <Form.Item name="description" label="Mô tả chi tiết">
+            <Input.TextArea 
+              placeholder="Mô tả dài cho banner (VD: Đăng ký thành viên ngay hôm nay để nhận mã giảm giá...)" 
+              rows={3} 
+              maxLength={1001} 
+              showCount 
+            />
+          </Form.Item>
+          <Form.Item name="badgeText" label="Badge text (hiển thị trên ảnh)">
+            <Input placeholder="VD: 50% OFF" maxLength={51} showCount />
+          </Form.Item>
+          <Form.Item name="bannerType" label="Loại banner" rules={[{ required: true, message: 'Chọn loại banner' }]}>
+            <Select
+              placeholder="Chọn loại banner"
+              options={[
+                { value: 'CAROUSEL', label: 'Carousel (Banner đầu trang)' },
+                { value: 'PROMO', label: 'Promo (Banner giữa trang)' },
+              ]}
+            />
+          </Form.Item>
 
           <Form.Item
             label="URL ảnh (Upload hoặc dán link)"
@@ -247,11 +288,17 @@ export function AdminBanners() {
             </Space.Compact>
           </Form.Item>
 
-          <Form.Item name="linkUrl" label="Link khi bấm (CTA)">
+          <Form.Item name="linkUrl" label="Link button 1 (CTA chính)">
             <Input placeholder="/shop hoặc /shop?sale=true" maxLength={501} />
           </Form.Item>
-          <Form.Item name="ctaText" label="Chữ nút bấm">
-            <Input placeholder="VD: Khám Phá Ngay" maxLength={51} />
+          <Form.Item name="ctaText" label="Chữ button 1">
+            <Input placeholder="VD: Mua Ngay" maxLength={51} />
+          </Form.Item>
+          <Form.Item name="linkUrl2" label="Link button 2 (CTA phụ)">
+            <Input placeholder="/register hoặc /about" maxLength={501} />
+          </Form.Item>
+          <Form.Item name="ctaText2" label="Chữ button 2">
+            <Input placeholder="VD: Tìm Hiểu Thêm" maxLength={51} />
           </Form.Item>
           <Form.Item name="sortOrder" label="Thứ tự hiển thị" initialValue={0}>
             <InputNumber min={0} style={{ width: '100%' }} />

@@ -145,6 +145,7 @@ export function AdminProductForm() {
           isNew: data.isNew ?? false,
           sizes: data.sizes ?? [],
           colors: (data.colors ?? []).length ? data.colors : [{ name: '', hex: '#000000' }],
+          gender: data.gender ?? 'UNISEX',
         });
       })
       .catch(() => {
@@ -178,6 +179,7 @@ export function AdminProductForm() {
         isNew: !!values.isNew,
         sizes: sizesList,
         colors: colorsList,
+        gender: values.gender || 'UNISEX',
       };
 
       setSubmitting(true);
@@ -245,6 +247,7 @@ export function AdminProductForm() {
           featured: false,
           bestseller: false,
           isNew: false,
+          gender: 'UNISEX',
         }}
       >
         <Row gutter={24}>
@@ -290,6 +293,21 @@ export function AdminProductForm() {
                   options={categories.map((c) => ({ value: c.id, label: c.name }))}
                   showSearch
                   optionFilterProp="label"
+                />
+              </Form.Item>
+              <Form.Item 
+                name="gender" 
+                label="Giới tính" 
+                rules={[{ required: true, message: 'Chọn giới tính' }]}
+                initialValue="UNISEX"
+              >
+                <Select
+                  placeholder="Chọn giới tính"
+                  options={[
+                    { value: 'MALE', label: 'Nam' },
+                    { value: 'FEMALE', label: 'Nữ' },
+                    { value: 'UNISEX', label: 'Unisex' },
+                  ]}
                 />
               </Form.Item>
               <Form.Item

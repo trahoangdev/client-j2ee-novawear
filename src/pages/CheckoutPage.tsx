@@ -65,8 +65,26 @@ export function CheckoutPage() {
     }
   }, [paymentOptions, paymentMethod]);
 
-  const shipping = subtotal >= 500000 ? 0 : 30000;
-  const total = subtotal + shipping;
+  // Voucher state - đọc từ sessionStorage
+  const [appliedVoucher, setAppliedVoucher] = useState<{ code: string; discountAmount: number } | null>(null);
+
+  useEffect(() => {
+    // Đọc voucher từ sessionStorage khi component mount
+    const savedVoucher = sessionStorage.getItem('appliedVoucher');
+    if (savedVoucher) {
+      try {
+        const voucher = JSON.parse(savedVoucher);
+        setAppliedVoucher(voucher);
+      } catch (e) {
+        console.error('Error parsing voucher from sessionStorage:', e);
+        sessionStorage.removeItem('appliedVoucher');
+      }
+    }
+  }, []);
+
+  const shipping = subtotal >= 200000 ? 0 : 30000;
+  const discountAmount = appliedVoucher?.discountAmount || 0;
+  const total = subtotal + shipping - discountAmount;
   const minOrderAmount = general.minOrderAmount ?? 0;
   const belowMinOrder = minOrderAmount > 0 && subtotal < minOrderAmount;
 
@@ -186,12 +204,17 @@ export function CheckoutPage() {
           address: `${shippingInfo.street}, ${shippingInfo.ward}, ${shippingInfo.district}, ${shippingInfo.city}`,
           phone: shippingInfo.phone,
           note: shippingInfo.note,
-        }
+        },
+        appliedVoucher?.code // Gửi mã voucher nếu có
       );
       
       // Lưu mã đơn hàng để hiển thị
       const orderCode = data.orderNumber ?? String(data.id).padStart(6, '0');
       setCreatedOrderId(orderCode);
+      
+      // Xóa voucher khỏi sessionStorage sau khi tạo đơn hàng thành công
+      sessionStorage.removeItem('appliedVoucher');
+      setAppliedVoucher(null);
       
       // Nếu là VNPAY, redirect đến trang thanh toán
       if (paymentMethod === 'vnpay') {
@@ -755,9 +778,15 @@ export function CheckoutPage() {
                     <span className="text-muted-foreground">Phí vận chuyển</span>
                     <span>{shipping === 0 ? 'Miễn phí' : formatCurrency(shipping)}</span>
                   </div>
+                  {appliedVoucher && discountAmount > 0 && (
+                    <div className="flex justify-between text-success">
+                      <span className="text-muted-foreground">Giảm giá ({appliedVoucher.code})</span>
+                      <span>-{formatCurrency(discountAmount)}</span>
+                    </div>
+                  )}
                   {shipping === 0 && (
                     <p className="text-xs text-success">
-                      ✓ Bạn được miễn phí vận chuyển cho đơn từ 500K
+                      ✓ Bạn được miễn phí vận chuyển cho đơn từ 200K
                     </p>
                   )}
                   {belowMinOrder && (

@@ -15,33 +15,6 @@ type Slide = {
   link: string;
 };
 
-const defaultSlides: Slide[] = [
-  {
-    id: 1,
-    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&q=80',
-    title: 'Bộ Sưu Tập\nXuân Hè 2024',
-    subtitle: 'Khám phá những xu hướng thời trang mới nhất',
-    cta: 'Khám Phá Ngay',
-    link: '/shop',
-  },
-  {
-    id: 2,
-    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&q=80',
-    title: 'Thanh Lịch\nMỗi Ngày',
-    subtitle: 'Phong cách công sở hiện đại, tinh tế',
-    cta: 'Xem Bộ Sưu Tập',
-    link: '/shop?category=tops',
-  },
-  {
-    id: 3,
-    image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1600&q=80',
-    title: 'Giảm Giá\nĐến 50%',
-    subtitle: 'Ưu đãi đặc biệt cho thành viên mới',
-    cta: 'Mua Ngay',
-    link: '/sale',
-  },
-];
-
 function bannerToSlide(b: BannerDto): Slide {
   return {
     id: b.id,
@@ -54,7 +27,8 @@ function bannerToSlide(b: BannerDto): Slide {
 }
 
 export function HeroCarousel() {
-  const [slides, setSlides] = useState<Slide[]>(defaultSlides);
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
@@ -62,12 +36,17 @@ export function HeroCarousel() {
     bannersApi
       .listActive()
       .then(({ data }) => {
-        if (data.length > 0) {
-          setSlides(data.map(bannerToSlide).filter((s) => s.image));
-        }
+        // Chỉ lấy banner có type CAROUSEL (hoặc không có type - backward compatibility)
+        const carouselBanners = data.filter(b => !b.bannerType || b.bannerType === 'CAROUSEL');
+        const validSlides = carouselBanners.map(bannerToSlide).filter((s) => s.image);
+        setSlides(validSlides);
       })
       .catch(() => {
-        // Giữ defaultSlides
+        // Không có banner hoặc lỗi, để slides rỗng
+        setSlides([]);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
 
@@ -109,7 +88,8 @@ export function HeroCarousel() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [length]);
 
-  if (length === 0) return null;
+  // Không hiển thị nếu đang loading hoặc không có slides
+  if (loading || length === 0) return null;
 
   return (
     <section

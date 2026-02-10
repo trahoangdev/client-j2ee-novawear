@@ -1,7 +1,7 @@
 import { Truck, ShieldCheck, RefreshCw, Headphones } from 'lucide-react';
 
 const features = [
-  { icon: Truck, title: 'Miễn Phí Vận Chuyển', description: 'Cho đơn hàng từ 500K' },
+  { icon: Truck, title: 'Miễn Phí Vận Chuyển', description: 'Cho đơn hàng từ 200K' },
   { icon: ShieldCheck, title: 'Thanh Toán An Toàn', description: 'Bảo mật 100%' },
   { icon: RefreshCw, title: 'Đổi Trả Dễ Dàng', description: 'Trong vòng 30 ngày' },
   { icon: Headphones, title: 'Hỗ Trợ 24/7', description: 'Tư vấn tận tâm' },
