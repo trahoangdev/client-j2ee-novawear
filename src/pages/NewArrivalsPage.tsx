@@ -26,6 +26,7 @@ import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 import { toast } from '@/lib/toast';
 import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { SEO } from '@/components/SEO';
 
 export function NewArrivalsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -155,6 +156,7 @@ export function NewArrivalsPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Hàng Mới Về" description="Cập nhật những mẫu thời trang mới nhất tại NOVAWEAR." url="/new-arrivals" keywords="hàng mới, new arrivals, thời trang mới" />
       <Header />
 
       <main className="flex-1">

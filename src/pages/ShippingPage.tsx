@@ -2,7 +2,7 @@ import { ContentPageLayout } from '@/components/layout/ContentPageLayout';
 
 export function ShippingPage() {
   return (
-    <ContentPageLayout title="Chính Sách Vận Chuyển">
+    <ContentPageLayout title="Chính Sách Vận Chuyển" description="Thông tin chi tiết về phí vận chuyển, thời gian giao hàng và phạm vi giao hàng toàn quốc của NOVAWEAR.">
       <div className="space-y-6 text-sm text-muted-foreground">
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">Phạm vi giao hàng</h2>

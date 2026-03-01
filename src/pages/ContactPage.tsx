@@ -8,7 +8,7 @@ export function ContactPage() {
   const mailHref = store.supportEmail ? `mailto:${store.supportEmail}` : undefined;
 
   return (
-    <ContentPageLayout title="Liên Hệ">
+    <ContentPageLayout title="Liên Hệ" description="Liên hệ với NOVAWEAR qua Hotline, Email hoặc địa chỉ cửa hàng. Chúng tôi luôn sẵn sàng hỗ trợ.">
       <div className="space-y-6 text-sm text-muted-foreground">
         <p>Chúng tôi luôn sẵn sàng hỗ trợ bạn. Liên hệ qua các kênh sau:</p>
         <ul className="space-y-4 list-none pl-0">

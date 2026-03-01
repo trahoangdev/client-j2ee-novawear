@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/lib/toast';
+import { SEO } from '@/components/SEO';
 
 export function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
@@ -60,6 +61,7 @@ export function ForgotPasswordPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4">
+            <SEO title="Quên Mật Khẩu" description="Khôi phục mật khẩu tài khoản NOVAWEAR của bạn." url="/forgot-password" noindex />
             {/* Background pattern */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />

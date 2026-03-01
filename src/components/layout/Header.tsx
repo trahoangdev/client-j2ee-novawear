@@ -44,15 +44,26 @@ function GenderMenu({ gender, label, categories, isActive, path }: { gender: str
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMouseEnter = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     setOpen(true);
   };
 
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setOpen(false);
-    }, 150);
+      timeoutRef.current = null;
+    }, 250);
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   return (
     <div
@@ -60,7 +71,7 @@ function GenderMenu({ gender, label, categories, isActive, path }: { gender: str
       onMouseLeave={handleMouseLeave}
       className="relative"
     >
-      <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenu open={open} onOpenChange={(v) => { if (!v && timeoutRef.current) return; setOpen(v); }}>
         <DropdownMenuTrigger asChild>
           <button
             onClick={() => navigate(path)}
@@ -80,7 +91,8 @@ function GenderMenu({ gender, label, categories, isActive, path }: { gender: str
           className="w-[600px] p-4 rounded-xl shadow-soft-lg"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          sideOffset={0}
+          sideOffset={2}
+          onCloseAutoFocus={(e) => e.preventDefault()}
         >
           <div className="grid grid-cols-3 gap-4">
             <div className="col-span-1 space-y-2">
@@ -224,7 +236,7 @@ export function Header() {
       const query = path.split('?')[1] ?? '';
       return location.pathname === '/shop' && location.search.includes(query);
     }
-    return false;
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   return (

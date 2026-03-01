@@ -8,10 +8,17 @@ import { NewArrivals } from '@/components/home/NewArrivals';
 import { PromoBanner } from '@/components/home/PromoBanner';
 import { Features } from '@/components/home/Features';
 import { GenderSection } from '@/components/home/GenderSection';
+import { SEO, buildWebSiteLD, buildOrganizationLD } from '@/components/SEO';
 
 export function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        url="/"
+        description="NOVAWEAR - Thời trang nam nữ cao cấp. Mua sắm online quần áo, phụ kiện, giày dép với giá tốt nhất. Miễn phí vận chuyển cho đơn từ 200K."
+        keywords="thời trang, quần áo, novawear, mua sắm online, thời trang nam, thời trang nữ"
+        jsonLd={[buildWebSiteLD(), buildOrganizationLD()]}
+      />
       <Header />
 
       <main className="flex-1">

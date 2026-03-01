@@ -10,6 +10,7 @@ import { useWishlist } from '@/context/WishlistContext';
 import { toast } from '@/lib/toast';
 import { productsApi } from '@/lib/customerApi';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
+import { SEO } from '@/components/SEO';
 
 export function WishlistPage() {
   const { itemIds } = useWishlist();
@@ -37,6 +38,7 @@ export function WishlistPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Yêu Thích" description="Sản phẩm yêu thích của bạn tại NOVAWEAR." url="/wishlist" noindex />
       <Header />
       <main className="flex-1 py-8 md:py-12">
         <div className="container px-4 sm:px-6">

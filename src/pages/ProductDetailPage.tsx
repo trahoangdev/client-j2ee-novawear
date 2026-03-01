@@ -33,6 +33,7 @@ import type { ReviewDto } from '@/types/api';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { MarkdownContent } from '@/components/ui/MarkdownContent';
+import { SEO, buildProductLD, buildBreadcrumbLD } from '@/components/SEO';
 
 const DEFAULT_COLOR = { name: 'Đen', hex: '#2D2D2D' };
 
@@ -157,8 +158,39 @@ export function ProductDetailPage() {
   const colors = product.colors?.length ? product.colors : [DEFAULT_COLOR];
   const sizes = product.sizes?.length ? product.sizes : ['S', 'M', 'L'];
 
+  const avgRating = reviews.length
+    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+    : product.rating;
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title={product.name}
+        description={product.description?.slice(0, 160) || `Mua ${product.name} tại NOVAWEAR với giá tốt nhất.`}
+        image={product.images[0]}
+        url={`/product/${product.slug}`}
+        type="product"
+        keywords={`${product.name}, ${product.category?.name || ''}, thời trang, novawear`}
+        jsonLd={[
+          buildProductLD({
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            salePrice: product.salePrice,
+            image: product.images[0],
+            slug: product.slug,
+            category: product.category?.name,
+            rating: avgRating,
+            reviewCount: reviews.length,
+            inStock: (product.stockCount ?? 1) > 0,
+          }),
+          buildBreadcrumbLD([
+            { name: 'Trang chủ', url: '/' },
+            { name: product.category?.name || 'Sản phẩm', url: '/shop' },
+            { name: product.name, url: `/product/${product.slug}` },
+          ]),
+        ]}
+      />
       <Header />
 
       <main className="flex-1">

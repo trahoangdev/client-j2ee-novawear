@@ -23,8 +23,7 @@ import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import { ordersApi, vnpayApi } from '@/lib/customerApi';
 import { cn } from '@/lib/utils';
-
-const steps = [
+import { SEO } from '@/components/SEO'; = [
   { id: 1, name: 'Thông tin giao hàng', icon: Truck },
   { id: 2, name: 'Phương thức thanh toán', icon: CreditCard },
   { id: 3, name: 'Xác nhận đơn hàng', icon: Check },
@@ -48,12 +47,13 @@ export function CheckoutPage() {
   const paymentOptions = useMemo((): PaymentKey[] => {
     const out: PaymentKey[] = [];
     if (general.paymentCodEnabled) out.push('cod');
-    if (general.paymentMomoEnabled) out.push('momo');
-    if (general.paymentPayPalEnabled) out.push('paypal');
+    // Momo & PayPal tạm ẩn — chưa tích hợp backend
+    // if (general.paymentMomoEnabled) out.push('momo');
+    // if (general.paymentPayPalEnabled) out.push('paypal');
     // VNPAY luôn enabled (có thể thêm vào settings sau)
     out.push('vnpay');
     return out;
-  }, [general.paymentCodEnabled, general.paymentMomoEnabled, general.paymentPayPalEnabled]);
+  }, [general.paymentCodEnabled]);
 
   const defaultPayment: PaymentKey = paymentOptions[0] ?? 'cod';
 
@@ -305,6 +305,7 @@ export function CheckoutPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
+      <SEO title="Thanh Toán" description="Hoàn tất đơn hàng của bạn tại NOVAWEAR." url="/checkout" noindex />
       <Header />
 
       <main className="flex-1 py-8">

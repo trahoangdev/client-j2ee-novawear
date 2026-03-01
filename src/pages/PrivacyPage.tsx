@@ -2,7 +2,7 @@ import { ContentPageLayout } from '@/components/layout/ContentPageLayout';
 
 export function PrivacyPage() {
   return (
-    <ContentPageLayout title="Chính Sách Bảo Mật">
+    <ContentPageLayout title="Chính Sách Bảo Mật" description="NOVAWEAR cam kết bảo vệ thông tin cá nhân của bạn. Tìm hiểu cách chúng tôi thu thập và sử dụng dữ liệu.">
       <div className="space-y-6 text-sm text-muted-foreground">
         <p>NOVAWEAR cam kết bảo vệ thông tin cá nhân của bạn. Chính sách này mô tả cách chúng tôi thu thập, sử dụng và bảo mật dữ liệu.</p>
         <section>

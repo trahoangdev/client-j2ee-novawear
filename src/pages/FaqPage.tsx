@@ -25,7 +25,7 @@ const faqs = [
 
 export function FaqPage() {
   return (
-    <ContentPageLayout title="Câu Hỏi Thường Gặp">
+    <ContentPageLayout title="Câu Hỏi Thường Gặp" description="Giải đáp các thắc mắc về đặt hàng, vận chuyển, đổi trả và thanh toán tại NOVAWEAR.">
       <ul className="space-y-6 list-none pl-0">
         {faqs.map((item, i) => (
           <li key={i} className="border-b border-border pb-6 last:border-0">

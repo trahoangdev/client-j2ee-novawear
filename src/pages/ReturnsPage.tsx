@@ -2,7 +2,7 @@ import { ContentPageLayout } from '@/components/layout/ContentPageLayout';
 
 export function ReturnsPage() {
   return (
-    <ContentPageLayout title="Đổi Trả & Hoàn Tiền">
+    <ContentPageLayout title="Đổi Trả & Hoàn Tiền" description="Chính sách đổi size, trả hàng và hoàn tiền trong 7 ngày tại NOVAWEAR.">
       <div className="space-y-6 text-sm text-muted-foreground">
         <section>
           <h2 className="text-base font-semibold text-foreground mb-2">Điều kiện đổi trả</h2>
