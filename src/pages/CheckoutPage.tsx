@@ -48,12 +48,13 @@ export function CheckoutPage() {
   const paymentOptions = useMemo((): PaymentKey[] => {
     const out: PaymentKey[] = [];
     if (general.paymentCodEnabled) out.push('cod');
-    if (general.paymentMomoEnabled) out.push('momo');
-    if (general.paymentPayPalEnabled) out.push('paypal');
+    // Momo & PayPal tạm ẩn — chưa tích hợp backend
+    // if (general.paymentMomoEnabled) out.push('momo');
+    // if (general.paymentPayPalEnabled) out.push('paypal');
     // VNPAY luôn enabled (có thể thêm vào settings sau)
     out.push('vnpay');
     return out;
-  }, [general.paymentCodEnabled, general.paymentMomoEnabled, general.paymentPayPalEnabled]);
+  }, [general.paymentCodEnabled]);
 
   const defaultPayment: PaymentKey = paymentOptions[0] ?? 'cod';
 
