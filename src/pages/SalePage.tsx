@@ -26,6 +26,7 @@ import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 import { toast } from '@/lib/toast';
 import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { SEO } from '@/components/SEO';
 
 export function SalePage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -155,6 +156,7 @@ export function SalePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Khuyến Mãi" description="Sản phẩm đang giảm giá tại NOVAWEAR. Mua ngay kẻ o hết!" url="/sale" keywords="giảm giá, sale, khuyến mãi, thời trang" />
       <Header />
 
       <main className="flex-1">

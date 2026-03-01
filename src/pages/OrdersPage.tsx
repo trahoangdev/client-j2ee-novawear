@@ -11,6 +11,7 @@ import { OrderCard } from '@/components/orders/OrderCard';
 import { OrderCardSkeleton } from '@/components/orders/OrderCardSkeleton';
 import { CancelOrderModal } from '@/components/orders/CancelOrderModal';
 import type { OrderDto, Page } from '@/types/api';
+import { SEO } from '@/components/SEO';
 
 const PAGE_SIZE = 10;
 
@@ -98,6 +99,7 @@ export function OrdersPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Đơn Hàng Của Tôi" description="Theo dõi đơn hàng của bạn tại NOVAWEAR." url="/orders" noindex />
       <Header />
 
       <main className="flex-1 py-8 md:py-12">

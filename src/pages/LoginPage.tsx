@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/lib/toast';
+import { SEO } from '@/components/SEO';
 
 export function LoginPage() {
     const navigate = useNavigate();
@@ -71,6 +72,7 @@ export function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4">
+            <SEO title="Đăng Nhập" description="Đăng nhập tài khoản NOVAWEAR để mua sắm và theo dõi đơn hàng." url="/login" noindex />
             {/* Background pattern */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />

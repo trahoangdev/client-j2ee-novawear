@@ -29,6 +29,7 @@ import { ordersApi } from '@/lib/customerApi';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { cn } from '@/lib/utils';
 import type { OrderDto, Page } from '@/types/api';
+import { SEO } from '@/components/SEO';
 
 type ProfileTab = 'overview' | 'orders' | 'wishlist' | 'settings';
 
@@ -125,6 +126,7 @@ export function ProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Tài Khoản" description="Quản lý tài khoản của bạn tại NOVAWEAR." url="/profile" noindex />
       <Header />
 
       <main className="flex-1 py-8 md:py-12">

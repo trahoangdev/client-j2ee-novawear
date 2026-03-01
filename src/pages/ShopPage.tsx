@@ -27,6 +27,7 @@ import { toast } from '@/lib/toast';
 import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
 import { PriceRangeSlider } from '@/components/shop/PriceRangeSlider';
+import { SEO } from '@/components/SEO';
 import { ColorFilter } from '@/components/shop/ColorFilter';
 import { SizeFilter } from '@/components/shop/SizeFilter';
 import { RatingFilter } from '@/components/shop/RatingFilter';
@@ -394,8 +395,19 @@ export function ShopPage() {
   const categoryName = selectedCategoryId != null ? categories.find((c) => c.id === selectedCategoryId)?.name : null;
   const genderName = genderParam === 'MALE' ? 'Nam' : genderParam === 'FEMALE' ? 'Nữ' : genderParam === 'UNISEX' ? 'Unisex' : null;
 
+  const seoTitle = genderName ? `Thời Trang ${genderName}` : categoryName ? categoryName : 'Cửa Hàng';
+  const seoDesc = genderName
+    ? `Khám phá bộ sưu tập thời trang ${genderName.toLowerCase()} mới nhất tại NOVAWEAR.`
+    : 'Mua sắm quần áo, phụ kiện thời trang tại NOVAWEAR với giá tốt nhất.';
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        url={location.pathname + location.search}
+        keywords="thời trang, quần áo, mua sắm, novawear"
+      />
       <Header />
 
       <main className="flex-1">

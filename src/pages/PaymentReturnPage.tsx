@@ -8,6 +8,7 @@ import { vnpayApi } from '@/lib/customerApi';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import { useCart } from '@/context/CartContext';
+import { SEO } from '@/components/SEO';
 
 export function PaymentReturnPage() {
   const [searchParams] = useSearchParams();
@@ -101,6 +102,7 @@ export function PaymentReturnPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Kết Quả Thanh Toán" description="Kết quả thanh toán đơn hàng NOVAWEAR." url="/payment/return" noindex />
       <Header />
       <main className="flex-1 py-12">
         <div className="container max-w-2xl mx-auto px-4">

@@ -26,6 +26,7 @@ import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 import { toast } from '@/lib/toast';
 import type { CategoryDto } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { SEO } from '@/components/SEO';
 
 export function BestsellerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -155,6 +156,7 @@ export function BestsellerPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Sản Phẩm Bán Chạy" description="Khám phá những sản phẩm bán chạy nhất tại NOVAWEAR." url="/bestseller" keywords="bán chạy, best seller, thời trang" />
       <Header />
 
       <main className="flex-1">

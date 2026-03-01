@@ -2,7 +2,7 @@ import { ContentPageLayout } from '@/components/layout/ContentPageLayout';
 
 export function TermsPage() {
   return (
-    <ContentPageLayout title="Điều Khoản Sử Dụng">
+    <ContentPageLayout title="Điều Khoản Sử Dụng" description="Điều khoản và điều kiện sử dụng website NOVAWEAR.">
       <div className="space-y-6 text-sm text-muted-foreground">
         <p>Khi truy cập và sử dụng website NOVAWEAR, bạn đồng ý tuân thủ các điều khoản dưới đây.</p>
         <section>

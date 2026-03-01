@@ -10,6 +10,7 @@ import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import VoucherInput from '@/components/voucher/VoucherInput';
 import { VoucherDto } from '@/types/api';
+import { SEO } from '@/components/SEO';
 
 export function CartPage() {
     const { state, removeItem, updateQuantity, clearCart, itemCount, subtotal } = useCart();
@@ -47,6 +48,7 @@ export function CartPage() {
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
+            <SEO title="Giỏ Hàng" description="Xem giỏ hàng của bạn tại NOVAWEAR." url="/cart" noindex />
             <Header />
 
             <main className="flex-1 py-8 md:py-12">

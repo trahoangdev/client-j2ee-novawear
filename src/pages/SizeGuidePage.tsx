@@ -2,7 +2,7 @@ import { ContentPageLayout } from '@/components/layout/ContentPageLayout';
 
 export function SizeGuidePage() {
   return (
-    <ContentPageLayout title="Hướng Dẫn Chọn Size">
+    <ContentPageLayout title="Hướng Dẫn Chọn Size" description="Bảng size chi tiết cho nam nữ. Hướng dẫn cách đo và chọn size phù hợp tại NOVAWEAR.">
       <div className="space-y-6 text-sm text-muted-foreground">
         <p>Tham khảo bảng size dưới đây để chọn size phù hợp. Nếu số đo của bạn nằm giữa hai size, nên chọn size lớn hơn để thoải mái.</p>
         <section>

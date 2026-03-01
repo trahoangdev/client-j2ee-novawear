@@ -23,8 +23,7 @@ import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import { ordersApi, vnpayApi } from '@/lib/customerApi';
 import { cn } from '@/lib/utils';
-
-const steps = [
+import { SEO } from '@/components/SEO'; = [
   { id: 1, name: 'Thông tin giao hàng', icon: Truck },
   { id: 2, name: 'Phương thức thanh toán', icon: CreditCard },
   { id: 3, name: 'Xác nhận đơn hàng', icon: Check },
@@ -306,6 +305,7 @@ export function CheckoutPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
+      <SEO title="Thanh Toán" description="Hoàn tất đơn hàng của bạn tại NOVAWEAR." url="/checkout" noindex />
       <Header />
 
       <main className="flex-1 py-8">
