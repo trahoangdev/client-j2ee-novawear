@@ -66,6 +66,9 @@ export interface OrderDto {
   voucherCode?: string;
   discountAmount?: number;
   paymentMethod?: string;
+  /** Tracking fields */
+  trackingNumber?: string;
+  carrier?: string;
 }
 
 export interface UserResponse {
@@ -88,6 +91,7 @@ export interface ReviewDto {
   comment: string;
   approved: boolean;
   createdAt: string;
+  images?: string[];
 }
 
 export interface RevenueByDayDto {

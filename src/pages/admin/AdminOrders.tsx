@@ -23,7 +23,7 @@ const printInvoice = (order: OrderDto) => {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Hóa đơn #${order.id}</title>
+      <title>Hóa đơn #${order.orderNumber ?? order.id}</title>
       <style>
         body { font-family: 'Times New Roman', serif; padding: 40px; max-width: 800px; mx-auto; }
         .header { text-align: center; margin-bottom: 30px; }
@@ -52,7 +52,7 @@ const printInvoice = (order: OrderDto) => {
       
       <div style="text-align: center;">
         <div class="invoice-title">HÓA ĐƠN BÁN HÀNG</div>
-        <div>Mã đơn: #${order.id}</div>
+        <div>Mã đơn: #${order.orderNumber ?? order.id}</div>
         <div>Ngày đặt: ${date}</div>
       </div>
 
@@ -132,6 +132,10 @@ export function AdminOrders() {
   const [total, setTotal] = useState(0);
   const [detailOrder, setDetailOrder] = useState<OrderDto | null>(null);
 
+  // Tracking update state
+  const [trackingForm, setTrackingForm] = useState({ trackingNumber: '', carrier: '' });
+  const [trackingLoading, setTrackingLoading] = useState(false);
+
   // Filters
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [searchText, setSearchText] = useState('');
@@ -181,13 +185,27 @@ export function AdminOrders() {
     }
   };
 
+  const handleUpdateTracking = async () => {
+    if (!detailOrder) return;
+    setTrackingLoading(true);
+    try {
+      const { data } = await adminOrdersApi.updateTracking(detailOrder.id, trackingForm.trackingNumber, trackingForm.carrier);
+      message.success('Đã cập nhật thông tin vận chuyển');
+      setDetailOrder(data);
+      fetchOrders(page);
+    } catch {
+      message.error('Cập nhật thất bại');
+    } finally {
+      setTrackingLoading(false);
+    }
+  };
+
   const columns: ColumnsType<OrderDto> = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-      render: (t) => <Typography.Text code>#{t}</Typography.Text>,
+      title: 'Mã đơn',
+      key: 'orderNumber',
+      width: 110,
+      render: (_, r) => <Typography.Text code>#{r.orderNumber ?? r.id}</Typography.Text>,
     },
     { title: 'Khách hàng', dataIndex: 'username', key: 'username', width: 140, ellipsis: true },
     {
@@ -241,7 +259,10 @@ export function AdminOrders() {
                   key: 'view',
                   label: 'Chi tiết',
                   icon: <EyeOutlined />,
-                  onClick: () => setDetailOrder(record),
+                  onClick: () => {
+                    setDetailOrder(record);
+                    setTrackingForm({ trackingNumber: record.trackingNumber ?? '', carrier: record.carrier ?? '' });
+                  },
                 },
                 {
                   key: 'print',
@@ -319,7 +340,7 @@ export function AdminOrders() {
       </Card>
 
       <Modal
-        title={`Chi tiết đơn #${detailOrder?.id ?? ''}`}
+        title={`Chi tiết đơn #${detailOrder?.orderNumber ?? detailOrder?.id ?? ''}`}
         open={!!detailOrder}
         onCancel={() => setDetailOrder(null)}
         footer={null}
@@ -333,7 +354,7 @@ export function AdminOrders() {
               </Button>
             </div>
             <Descriptions column={1} size="small" bordered style={{ marginBottom: 16 }}>
-              <Descriptions.Item label="ID">#{detailOrder.id}</Descriptions.Item>
+              <Descriptions.Item label="Mã đơn">#{detailOrder.orderNumber ?? detailOrder.id}</Descriptions.Item>
               <Descriptions.Item label="Khách hàng">{detailOrder.username}</Descriptions.Item>
               <Descriptions.Item label="Trạng thái">
                 <Tag color={orderStatusColor[detailOrder.status] ?? 'default'}>
@@ -347,7 +368,31 @@ export function AdminOrders() {
               <Descriptions.Item label="SĐT">{detailOrder.phone || '—'}</Descriptions.Item>
               <Descriptions.Item label="Địa chỉ">{detailOrder.address || '—'}</Descriptions.Item>
               <Descriptions.Item label="Ghi chú">{detailOrder.note || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Đơn vị vận chuyển">{detailOrder.carrier || '—'}</Descriptions.Item>
+              <Descriptions.Item label="Mã vận đơn">{detailOrder.trackingNumber || '—'}</Descriptions.Item>
             </Descriptions>
+
+            {/* Tracking update form */}
+            <div style={{ marginBottom: 16, padding: 12, background: '#fafafa', borderRadius: 8, border: '1px solid #f0f0f0' }}>
+              <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+                Cập nhật vận chuyển
+              </Typography.Text>
+              <Space direction="vertical" style={{ width: '100%' }} size="small">
+                <Input
+                  placeholder="Đơn vị vận chuyển (VD: GHTK, GHN, J&T...)"
+                  value={trackingForm.carrier}
+                  onChange={(e) => setTrackingForm((f) => ({ ...f, carrier: e.target.value }))}
+                />
+                <Input
+                  placeholder="Mã vận đơn"
+                  value={trackingForm.trackingNumber}
+                  onChange={(e) => setTrackingForm((f) => ({ ...f, trackingNumber: e.target.value }))}
+                />
+                <Button type="primary" size="small" loading={trackingLoading} onClick={handleUpdateTracking}>
+                  Lưu thông tin vận chuyển
+                </Button>
+              </Space>
+            </div>
             <Typography.Text strong style={{ color: 'var(--admin-text)', display: 'block', marginBottom: 8 }}>
               Sản phẩm
             </Typography.Text>

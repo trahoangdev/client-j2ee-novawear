@@ -67,6 +67,17 @@ export const reviewsApi = {
     }),
   create: (productId: number, data: { rating: number; comment: string }) =>
     api.post<ReviewDto>(`/api/reviews/product/${productId}`, data),
+  createWithImages: (productId: number, data: { rating: number; comment: string; images?: File[] }) => {
+    const formData = new FormData();
+    formData.append('rating', String(data.rating));
+    formData.append('comment', data.comment);
+    if (data.images) {
+      data.images.forEach((file) => formData.append('images', file));
+    }
+    return api.post<ReviewDto>(`/api/reviews/product/${productId}/with-images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 /** Cart – cần đăng nhập */

@@ -83,6 +83,8 @@ export const adminOrdersApi = {
   getById: (id: number) => api.get<OrderDto>(`/api/admin/orders/${id}`),
   updateStatus: (id: number, status: string) =>
     api.patch<OrderDto>(`/api/admin/orders/${id}/status`, null, { params: { status } }),
+  updateTracking: (id: number, trackingNumber: string, carrier: string) =>
+    api.patch<OrderDto>(`/api/admin/orders/${id}/tracking`, null, { params: { trackingNumber, carrier } }),
 };
 
 /** Admin Users (customers) */

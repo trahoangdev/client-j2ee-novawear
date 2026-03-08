@@ -8,6 +8,7 @@ import {
   Truck,
   ShoppingBag,
   Loader2,
+  TicketPercent,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,9 @@ import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import { ordersApi, vnpayApi } from '@/lib/customerApi';
 import { cn } from '@/lib/utils';
-import { SEO } from '@/components/SEO'; = [
+import { SEO } from '@/components/SEO';
+import { VoucherModal } from '@/components/voucher/VoucherModal';
+import type { VoucherDto } from '@/types/api'; = [
   { id: 1, name: 'Thông tin giao hàng', icon: Truck },
   { id: 2, name: 'Phương thức thanh toán', icon: CreditCard },
   { id: 3, name: 'Xác nhận đơn hàng', icon: Check },
@@ -67,6 +70,7 @@ export function CheckoutPage() {
 
   // Voucher state - đọc từ sessionStorage
   const [appliedVoucher, setAppliedVoucher] = useState<{ code: string; discountAmount: number } | null>(null);
+  const [voucherModalOpen, setVoucherModalOpen] = useState(false);
 
   useEffect(() => {
     // Đọc voucher từ sessionStorage khi component mount
@@ -81,6 +85,17 @@ export function CheckoutPage() {
       }
     }
   }, []);
+
+  const handleApplyVoucher = (voucher: VoucherDto, discountAmount: number) => {
+    const voucherData = { code: voucher.code, discountAmount };
+    setAppliedVoucher(voucherData);
+    sessionStorage.setItem('appliedVoucher', JSON.stringify(voucherData));
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    sessionStorage.removeItem('appliedVoucher');
+  };
 
   const shipping = subtotal >= 200000 ? 0 : 30000;
   const discountAmount = appliedVoucher?.discountAmount || 0;
@@ -803,6 +818,40 @@ export function CheckoutPage() {
                     {formatCurrency(total)}
                   </span>
                 </div>
+
+                {/* Voucher */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  {appliedVoucher ? (
+                    <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                      <div className="min-w-0">
+                        <p className="font-mono text-sm font-bold text-green-700 dark:text-green-400">{appliedVoucher.code}</p>
+                        <p className="text-xs text-green-600 dark:text-green-400">Giảm {formatCurrency(appliedVoucher.discountAmount)}</p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setVoucherModalOpen(true)}>Sửa</Button>
+                        <Button variant="ghost" size="sm" className="text-xs h-7 text-destructive" onClick={handleRemoveVoucher}>Bỏ</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 text-sm"
+                      onClick={() => setVoucherModalOpen(true)}
+                    >
+                      <TicketPercent className="h-4 w-4 text-primary" />
+                      Chọn mã giảm giá
+                    </Button>
+                  )}
+                </div>
+
+                <VoucherModal
+                  open={voucherModalOpen}
+                  onOpenChange={setVoucherModalOpen}
+                  orderTotal={subtotal}
+                  appliedCode={appliedVoucher?.code}
+                  onApply={handleApplyVoucher}
+                  onRemove={handleRemoveVoucher}
+                />
               </div>
             </div>
           </div>

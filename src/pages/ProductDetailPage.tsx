@@ -13,6 +13,8 @@ import {
   Truck,
   RefreshCw,
   ShieldCheck,
+  ImagePlus,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +55,7 @@ export function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
   const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
@@ -111,12 +114,24 @@ export function ProductDetailPage() {
     setSubmittingReview(true);
     try {
       const productId = Number(product.id);
-      const { data } = await reviewsApi.create(productId, {
-        rating: reviewForm.rating,
-        comment: reviewForm.comment.trim(),
-      });
+      let data: ReviewDto;
+      if (reviewImages.length > 0) {
+        const res = await reviewsApi.createWithImages(productId, {
+          rating: reviewForm.rating,
+          comment: reviewForm.comment.trim(),
+          images: reviewImages,
+        });
+        data = res.data;
+      } else {
+        const res = await reviewsApi.create(productId, {
+          rating: reviewForm.rating,
+          comment: reviewForm.comment.trim(),
+        });
+        data = res.data;
+      }
       setReviews((prev) => [data, ...prev]);
       setReviewForm({ rating: 5, comment: '' });
+      setReviewImages([]);
       toast.success('Đã gửi đánh giá. Đánh giá có thể cần duyệt trước khi hiển thị.');
     } catch {
       toast.error('Gửi đánh giá thất bại. Vui lòng thử lại.');
@@ -364,6 +379,43 @@ export function ProductDetailPage() {
                     value={reviewForm.comment}
                     onChange={(e) => setReviewForm((f) => ({ ...f, comment: e.target.value }))}
                   />
+                  {/* Image upload */}
+                  <div className="mt-3">
+                    <div className="flex flex-wrap gap-2">
+                      {reviewImages.map((file, idx) => (
+                        <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border">
+                          <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            className="absolute top-0 right-0 bg-black/60 text-white rounded-bl p-0.5"
+                            onClick={() => setReviewImages((prev) => prev.filter((_, i) => i !== idx))}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      {reviewImages.length < 5 && (
+                        <label className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                          <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground mt-1">Thêm ảnh</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files ?? []);
+                              setReviewImages((prev) => [...prev, ...files].slice(0, 5));
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                    {reviewImages.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">{reviewImages.length}/5 ảnh</p>
+                    )}
+                  </div>
                   {isAuthenticated ? (
                     <>
                       <Button className="mt-3" onClick={handleSubmitReview} disabled={!reviewForm.comment.trim() || submittingReview}>
@@ -403,6 +455,19 @@ export function ProductDetailPage() {
                               ))}
                             </div>
                             <p className="text-foreground">{review.comment}</p>
+                            {review.images && review.images.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                {review.images.map((img, idx) => (
+                                  <a key={idx} href={img} target="_blank" rel="noopener noreferrer" className="block">
+                                    <img
+                                      src={img}
+                                      alt={`Review image ${idx + 1}`}
+                                      className="w-20 h-20 rounded-lg object-cover border hover:opacity-80 transition-opacity"
+                                    />
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

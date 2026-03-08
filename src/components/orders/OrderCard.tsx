@@ -1,6 +1,7 @@
-import { Calendar, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, XCircle, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { OrderTimeline } from '@/components/orders/OrderTimeline';
 import type { OrderDto } from '@/types/api';
 
 export const ORDER_STATUS_MAP: Record<string, { label: string; className: string }> = {
@@ -85,6 +86,38 @@ export function OrderCard({
               </div>
             </div>
           )}
+
+          {/* Voucher / Giảm giá */}
+          {detail?.voucherCode && (
+            <div className="pt-3 border-t border-border">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Mã giảm giá: <span className="font-mono font-medium text-foreground">{detail.voucherCode}</span></span>
+                {detail.discountAmount != null && detail.discountAmount > 0 && (
+                  <span className="text-green-600 dark:text-green-400 font-medium">-{formatCurrency(detail.discountAmount)}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Thông tin vận chuyển */}
+          {(detail?.trackingNumber || detail?.carrier) && (
+            <div className="pt-3 border-t border-border">
+              <h4 className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                <Truck className="h-4 w-4" />
+                Thông tin vận chuyển
+              </h4>
+              <div className="text-sm text-muted-foreground space-y-1">
+                {detail?.carrier && <p>Đơn vị vận chuyển: <span className="font-medium text-foreground">{detail.carrier}</span></p>}
+                {detail?.trackingNumber && <p>Mã vận đơn: <span className="font-mono font-medium text-foreground">{detail.trackingNumber}</span></p>}
+              </div>
+            </div>
+          )}
+
+          {/* Timeline trạng thái */}
+          <div className="pt-3 border-t border-border">
+            <h4 className="text-sm font-medium mb-3">Trạng thái đơn hàng</h4>
+            <OrderTimeline status={order.status} />
+          </div>
 
           {/* Nút hủy đơn */}
           {canCancel && onCancelClick && (
