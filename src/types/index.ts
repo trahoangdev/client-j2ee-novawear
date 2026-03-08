@@ -52,6 +52,9 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  fullName?: string;
+  phone?: string;
+  address?: string;
   avatar?: string;
   role: 'customer' | 'admin';
   createdAt: string;

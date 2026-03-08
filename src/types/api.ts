@@ -72,6 +72,9 @@ export interface UserResponse {
   id: number;
   username: string;
   email: string;
+  fullName?: string;
+  phone?: string;
+  address?: string;
   role: string;
   active: boolean;
 }

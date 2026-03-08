@@ -126,3 +126,19 @@ export const vnpayApi = {
       message: string;
     }>('/api/payment/vnpay/return', { params }),
 };
+
+/** Auth – đổi mật khẩu & cập nhật hồ sơ */
+export const authApi = {
+  changePassword: (data: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => api.post<{ message: string }>('/api/auth/change-password', data),
+
+  updateProfile: (data: {
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+  }) => api.put<import('@/types/api').UserResponse>('/api/auth/profile', data),
+};
