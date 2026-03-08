@@ -18,8 +18,7 @@ import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { useAppSettingsReadOnly } from '@/context/AppSettingsContext';
-import { categoriesApi } from '@/lib/customerApi';
-import type { CategoryDto } from '@/types/api';
+
 
 const navLinks = [
   { to: '/shop', label: 'Bộ Sưu Tập' },
@@ -38,7 +37,7 @@ function BrandName({ name }: { name: string }) {
   return <span>{name}</span>;
 }
 
-function GenderMenu({ gender, label, categories, isActive, path }: { gender: string; label: string; categories: CategoryDto[]; isActive: boolean; path: string }) {
+function GenderMenu({ gender, label, isActive, path }: { gender: string; label: string; isActive: boolean; path: string }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,54 +87,38 @@ function GenderMenu({ gender, label, categories, isActive, path }: { gender: str
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="w-[600px] p-4 rounded-xl shadow-soft-lg"
+          className="w-auto min-w-[180px] p-4 rounded-xl shadow-soft-lg"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           sideOffset={2}
           onCloseAutoFocus={(e) => e.preventDefault()}
         >
-          <div className="grid grid-cols-3 gap-4">
-            <div className="col-span-1 space-y-2">
-              <h4 className="font-semibold text-foreground mb-2">{label}</h4>
-              <Link
-                to={path}
-                className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Xem tất cả
-              </Link>
-              <Link
-                to={`${path}?isNew=true`}
-                className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Hàng Mới Về
-              </Link>
-              <Link
-                to={`${path}?bestseller=true`}
-                className="block text-sm text-muted-foreground hover:text-primary transition-colors"
-              >
-                Bán Chạy Nhất
-              </Link>
-              <Link
-                to={`${path}?onSale=true`}
-                className="block text-sm text-destructive hover:underline transition-colors font-medium"
-              >
-                Đang Khuyến Mãi
-              </Link>
-            </div>
-            <div className="col-span-2">
-              <h4 className="font-semibold text-foreground mb-3">Danh Mục</h4>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    to={`${path}?categoryId=${cat.id}`}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    {cat.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
+          <div className="space-y-2">
+            <h4 className="font-semibold text-foreground mb-2">{label}</h4>
+            <Link
+              to={path}
+              className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Xem tất cả
+            </Link>
+            <Link
+              to={`${path}?isNew=true`}
+              className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Hàng Mới Về
+            </Link>
+            <Link
+              to={`${path}?bestseller=true`}
+              className="block text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Bán Chạy Nhất
+            </Link>
+            <Link
+              to={`${path}?onSale=true`}
+              className="block text-sm text-destructive hover:underline transition-colors font-medium"
+            >
+              Đang Khuyến Mãi
+            </Link>
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -158,13 +141,7 @@ export function Header() {
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [categories, setCategories] = useState<CategoryDto[]>([]);
 
-  useEffect(() => {
-    categoriesApi.list()
-      .then(({ data }) => setCategories(data))
-      .catch(console.error);
-  }, []);
 
   useEffect(() => {
     if (isSearchOpen && searchInputRef.current) {
@@ -278,9 +255,9 @@ export function Header() {
             >
               Bộ Sưu Tập
             </Link>
-            <GenderMenu gender="MALE" label="Nam" categories={categories} isActive={isActive('/nam')} path="/nam" />
-            <GenderMenu gender="FEMALE" label="Nữ" categories={categories} isActive={isActive('/nu')} path="/nu" />
-            <GenderMenu gender="UNISEX" label="Unisex" categories={categories} isActive={isActive('/unisex')} path="/unisex" />
+            <GenderMenu gender="MALE" label="Nam" isActive={isActive('/nam')} path="/nam" />
+            <GenderMenu gender="FEMALE" label="Nữ" isActive={isActive('/nu')} path="/nu" />
+            <GenderMenu gender="UNISEX" label="Unisex" isActive={isActive('/unisex')} path="/unisex" />
           </nav>
 
           {/* Right Actions */}

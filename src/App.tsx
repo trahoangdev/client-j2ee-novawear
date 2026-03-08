@@ -27,6 +27,9 @@ const PrivacyPage = lazy(() => import("@/pages/PrivacyPage").then(m => ({ defaul
 const TermsPage = lazy(() => import("@/pages/TermsPage").then(m => ({ default: m.TermsPage })));
 const WishlistPage = lazy(() => import("@/pages/WishlistPage").then(m => ({ default: m.WishlistPage })));
 
+// 404
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage").then(m => ({ default: m.NotFoundPage })));
+
 // Auth pages
 const LoginPage = lazy(() => import("@/pages/LoginPage").then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import("@/pages/RegisterPage").then(m => ({ default: m.RegisterPage })));
@@ -113,6 +116,9 @@ function App() {
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
+
+                {/* 404 */}
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
 
