@@ -16,8 +16,8 @@
     --popover: 36 33% 98%;
     --popover-foreground: 0 0% 18%;
 
-    /* Primary - Deep Terracotta #C85A54 */
-    --primary: 4 50% 56%;
+    /* Primary - Deep Terracotta #C75E57 */
+    --primary: 3 48% 56%;
     --primary-foreground: 36 33% 97%;
 
     /* Secondary - Soft Sage #A8B5A0 */
@@ -155,6 +155,15 @@
   
   .font-data {
     font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Utilities for hiding scrollbar completely but keeping scroll functionality */
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
   }
 
   /* Soft UI Shadows */
