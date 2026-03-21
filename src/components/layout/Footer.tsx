@@ -128,7 +128,7 @@ export function Footer() {
               )}
               {store.zaloUrl && (
                 <a href={store.zaloUrl.startsWith('http') ? store.zaloUrl : `https://zalo.me/${store.zaloUrl.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all duration-300 group border border-white/10 hover:border-blue-400 shadow-sm hover:shadow-blue-500/20 hover:-translate-y-1" aria-label="Zalo">
-                  <svg className="h-5 w-5 text-white/70 group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" /></svg>
+                  <img src="/images/zalo.png" alt="Zalo" className="h-6 w-6 object-contain opacity-80 group-hover:opacity-100 transition-opacity" />
                 </a>
               )}
             </div>
