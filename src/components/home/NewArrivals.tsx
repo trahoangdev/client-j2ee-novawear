@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductCard } from '@/components/products/ProductCard';
 import { ProductCardSkeleton } from '@/components/products/ProductCardSkeleton';
 import { productsApi } from '@/lib/customerApi';
@@ -10,6 +10,18 @@ import { motion } from 'framer-motion';
 export function NewArrivals() {
   const [products, setProducts] = useState<ProductDisplay[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, clientWidth } = scrollContainerRef.current;
+      const scrollAmount = clientWidth * 0.8;
+      scrollContainerRef.current.scrollTo({
+        left: direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   useEffect(() => {
     productsApi
@@ -67,7 +79,27 @@ export function NewArrivals() {
                 ))}
               </div>
             ) : (
-              <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-10 pt-4 snap-x hide-scrollbar px-1">
+              <div className="relative group">
+                {/* Navigation Buttons */}
+                <button 
+                  onClick={() => scroll('left')}
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-background border border-border/50 shadow-xl flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground hover:scale-110 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
+                  aria-label="Cuộn qua trái"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button 
+                  onClick={() => scroll('right')}
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 h-12 w-12 rounded-full bg-background border border-border/50 shadow-xl flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground hover:scale-110 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
+                  aria-label="Cuộn qua phải"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+
+                <div 
+                  ref={scrollContainerRef}
+                  className="flex gap-4 sm:gap-6 overflow-x-auto pb-10 pt-4 snap-x hide-scrollbar px-1 scroll-smooth"
+                >
                 {products.map((product, idx) => (
                   <motion.div
                     key={product.id}
@@ -98,6 +130,7 @@ export function NewArrivals() {
                    </motion.div>
                 )}
               </div>
+            </div>
             )}
           </div>
         </div>

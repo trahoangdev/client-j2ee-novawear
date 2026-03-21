@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ChevronLeft,
   ChevronRight,
@@ -44,6 +44,7 @@ const DEFAULT_COLOR = { name: 'Đen', hex: '#2D2D2D' };
 
 export function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { addItem } = useCart();
   const { has: isInWishlist, toggle: toggleWishlist } = useWishlist();
   const { isAuthenticated, user } = useAuth();
@@ -119,6 +120,17 @@ export function ProductDetailPage() {
     setAddedToCart(true);
     toast.success('Đã thêm vào giỏ hàng');
     setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    addItem(
+      product as import('@/types').Product,
+      quantity,
+      selectedSize,
+      selectedColor
+    );
+    navigate('/checkout');
   };
 
   const handleSubmitReview = async () => {
@@ -424,8 +436,8 @@ export function ProductDetailPage() {
               {/* Add to cart / Action buttons */}
               <div className="space-y-3 mb-10 w-full mt-2">
                 <Button
-                  className={cn("w-full h-12 rounded-md font-semibold text-base transition-all", addedToCart ? "bg-green-600 hover:bg-green-700 text-white" : "bg-primary text-primary-foreground hover:bg-primary/90")}
-                  onClick={handleAddToCart}
+                  className="w-full h-12 rounded-md font-semibold text-base transition-all bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={handleBuyNow}
                   disabled={(product.stockCount ?? 0) <= 0}
                 >
                   Mua ngay

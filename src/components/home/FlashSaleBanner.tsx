@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Timer, Flame } from 'lucide-react';
+import { Zap, Timer, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 import { flashSalesApi } from '@/lib/customerApi';
 import { formatCurrency } from '@/lib/utils';
 import type { FlashSaleDto } from '@/types/api';
@@ -50,6 +50,18 @@ function CountdownTimer({ endTime }: { endTime: string }) {
 export function FlashSaleBanner() {
   const [sale, setSale] = useState<FlashSaleDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, clientWidth } = scrollContainerRef.current;
+      const scrollAmount = clientWidth * 0.8;
+      scrollContainerRef.current.scrollTo({
+        left: direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   useEffect(() => {
     flashSalesApi.getActive()
@@ -103,8 +115,27 @@ export function FlashSaleBanner() {
           </div>
 
           {/* Products Scroll Area */}
-          <div className="relative z-10 p-6 sm:p-10 bg-white/5 backdrop-blur-3xl">
-            <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 snap-x hide-scrollbar">
+          <div className="relative z-10 p-6 sm:p-10 bg-white/5 backdrop-blur-3xl group">
+             {/* Navigation Buttons */}
+             <button 
+               onClick={() => scroll('left')}
+               className="absolute left-4 sm:left-6 top-[60%] -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-background border border-border/50 shadow-[0_0_15px_rgba(0,0,0,0.2)] flex items-center justify-center text-foreground hover:bg-red-600 hover:text-white hover:border-red-500 hover:scale-110 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
+               aria-label="Cuộn qua trái"
+             >
+               <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+             </button>
+             <button 
+               onClick={() => scroll('right')}
+               className="absolute right-4 sm:right-6 top-[60%] -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-background border border-border/50 shadow-[0_0_15px_rgba(0,0,0,0.2)] flex items-center justify-center text-foreground hover:bg-red-600 hover:text-white hover:border-red-500 hover:scale-110 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
+               aria-label="Cuộn qua phải"
+             >
+               <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+             </button>
+
+            <div 
+              ref={scrollContainerRef}
+              className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 snap-x hide-scrollbar scroll-smooth"
+            >
               {sale.products.map((item, index) => {
                 const percent = item.quantity > 0 ? Math.round((item.soldCount / item.quantity) * 100) : 0;
                 

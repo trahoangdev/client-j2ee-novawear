@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import {
   ChevronLeft,
   ChevronRight,
@@ -265,26 +265,7 @@ export function CheckoutPage() {
   };
 
   if (state.items.length === 0 && !orderComplete) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-              <ShoppingBag className="h-12 w-12 text-muted-foreground" />
-            </div>
-            <h1 className="font-display text-2xl font-bold mb-2">Giỏ hàng trống</h1>
-            <p className="text-muted-foreground mb-6">
-              Hãy thêm sản phẩm vào giỏ hàng trước khi thanh toán
-            </p>
-            <Button asChild>
-              <Link to="/shop">Mua Sắm Ngay</Link>
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <Navigate to="/shop" replace />;
   }
 
   if (orderComplete) {
@@ -597,9 +578,11 @@ export function CheckoutPage() {
                           >
                             <RadioGroupItem value="vnpay" id="vnpay" />
                             <div className="flex items-center gap-4 flex-1">
-                              <div className="h-8 w-20 bg-blue-600 text-white rounded flex items-center justify-center text-xs font-bold">
-                                VNPAY
-                              </div>
+                              <img
+                                src="/images/vnpay.png"
+                                alt="VNPAY"
+                                className="h-8 object-contain"
+                              />
                               <div>
                                 <p className="font-medium">VNPAY</p>
                                 <p className="text-sm text-muted-foreground">
