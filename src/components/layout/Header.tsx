@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingBag, User, Menu, X, Heart, Loader2, ChevronDown, Bell, ArrowRight } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, X, Heart, Loader2, ChevronDown, Bell, ArrowRight, Grid, Sparkles, Flame, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
@@ -99,10 +99,10 @@ function GenderMenu({ gender, label, isActive, path }: { gender: string; label: 
         <DropdownMenuTrigger asChild>
           <button
             onClick={() => navigate(path)}
-            className="relative px-3 py-2 text-sm font-semibold text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1 focus:outline-none"
+            className="relative px-3 py-2 text-sm font-semibold text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1.5 focus:outline-none"
           >
             {label}
-            <ChevronDown className={cn("h-4 w-4 opacity-50 transition-transform duration-200", open && "rotate-180")} />
+            <ChevronDown className={cn("h-3.5 w-3.5 opacity-50 transition-transform duration-300", open && "rotate-180")} />
             {isActive && (
               <motion.div layoutId="header-active-tab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" initial={false} />
             )}
@@ -113,27 +113,61 @@ function GenderMenu({ gender, label, isActive, path }: { gender: string; label: 
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="w-56 p-2 rounded-xl border border-border/40 bg-background/80 backdrop-blur-2xl shadow-2xl z-50 mb-1"
-          sideOffset={14}
+          className="w-[340px] p-3 rounded-3xl border border-border/50 bg-background/95 backdrop-blur-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] z-50 mb-1"
+          sideOffset={18}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onCloseAutoFocus={(e) => e.preventDefault()}
         >
-          <div className="p-1 space-y-1">
-             <h4 className="font-bold text-sm text-foreground mb-3 px-2 mt-1 flex items-center justify-between">
-               {label} <ArrowRight className="h-4 w-4 text-muted-foreground" />
-             </h4>
-             <Link to={path} className="flex items-center w-full px-3 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-colors">
-               Xem tất cả
+          <div className="flex flex-col gap-1.5 p-1 cursor-default">
+             <div className="flex items-center justify-between px-3 pt-2 pb-4 mb-1 border-b border-border/40">
+               <div>
+                  <h4 className="font-extrabold text-lg text-foreground tracking-tight">Thời Trang {label}</h4>
+                  <p className="text-[11px] text-muted-foreground uppercase tracking-widest mt-0.5 font-bold">Khám phá bộ sưu tập</p>
+               </div>
+               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary ml-auto shadow-inner">
+                  <ArrowRight className="h-4 w-4" />
+               </div>
+             </div>
+             
+             <Link to={path} className="group flex items-center gap-4 w-full p-2.5 rounded-2xl hover:bg-muted/80 transition-all duration-300 relative overflow-hidden" onClick={() => setOpen(false)}>
+               <div className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-background border border-border/50 shadow-sm text-foreground/70 group-hover:text-primary group-hover:border-primary/30 group-hover:shadow-md transition-all duration-300">
+                  <Grid className="h-5 w-5" />
+               </div>
+               <div className="text-left">
+                  <span className="block text-sm font-bold text-foreground group-hover:text-primary transition-colors">Xem tất cả</span>
+                  <span className="block text-xs text-muted-foreground mt-0.5 font-medium line-clamp-1">Toàn bộ sản phẩm {label.toLowerCase()}</span>
+               </div>
              </Link>
-             <Link to={`${path}?isNew=true`} className="flex items-center w-full px-3 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-colors">
-               Hàng Mới Về
+
+             <Link to={`${path}?isNew=true`} className="group flex items-center gap-4 w-full p-2.5 rounded-2xl hover:bg-muted/80 transition-all duration-300" onClick={() => setOpen(false)}>
+               <div className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-background border border-border/50 shadow-sm text-foreground/70 group-hover:text-amber-500 group-hover:border-amber-500/30 group-hover:shadow-md transition-all duration-300">
+                  <Sparkles className="h-5 w-5" />
+               </div>
+               <div className="text-left">
+                  <span className="block text-sm font-bold text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-500 transition-colors">Hàng Mới Về</span>
+                  <span className="block text-xs text-muted-foreground mt-0.5 font-medium line-clamp-1">Cập nhật những thiết kế mới nhất</span>
+               </div>
              </Link>
-             <Link to={`${path}?bestseller=true`} className="flex items-center w-full px-3 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground transition-colors">
-               Bán Chạy Nhất
+
+             <Link to={`${path}?bestseller=true`} className="group flex items-center gap-4 w-full p-2.5 rounded-2xl hover:bg-muted/80 transition-all duration-300" onClick={() => setOpen(false)}>
+               <div className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-background border border-border/50 shadow-sm text-foreground/70 group-hover:text-orange-500 group-hover:border-orange-500/30 group-hover:shadow-md transition-all duration-300">
+                  <Flame className="h-5 w-5" />
+               </div>
+               <div className="text-left">
+                  <span className="block text-sm font-bold text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-500 transition-colors">Bán Chạy Nhất</span>
+                  <span className="block text-xs text-muted-foreground mt-0.5 font-medium line-clamp-1">Các sản phẩm được yêu thích nhất</span>
+               </div>
              </Link>
-             <Link to={`${path}?onSale=true`} className="flex items-center w-full px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors rounded-lg">
-               Đang Khuyến Mãi
+
+             <Link to={`${path}?onSale=true`} className="group flex items-center gap-4 w-full p-2.5 rounded-2xl hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-300 mt-1 border border-transparent hover:border-red-100 dark:hover:border-red-900/40" onClick={() => setOpen(false)}>
+               <div className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800 shadow-sm text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform duration-300">
+                  <Tag className="h-5 w-5" />
+               </div>
+               <div className="text-left">
+                  <span className="block text-sm font-bold text-red-600 dark:text-red-400">Đang Khuyến Mãi</span>
+                  <span className="block text-xs text-red-600/70 dark:text-red-400/70 mt-0.5 font-medium line-clamp-1">Ưu đãi đặc biệt không thể bỏ lỡ</span>
+               </div>
              </Link>
           </div>
         </DropdownMenuContent>
