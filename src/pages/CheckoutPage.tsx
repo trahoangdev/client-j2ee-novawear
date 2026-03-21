@@ -685,9 +685,14 @@ export function CheckoutPage() {
                               className="h-16 w-14 object-cover rounded-md"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm line-clamp-1">
+                              <div className="font-medium text-sm line-clamp-1">
                                 {item.product.name}
-                              </p>
+                                {item.isFlashSale && (
+                                  <span className="ml-1.5 inline-flex items-center gap-1 bg-red-100 text-red-600 px-1 py-[1px] rounded text-[9px] font-bold uppercase tracking-wider translate-y-[-1px]">
+                                    ⚡ Flash Sale
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-muted-foreground">
                                 {item.size} • {item.color.name} • SL: {item.quantity}
                               </p>
@@ -770,9 +775,14 @@ export function CheckoutPage() {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium line-clamp-1">
+                        <div className="text-sm font-medium line-clamp-1 leading-snug">
                           {item.product.name}
-                        </p>
+                          {item.isFlashSale && (
+                            <span className="ml-1.5 inline-flex items-center gap-1 bg-red-100 text-red-600 px-1 py-[1px] rounded text-[9px] font-bold uppercase tracking-wider translate-y-[-1px]">
+                              ⚡ Flash Sale
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {item.size} • {item.color.name}
                         </p>

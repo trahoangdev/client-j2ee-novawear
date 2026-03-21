@@ -17,6 +17,7 @@ export interface ProductDisplay {
   featured?: boolean;
   isNew?: boolean;
   bestseller?: boolean;
+  isFlashSale?: boolean;
   colors?: { name: string; hex: string }[];
   sizes?: string[];
 }
@@ -44,6 +45,7 @@ export function productDtoToDisplay(dto: ProductDto): ProductDisplay {
     featured: !!dto.featured,
     isNew: !!dto.isNew,
     bestseller: !!dto.bestseller,
+    isFlashSale: !!dto.isFlashSale,
     colors: dto.colors?.length ? dto.colors.map((c) => ({ name: c.name, hex: c.hex })) : [],
     sizes: dto.sizes?.length ? dto.sizes : ['S', 'M', 'L'],
   };

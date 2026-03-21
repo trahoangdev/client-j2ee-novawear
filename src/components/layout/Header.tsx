@@ -357,6 +357,13 @@ export function Header() {
               <GenderMenu gender="FEMALE" label="Nữ" isActive={isActive('/nu')} path="/nu" />
               <GenderMenu gender="UNISEX" label="Unisex" isActive={isActive('/unisex')} path="/unisex" />
               <NavLink to="/bundles" label="Combo" isActive={isActive('/bundles')} />
+              <div className="relative flex items-center h-full">
+                <NavLink to="/flash-sale" label="Flash Sale" isActive={isActive('/flash-sale')} />
+                <span className="absolute -top-1 right-0 sm:-right-2 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+              </div>
             </nav>
 
             {/* Right Actions */}
@@ -584,7 +591,7 @@ export function Header() {
                 <Link to="/nu" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3.5 rounded-2xl font-semibold text-foreground/90 hover:bg-muted hover:text-foreground transition-all">Thời Trang Nữ</Link>
                 <Link to="/unisex" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3.5 rounded-2xl font-semibold text-foreground/90 hover:bg-muted hover:text-foreground transition-all">Unisex Bộ Phối</Link>
                 <Link to="/bundles" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3.5 rounded-2xl font-semibold text-foreground/90 hover:bg-muted hover:text-foreground transition-all">Combo Đặc Biệt</Link>
-                <Link to="/sale" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3.5 rounded-2xl font-bold text-destructive bg-destructive/10 hover:bg-destructive/20 transition-all mt-6 shadow-sm">🔥 Đang Khuyến Mãi</Link>
+                <Link to="/flash-sale" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3.5 rounded-2xl font-bold text-destructive bg-destructive/10 hover:bg-destructive/20 transition-all mt-6 shadow-sm">🔥 Flash Sale</Link>
               </div>
 
               {!isAuthenticated && (

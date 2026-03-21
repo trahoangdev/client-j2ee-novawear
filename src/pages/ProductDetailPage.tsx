@@ -16,6 +16,7 @@ import {
   ImagePlus,
   X,
   Loader2,
+  Zap,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ export function ProductDetailPage() {
   const { isAuthenticated, user } = useAuth();
 
   const [product, setProduct] = useState<ProductDisplay | null>(null);
+  const [activeFlashSale, setActiveFlashSale] = useState<import('@/types/api').FlashSaleDto | null>(null);
   const [reviews, setReviews] = useState<ReviewDto[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<ProductDisplay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +74,14 @@ export function ProductDetailPage() {
         const p = productDtoToDisplay(prodRes.data);
         const productId = Number(p.id);
         setProduct(p);
+        // If product is in flash sale, load the flash sale data
+        if (p.isFlashSale) {
+           import('@/lib/customerApi').then(({ flashSalesApi }) => {
+               flashSalesApi.getActive().then(({ data }) => {
+                   if (data && data.length > 0) setActiveFlashSale(data[0]);
+               }).catch(() => {});
+           });
+        }
         // Load reviews by product ID
         return Promise.all([
           Promise.resolve(p),
@@ -232,11 +242,17 @@ export function ProductDetailPage() {
               className="lg:w-1/2 space-y-4"
             >
               <div className="relative aspect-[4/5] bg-muted/30 rounded-3xl overflow-hidden group shadow-sm border border-border/40">
-                {product.isNew && (
-                  <Badge className="absolute top-6 left-6 z-10 bg-primary text-primary-foreground border-none font-bold tracking-widest uppercase px-3 py-1 shadow-lg">New Arrival</Badge>
+                {product.isNew && !product.isFlashSale && (
+                  <Badge className="absolute top-6 left-6 z-10 bg-primary text-primary-foreground border-none font-bold tracking-widest uppercase px-3 py-1 shadow-lg">New</Badge>
                 )}
-                {product.salePrice && product.salePrice < product.price && (
-                  <Badge className="absolute top-6 right-6 z-10 bg-destructive text-destructive-foreground border-none font-bold tracking-widest uppercase px-3 py-1 shadow-lg">Sale</Badge>
+                {product.isFlashSale ? (
+                  <Badge className="absolute top-6 left-6 z-10 bg-red-600 text-white border-none font-black tracking-widest uppercase px-4 py-1.5 shadow-lg flex items-center gap-1.5 text-xs sm:text-sm">
+                    <Zap className="h-4 w-4 fill-current animate-pulse" /> Flash Sale
+                  </Badge>
+                ) : (
+                  product.salePrice && product.salePrice < product.price && (
+                    <Badge className="absolute top-6 right-6 z-10 bg-destructive text-destructive-foreground border-none font-bold tracking-widest uppercase px-3 py-1 shadow-lg">Sale</Badge>
+                  )
                 )}
                 <img
                   src={images[selectedImage] ?? ''}
@@ -321,11 +337,25 @@ export function ProductDetailPage() {
                   <span className="text-sm text-muted-foreground font-medium">( {reviews.length} Reviews )</span>
                 </div>
 
+                {product.isFlashSale && activeFlashSale && (
+                   <div className="mb-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl p-4">
+                      <div className="flex items-center gap-2 text-red-600 dark:text-red-500 font-bold text-sm uppercase tracking-widest mb-1">
+                        <Zap className="w-5 h-5 fill-current" /> Đang trong Flash Sale
+                      </div>
+                      <p className="text-muted-foreground text-xs font-medium">Nhanh tay số lượng có hạn!</p>
+                   </div>
+                )}
+
                 <div className="flex items-baseline gap-3">
                   {product.salePrice && product.salePrice < product.price ? (
                     <>
-                      <span className="text-xl text-muted-foreground line-through font-medium">{formatCurrency(product.price)}</span>
-                      <span className="text-3xl font-semibold text-foreground tracking-tight">{formatCurrency(product.salePrice)}</span>
+                      <span className={cn("text-xl text-muted-foreground line-through font-medium", product.isFlashSale && "text-muted-foreground/70")}>{formatCurrency(product.price)}</span>
+                      <span className={cn("text-3xl font-semibold tracking-tight", product.isFlashSale ? "text-red-600" : "text-foreground")}>{formatCurrency(product.salePrice)}</span>
+                      {product.isFlashSale && (
+                          <Badge className="ml-2 bg-red-600/10 text-red-600 border-none px-2.5 py-1 text-sm font-black shadow-none pointer-events-none">
+                            -{Math.round(((product.price - product.salePrice) / product.price) * 100)}%
+                          </Badge>
+                      )}
                     </>
                   ) : (
                     <span className="text-3xl font-semibold text-foreground tracking-tight">{formatCurrency(product.price)}</span>

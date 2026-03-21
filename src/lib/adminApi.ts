@@ -168,6 +168,8 @@ export const adminSubscribersApi = {
     }),
   count: () => api.get<{ active: number }>('/api/admin/subscribers/count'),
   delete: (id: number) => api.delete(`/api/admin/subscribers/${id}`),
+  sendEmail: (data: { subject: string; content: string }) => 
+    api.post<{ message: string }>('/api/admin/subscribers/send-email', data),
 };
 
 /** Admin Bundles */

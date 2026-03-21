@@ -14,7 +14,7 @@ const shopLinks = [
   { to: '/unisex', label: 'Unisex' },
   { to: '/new-arrivals', label: 'Hàng Mới Về' },
   { to: '/bestseller', label: 'Bán Chạy Nhất' },
-  { to: '/sale', label: 'Khuyến Mãi', highlight: true },
+  { to: '/flash-sale', label: 'Flash Sale', highlight: true },
 ];
 
 const supportLinks = [

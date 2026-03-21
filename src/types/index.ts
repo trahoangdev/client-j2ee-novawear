@@ -16,6 +16,7 @@ export interface Product {
   reviewCount: number;
   isFeatured: boolean;
   isNew: boolean;
+  isFlashSale?: boolean;
   createdAt: string;
 }
 
@@ -38,6 +39,7 @@ export interface CartItem {
   quantity: number;
   size: string;
   color: ProductColor;
+  isFlashSale?: boolean;
 }
 
 export interface Cart {

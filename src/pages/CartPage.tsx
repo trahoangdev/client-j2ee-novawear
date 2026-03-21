@@ -150,6 +150,11 @@ export function CartPage() {
                                 className="font-semibold text-[15px] hover:text-primary transition-colors line-clamp-2 block leading-snug mb-2"
                               >
                                 {item.product.name}
+                                {item.isFlashSale && (
+                                  <span className="ml-2 inline-flex items-center gap-1 bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider translate-y-[-2px]">
+                                    ⚡ Flash Sale
+                                  </span>
+                                )}
                               </Link>
                               <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
                                 <span className="text-xs bg-muted/60 border border-border/50 px-2 py-0.5 rounded-md font-medium">{item.size}</span>

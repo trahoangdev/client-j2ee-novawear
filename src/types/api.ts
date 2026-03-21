@@ -34,6 +34,7 @@ export interface ProductDto {
   isNew?: boolean;
   sizes?: string[];
   colors?: ProductColorDto[];
+  isFlashSale?: boolean;
   /** Giới tính: MALE, FEMALE, UNISEX */
   gender?: 'MALE' | 'FEMALE' | 'UNISEX';
 }

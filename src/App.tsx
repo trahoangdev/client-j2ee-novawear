@@ -11,6 +11,7 @@ const HomePage = lazy(() => import("@/pages/HomePage").then(m => ({ default: m.H
 const ShopPage = lazy(() => import("@/pages/ShopPage").then(m => ({ default: m.ShopPage })));
 const BestsellerPage = lazy(() => import("@/pages/BestsellerPage").then(m => ({ default: m.BestsellerPage })));
 const SalePage = lazy(() => import("@/pages/SalePage").then(m => ({ default: m.SalePage })));
+const FlashSalePage = lazy(() => import("@/pages/FlashSalePage").then(m => ({ default: m.FlashSalePage })));
 const NewArrivalsPage = lazy(() => import("@/pages/NewArrivalsPage").then(m => ({ default: m.NewArrivalsPage })));
 const ProductDetailPage = lazy(() => import("@/pages/ProductDetailPage").then(m => ({ default: m.ProductDetailPage })));
 const CartPage = lazy(() => import("@/pages/CartPage").then(m => ({ default: m.CartPage })));
@@ -58,6 +59,9 @@ const BundlesPage = lazy(() => import("@/pages/BundlesPage"));
 // Live Chat Widget
 import { LiveChatWidget } from "@/components/layout/LiveChatWidget";
 
+// Route Protection
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+
 // Loading Fallback
 function LoadingFallback() {
   return (
@@ -86,13 +90,14 @@ function App() {
                 <Route path="/unisex" element={<ShopPage />} />
                 <Route path="/bestseller" element={<BestsellerPage />} />
                 <Route path="/sale" element={<SalePage />} />
+                <Route path="/flash-sale" element={<FlashSalePage />} />
                 <Route path="/new-arrivals" element={<NewArrivalsPage />} />
                 <Route path="/product/:slug" element={<ProductDetailPage />} />
                 <Route path="/cart" element={<CartPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/payment/vnpay/return" element={<PaymentReturnPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+                <Route path="/payment/vnpay/return" element={<ProtectedRoute><PaymentReturnPage /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
                 <Route path="/faq" element={<FaqPage />} />
                 <Route path="/shipping" element={<ShippingPage />} />
                 <Route path="/returns" element={<ReturnsPage />} />

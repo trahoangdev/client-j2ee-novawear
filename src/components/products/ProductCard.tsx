@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useWishlist } from '@/context/WishlistContext';
@@ -38,6 +38,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   // Tags
   const isNew = (product as ProductDisplay).isNew ?? ('isNew' in product && product.isNew);
   const bestseller = (product as ProductDisplay).bestseller ?? false;
+  const isFlashSale = (product as ProductDisplay).isFlashSale ?? false;
 
   // Preload second image
   useEffect(() => {
@@ -81,7 +82,12 @@ export function ProductCard({ product, className }: ProductCardProps) {
       <Link to={`/product/${slug}`} className="block relative aspect-[4/3] rounded-2xl overflow-hidden bg-muted/20 mb-5 focus:outline-none">
         {/* Badges inside Image */}
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
-          {isNew && (
+          {isFlashSale && (
+             <Badge className="bg-red-600 hover:bg-red-700 text-white border-none font-black tracking-widest uppercase px-3 py-1.5 shadow-lg flex items-center gap-1.5 text-[10px] sm:text-xs">
+                 <Zap className="h-3.5 w-3.5 fill-current animate-pulse" /> Flash Sale
+             </Badge>
+          )}
+          {isNew && !isFlashSale && (
             <Badge className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold px-3 py-1 border-none shadow-sm rounded-full">New</Badge>
           )}
           {bestseller && (
@@ -136,13 +142,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
       <div className="flex items-end gap-2.5 mb-5 h-8">
         {hasDiscount ? (
           <>
-            <span className="font-display text-2xl font-black text-foreground tracking-tight leading-none">
+            <span className={cn("font-display text-2xl font-black tracking-tight leading-none", isFlashSale ? "text-red-600" : "text-foreground")}>
               {formatCurrency(salePriceNum!)}
             </span>
-            <span className="text-sm font-semibold text-muted-foreground line-through decoration-muted-foreground/50 mb-0.5">
+            <span className={cn("text-sm font-semibold line-through decoration-muted-foreground/50 mb-0.5", isFlashSale ? "text-muted-foreground/70" : "text-muted-foreground")}>
               {formatCurrency(priceNum)}
             </span>
-            <Badge className="bg-destructive/10 text-destructive border-none shadow-none font-bold text-xs ml-auto hover:bg-destructive/20 hidden sm:inline-flex">
+            <Badge className={cn("border-none shadow-none font-bold text-xs ml-auto hidden sm:inline-flex", isFlashSale ? "bg-red-100 text-red-600 hover:bg-red-200" : "bg-destructive/10 text-destructive hover:bg-destructive/20")}>
               - {discountPercent}%
             </Badge>
           </>

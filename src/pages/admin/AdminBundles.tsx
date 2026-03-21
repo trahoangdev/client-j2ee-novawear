@@ -44,30 +44,51 @@ export function AdminBundles() {
       .finally(() => setLoading(false));
   };
 
+  const loadProductsIfEmpty = () => {
+    if (products.length === 0) {
+      productsApi.list({ page: 0, size: 200 })
+        .then(({ data }) => setProducts(data.content))
+        .catch(() => message.error('Lỗi tải danh sách sản phẩm'));
+    }
+  };
+
   useEffect(() => {
     fetchBundles();
   }, [page]);
 
   const handleSubmit = async () => {
-    const values = await form.validateFields();
-    const payload = {
-      name: values.name,
-      description: values.description,
-      imageUrl: values.imageUrl,
-      discountPercent: values.discountPercent,
-      active: values.active ?? true,
-    };
-    if (editing) {
-      await adminBundlesApi.update(editing.id, payload);
-      message.success('Cập nhật thành công');
-    } else {
-      await adminBundlesApi.create(payload);
-      message.success('Tạo thành công');
+    try {
+      const values = await form.validateFields();
+      const payload = {
+        name: values.name,
+        description: values.description,
+        imageUrl: values.imageUrl,
+        discountPercent: values.discountPercent,
+        active: values.active ?? true,
+      };
+      if (editing) {
+        await adminBundlesApi.update(editing.id, payload);
+        message.success('Cập nhật thành công');
+      } else {
+        const { data: newBundle } = await adminBundlesApi.create(payload);
+        if (values.productIds && values.productIds.length > 0) {
+          for (const pId of values.productIds) {
+            await adminBundlesApi.addItem(newBundle.id, pId, 1);
+          }
+        }
+        message.success('Tạo thành công');
+      }
+      setModalOpen(false);
+      setEditing(null);
+      form.resetFields();
+      fetchBundles();
+    } catch (e: any) {
+      if (e.response?.data?.message) {
+        message.error(e.response.data.message);
+      } else if (e.name !== 'ValidationError') {
+        message.error('Có lỗi xảy ra, vui lòng thử lại');
+      }
     }
-    setModalOpen(false);
-    setEditing(null);
-    form.resetFields();
-    fetchBundles();
   };
 
   const openAddItem = (bundle: BundleDto) => {
@@ -83,16 +104,24 @@ export function AdminBundles() {
 
   const handleAddItem = async () => {
     if (!selectedBundle || !selectedProductId) return;
-    await adminBundlesApi.addItem(selectedBundle.id, selectedProductId, itemQty);
-    message.success('Đã thêm sản phẩm vào combo');
-    setItemModalOpen(false);
-    fetchBundles();
+    try {
+      await adminBundlesApi.addItem(selectedBundle.id, selectedProductId, itemQty);
+      message.success('Đã thêm sản phẩm vào combo');
+      setItemModalOpen(false);
+      fetchBundles();
+    } catch (e: any) {
+      message.error(e.response?.data?.message || 'Có lỗi xảy ra, không thể thêm SP');
+    }
   };
 
   const handleRemoveItem = async (bundleId: number, itemId: number) => {
-    await adminBundlesApi.removeItem(bundleId, itemId);
-    message.success('Đã xoá sản phẩm khỏi combo');
-    fetchBundles();
+    try {
+      await adminBundlesApi.removeItem(bundleId, itemId);
+      message.success('Đã xoá sản phẩm khỏi combo');
+      fetchBundles();
+    } catch (e: any) {
+      message.error(e.response?.data?.message || 'Không thể xóa sản phẩm khỏi combo');
+    }
   };
 
   const columns = [
@@ -228,6 +257,7 @@ export function AdminBundles() {
           onClick={() => {
             setEditing(null);
             form.resetFields();
+            loadProductsIfEmpty();
             setModalOpen(true);
           }}
         >
@@ -277,6 +307,19 @@ export function AdminBundles() {
           >
             <InputNumber min={1} max={90} style={{ width: '100%' }} />
           </Form.Item>
+          {!editing && (
+            <Form.Item name="productIds" label="Chọn sản phẩm (Tuỳ chọn)">
+              <Select
+                mode="multiple"
+                showSearch
+                placeholder="Tìm và chọn các SP để đóng gói"
+                filterOption={(input, option) =>
+                  (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+                }
+                options={products.map((p) => ({ value: p.id, label: p.name }))}
+              />
+            </Form.Item>
+          )}
           <Form.Item name="active" label="Kích hoạt" valuePropName="checked" initialValue={true}>
             <Switch />
           </Form.Item>

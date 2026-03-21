@@ -28,34 +28,59 @@ export function AdminFlashSales() {
       .finally(() => setLoading(false));
   };
 
+  const loadProductsIfEmpty = () => {
+    if (products.length === 0) {
+      productsApi.list({ page: 0, size: 200 })
+        .then(({ data }) => setProducts(data.content))
+        .catch(() => message.error('Lỗi tải sản phẩm'));
+    }
+  };
+
   useEffect(() => { fetchSales(); }, [page]);
 
   const handleSubmit = async () => {
-    const values = await form.validateFields();
-    const payload = {
-      name: values.name,
-      startTime: values.timeRange[0].toISOString(),
-      endTime: values.timeRange[1].toISOString(),
-      discountPercent: values.discountPercent,
-      active: values.active ?? true,
-    };
-    if (editing) {
-      await adminFlashSalesApi.update(editing.id, payload);
-      message.success('Cập nhật thành công');
-    } else {
-      await adminFlashSalesApi.create(payload);
-      message.success('Tạo thành công');
+    try {
+      const values = await form.validateFields();
+      const payload = {
+        name: values.name,
+        startTime: values.timeRange[0].toISOString(),
+        endTime: values.timeRange[1].toISOString(),
+        discountPercent: values.discountPercent,
+        active: values.active ?? true,
+      };
+      if (editing) {
+        await adminFlashSalesApi.update(editing.id, payload);
+        message.success('Cập nhật thành công');
+      } else {
+        const { data: newSale } = await adminFlashSalesApi.create(payload);
+        if (values.productIds && values.productIds.length > 0) {
+          for (const pId of values.productIds) {
+            await adminFlashSalesApi.addProduct(newSale.id, pId, 50); // Mặc định SL 50
+          }
+        }
+        message.success('Tạo thành công');
+      }
+      setModalOpen(false);
+      setEditing(null);
+      form.resetFields();
+      fetchSales();
+    } catch (e: any) {
+      if (e.response?.data?.message) {
+        message.error(e.response.data.message);
+      } else if (e.name !== 'ValidationError') {
+        message.error('Có lỗi xảy ra, vui lòng thử lại');
+      }
     }
-    setModalOpen(false);
-    setEditing(null);
-    form.resetFields();
-    fetchSales();
   };
 
   const handleDelete = async (id: number) => {
-    await adminFlashSalesApi.delete(id);
-    message.success('Đã xóa');
-    fetchSales();
+    try {
+      await adminFlashSalesApi.delete(id);
+      message.success('Đã xóa');
+      fetchSales();
+    } catch (e: any) {
+      message.error(e.response?.data?.message || 'Không thể xóa');
+    }
   };
 
   const openAddProduct = (sale: FlashSaleDto) => {
@@ -66,18 +91,26 @@ export function AdminFlashSales() {
 
   const handleAddProduct = async () => {
     if (!selectedSale || !selectedProductId) return;
-    await adminFlashSalesApi.addProduct(selectedSale.id, selectedProductId, productQty);
-    message.success('Đã thêm sản phẩm');
-    setProductModalOpen(false);
-    setSelectedProductId(null);
-    setProductQty(50);
-    fetchSales();
+    try {
+      await adminFlashSalesApi.addProduct(selectedSale.id, selectedProductId, productQty);
+      message.success('Đã thêm sản phẩm');
+      setProductModalOpen(false);
+      setSelectedProductId(null);
+      setProductQty(50);
+      fetchSales();
+    } catch (e: any) {
+      message.error(e.response?.data?.message || 'Lỗi thêm sản phẩm');
+    }
   };
 
   const handleRemoveProduct = async (saleId: number, itemId: number) => {
-    await adminFlashSalesApi.removeProduct(saleId, itemId);
-    message.success('Đã xóa sản phẩm');
-    fetchSales();
+    try {
+      await adminFlashSalesApi.removeProduct(saleId, itemId);
+      message.success('Đã xóa sản phẩm');
+      fetchSales();
+    } catch (e: any) {
+      message.error(e.response?.data?.message || 'Không thể xóa sản phẩm');
+    }
   };
 
   const columns = [
@@ -131,7 +164,7 @@ export function AdminFlashSales() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>Flash Sale</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setModalOpen(true); }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); loadProductsIfEmpty(); setModalOpen(true); }}>
           Tạo Flash Sale
         </Button>
       </div>
@@ -189,9 +222,26 @@ export function AdminFlashSales() {
           <Form.Item name="discountPercent" label="Phần trăm giảm" rules={[{ required: true }]}>
             <InputNumber min={1} max={90} addonAfter="%" style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="timeRange" label="Thời gian" rules={[{ required: true, message: 'Chọn thời gian' }]}>
-            <DatePicker.RangePicker showTime format="DD/MM/YYYY HH:mm" style={{ width: '100%' }} />
+          <Form.Item
+            name="timeRange"
+            label="Thời gian"
+            rules={[{ required: true, message: 'Vui lòng chọn thời gian' }]}
+          >
+            <DatePicker.RangePicker showTime style={{ width: '100%' }} />
           </Form.Item>
+          {!editing && (
+            <Form.Item name="productIds" label="Chọn sản phẩm (Tuỳ chọn)">
+              <Select
+                mode="multiple"
+                showSearch
+                placeholder="Tìm và đưa SP vào đợt Sale (SL: 50 mặc định)"
+                filterOption={(input, option) =>
+                  (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+                }
+                options={products.map((p) => ({ value: p.id, label: p.name }))}
+              />
+            </Form.Item>
+          )}
           <Form.Item name="active" label="Hoạt động" valuePropName="checked" initialValue={true}>
             <Switch />
           </Form.Item>

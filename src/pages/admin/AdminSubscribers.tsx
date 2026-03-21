@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Tag, Button, Popconfirm, Statistic, Row, Col, Card, message } from 'antd';
+import { Table, Tag, Button, Popconfirm, Statistic, Row, Col, Card, message, Modal, Form, Input } from 'antd';
 import { MailOutlined, DeleteOutlined } from '@ant-design/icons';
 import { adminSubscribersApi } from '@/lib/adminApi';
 import type { SubscriberDto } from '@/types/api';
@@ -10,6 +10,9 @@ export function AdminSubscribers() {
   const [total, setTotal] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
   const [page, setPage] = useState(0);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [form] = Form.useForm();
 
   const fetchData = () => {
     setLoading(true);
@@ -32,6 +35,23 @@ export function AdminSubscribers() {
     await adminSubscribersApi.delete(id);
     message.success('Đã xóa');
     fetchData();
+  };
+
+  const handleSendEmail = async () => {
+    try {
+      const values = await form.validateFields();
+      setSendingEmail(true);
+      const { data } = await adminSubscribersApi.sendEmail(values);
+      message.success(data.message);
+      setEmailModalOpen(false);
+      form.resetFields();
+    } catch (e: any) {
+      if (e.response?.data?.message) {
+        message.error(e.response.data.message);
+      }
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const columns = [
@@ -67,7 +87,12 @@ export function AdminSubscribers() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16 }}>Newsletter Subscribers</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>Newsletter Subscribers</h2>
+        <Button type="primary" icon={<MailOutlined />} onClick={() => setEmailModalOpen(true)}>
+          Gửi Email Hàng Loạt
+        </Button>
+      </div>
 
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col span={8}>
@@ -94,6 +119,36 @@ export function AdminSubscribers() {
         loading={loading}
         pagination={{ current: page + 1, total, pageSize: 20, onChange: (p) => setPage(p - 1) }}
       />
+
+      <Modal
+        title="Gửi Email Hàng Loạt"
+        open={emailModalOpen}
+        onCancel={() => setEmailModalOpen(false)}
+        confirmLoading={sendingEmail}
+        onOk={handleSendEmail}
+        okText="Gửi"
+        cancelText="Hủy"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="subject"
+            label="Tiêu đề"
+            rules={[{ required: true, message: 'Vui lòng nhập tiêu đề' }]}
+          >
+            <Input placeholder="Nhập tiêu đề email..." />
+          </Form.Item>
+          <Form.Item
+            name="content"
+            label="Nội dung"
+            rules={[{ required: true, message: 'Vui lòng nhập nội dung' }]}
+          >
+            <Input.TextArea rows={6} placeholder="Nhập nội dung email..." />
+          </Form.Item>
+          <div className="text-red-500 text-sm mt-2">
+            * Lưu ý: Hiện tại hệ thống sẽ gửi email tới toàn bộ người dùng "Đang theo dõi".
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 }
