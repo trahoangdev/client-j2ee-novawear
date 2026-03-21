@@ -9,6 +9,10 @@ import type {
   BannerDto,
   Page,
   TopProductDto,
+  FlashSaleDto,
+  SubscriberDto,
+  ReturnRequestDto,
+  BundleDto,
 } from '@/types/api';
 
 /** Auth */
@@ -134,4 +138,67 @@ export const adminBannersApi = {
   update: (id: number, data: { title?: string; subtitle?: string; imageUrl?: string; linkUrl?: string; ctaText?: string; description?: string; ctaText2?: string; linkUrl2?: string; badgeText?: string; bannerType?: string; sortOrder?: number; active?: boolean }) =>
     api.put<BannerDto>(`/api/admin/banners/${id}`, data),
   delete: (id: number) => api.delete(`/api/admin/banners/${id}`),
+};
+
+/** Admin Flash Sales */
+export const adminFlashSalesApi = {
+  list: (params?: { page?: number; size?: number }) =>
+    api.get<Page<FlashSaleDto>>('/api/admin/flash-sales', {
+      params: { page: params?.page ?? 0, size: params?.size ?? 10 },
+    }),
+  getById: (id: number) => api.get<FlashSaleDto>(`/api/admin/flash-sales/${id}`),
+  create: (data: { name: string; startTime: string; endTime: string; discountPercent: number; active?: boolean }) =>
+    api.post<FlashSaleDto>('/api/admin/flash-sales', data),
+  update: (id: number, data: { name?: string; startTime?: string; endTime?: string; discountPercent?: number; active?: boolean }) =>
+    api.put<FlashSaleDto>(`/api/admin/flash-sales/${id}`, data),
+  addProduct: (id: number, productId: number, quantity?: number) =>
+    api.post<FlashSaleDto>(`/api/admin/flash-sales/${id}/products`, null, {
+      params: { productId, ...(quantity != null && { quantity }) },
+    }),
+  removeProduct: (id: number, itemId: number) =>
+    api.delete(`/api/admin/flash-sales/${id}/products/${itemId}`),
+  delete: (id: number) => api.delete(`/api/admin/flash-sales/${id}`),
+};
+
+/** Admin Subscribers (Newsletter) */
+export const adminSubscribersApi = {
+  list: (params?: { page?: number; size?: number }) =>
+    api.get<Page<SubscriberDto>>('/api/admin/subscribers', {
+      params: { page: params?.page ?? 0, size: params?.size ?? 20 },
+    }),
+  count: () => api.get<{ active: number }>('/api/admin/subscribers/count'),
+  delete: (id: number) => api.delete(`/api/admin/subscribers/${id}`),
+};
+
+/** Admin Bundles */
+export const adminBundlesApi = {
+  list: (params?: { page?: number; size?: number }) =>
+    api.get<Page<BundleDto>>('/api/admin/bundles', {
+      params: { page: params?.page ?? 0, size: params?.size ?? 10 },
+    }),
+  getById: (id: number) => api.get<BundleDto>(`/api/admin/bundles/${id}`),
+  create: (data: Partial<BundleDto>) =>
+    api.post<BundleDto>('/api/admin/bundles', data),
+  update: (id: number, data: Partial<BundleDto>) =>
+    api.put<BundleDto>(`/api/admin/bundles/${id}`, data),
+  addItem: (id: number, productId: number, quantity?: number) =>
+    api.post<BundleDto>(`/api/admin/bundles/${id}/items`, null, {
+      params: { productId, ...(quantity != null && { quantity }) },
+    }),
+  removeItem: (id: number, itemId: number) =>
+    api.delete(`/api/admin/bundles/${id}/items/${itemId}`),
+  delete: (id: number) => api.delete(`/api/admin/bundles/${id}`),
+};
+
+/** Admin Returns */
+export const adminReturnsApi = {
+  list: (params?: { page?: number; size?: number }) =>
+    api.get<Page<ReturnRequestDto>>('/api/admin/returns', {
+      params: { page: params?.page ?? 0, size: params?.size ?? 10 },
+    }),
+  getById: (id: number) => api.get<ReturnRequestDto>(`/api/admin/returns/${id}`),
+  updateStatus: (id: number, status: string, adminNote?: string) =>
+    api.patch<ReturnRequestDto>(`/api/admin/returns/${id}/status`, null, {
+      params: { status, ...(adminNote && { adminNote }) },
+    }),
 };

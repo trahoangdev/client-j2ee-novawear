@@ -49,6 +49,14 @@ const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings").then(m =>
 const AdminBanners = lazy(() => import("@/pages/admin/AdminBanners").then(m => ({ default: m.AdminBanners })));
 const AdminVouchers = lazy(() => import("@/pages/admin/AdminVouchers").then(m => ({ default: m.AdminVouchers })));
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin").then(m => ({ default: m.AdminLogin })));
+const AdminFlashSales = lazy(() => import("@/pages/admin/AdminFlashSales").then(m => ({ default: m.AdminFlashSales })));
+const AdminReturns = lazy(() => import("@/pages/admin/AdminReturns").then(m => ({ default: m.AdminReturns })));
+const AdminSubscribers = lazy(() => import("@/pages/admin/AdminSubscribers").then(m => ({ default: m.AdminSubscribers })));
+const AdminBundles = lazy(() => import("@/pages/admin/AdminBundles").then(m => ({ default: m.AdminBundles })));
+const BundlesPage = lazy(() => import("@/pages/BundlesPage"));
+
+// Live Chat Widget
+import { LiveChatWidget } from "@/components/layout/LiveChatWidget";
 
 // Loading Fallback
 function LoadingFallback() {
@@ -93,6 +101,7 @@ function App() {
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/wishlist" element={<WishlistPage />} />
+                <Route path="/bundles" element={<BundlesPage />} />
 
                 {/* Auth Routes */}
                 <Route path="/login" element={<LoginPage />} />
@@ -113,6 +122,10 @@ function App() {
                   <Route path="reviews" element={<AdminReviews />} />
                   <Route path="public/banners" element={<AdminBanners />} />
                   <Route path="vouchers" element={<AdminVouchers />} />
+                  <Route path="flash-sales" element={<AdminFlashSales />} />
+                  <Route path="returns" element={<AdminReturns />} />
+                  <Route path="subscribers" element={<AdminSubscribers />} />
+                  <Route path="bundles" element={<AdminBundles />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
@@ -123,6 +136,7 @@ function App() {
             </Suspense>
 
             {/* Global Components */}
+            <LiveChatWidget />
             <Toaster 
               position="top-right" 
               richColors 

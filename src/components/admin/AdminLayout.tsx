@@ -16,6 +16,10 @@ import {
   GlobalOutlined,
   PictureOutlined,
   GiftOutlined,
+  ThunderboltOutlined,
+  RollbackOutlined,
+  MailOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -31,7 +35,10 @@ const menuItems: MenuProps['items'] = [
   { key: '/admin/orders', icon: <ShoppingCartOutlined />, label: <Link to="/admin/orders">Đơn hàng</Link> },
   { key: '/admin/customers', icon: <UserOutlined />, label: <Link to="/admin/customers">Khách hàng</Link> },
   { key: '/admin/vouchers', icon: <GiftOutlined />, label: <Link to="/admin/vouchers">Voucher</Link> },
+  { key: '/admin/flash-sales', icon: <ThunderboltOutlined />, label: <Link to="/admin/flash-sales">Flash Sale</Link> },
+  { key: '/admin/bundles', icon: <AppstoreOutlined />, label: <Link to="/admin/bundles">Combo / Set</Link> },
   { key: '/admin/reviews', icon: <StarOutlined />, label: <Link to="/admin/reviews">Đánh giá</Link> },
+  { key: '/admin/returns', icon: <RollbackOutlined />, label: <Link to="/admin/returns">Trả hàng</Link> },
   {
     key: '/admin/public',
     icon: <PictureOutlined />,
@@ -40,6 +47,7 @@ const menuItems: MenuProps['items'] = [
       { key: '/admin/public/banners', label: <Link to="/admin/public/banners">Banner</Link> },
     ],
   },
+  { key: '/admin/subscribers', icon: <MailOutlined />, label: <Link to="/admin/subscribers">Newsletter</Link> },
   { key: '/admin/analytics', icon: <BarChartOutlined />, label: <Link to="/admin/analytics">Thống kê</Link> },
   { key: '/admin/settings', icon: <SettingOutlined />, label: <Link to="/admin/settings">Cài đặt</Link> },
 ];

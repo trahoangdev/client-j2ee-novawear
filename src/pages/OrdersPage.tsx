@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { ordersApi } from '@/lib/customerApi';
+import { returnsApi } from '@/lib/customerApi';
 import { toast } from '@/lib/toast';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { OrderCardSkeleton } from '@/components/orders/OrderCardSkeleton';
@@ -27,6 +28,12 @@ export function OrdersPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancellingOrder, setCancellingOrder] = useState<OrderDto | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
+
+  // Return request states
+  const [returnModalOpen, setReturnModalOpen] = useState(false);
+  const [returningOrder, setReturningOrder] = useState<OrderDto | null>(null);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnLoading, setReturnLoading] = useState(false);
 
   const loadOrders = () => {
     if (!isAuthenticated) return;
@@ -89,6 +96,29 @@ export function OrdersPage() {
     }
   };
 
+  const handleReturnClick = (order: OrderDto) => {
+    setReturningOrder(order);
+    setReturnReason('');
+    setReturnModalOpen(true);
+  };
+
+  const handleReturnSubmit = async () => {
+    if (!returningOrder || !returnReason.trim()) return;
+    setReturnLoading(true);
+    try {
+      await returnsApi.create(returningOrder.id, returnReason.trim());
+      toast.success('Yêu cầu trả hàng đã được gửi thành công');
+      setReturnModalOpen(false);
+      setReturningOrder(null);
+      setReturnReason('');
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.response?.data?.error || 'Không thể gửi yêu cầu trả hàng.';
+      toast.error(message);
+    } finally {
+      setReturnLoading(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
@@ -135,6 +165,7 @@ export function OrdersPage() {
                     onToggle={() => toggleOrder(order.id)}
                     detail={orderDetails[order.id] ?? null}
                     onCancelClick={() => handleCancelClick(order)}
+                    onReturnClick={() => handleReturnClick(order)}
                   />
                 ))}
               </div>
@@ -185,6 +216,39 @@ export function OrdersPage() {
         orderNumber={cancellingOrder?.orderNumber ?? String(cancellingOrder?.id ?? '').padStart(6, '0')}
         loading={cancelLoading}
       />
+
+      {/* Return Request Modal */}
+      {returnModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-background rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <h2 className="text-lg font-semibold">Yêu cầu trả hàng</h2>
+            <p className="text-sm text-muted-foreground">
+              Đơn hàng: <span className="font-mono font-medium">#{returningOrder?.orderNumber ?? returningOrder?.id}</span>
+            </p>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Lý do trả hàng</label>
+              <textarea
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Mô tả lý do bạn muốn trả hàng..."
+                value={returnReason}
+                onChange={(e) => setReturnReason(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setReturnModalOpen(false); setReturningOrder(null); }}>
+                Hủy
+              </Button>
+              <Button
+                onClick={handleReturnSubmit}
+                disabled={!returnReason.trim() || returnLoading}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                {returnLoading ? 'Đang gửi...' : 'Gửi yêu cầu'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

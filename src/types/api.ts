@@ -199,3 +199,85 @@ export interface ProductFiltersDto {
   sizes: string[];
   colors: string[];
 }
+
+/** Flash Sale */
+export interface FlashSaleItemDto {
+  id: number;
+  productId: number;
+  productName: string;
+  productSlug?: string;
+  productImage?: string;
+  originalPrice: number;
+  salePrice: number;
+  quantity: number;
+  soldCount: number;
+}
+
+export interface FlashSaleDto {
+  id: number;
+  name: string;
+  startTime: string;
+  endTime: string;
+  discountPercent: number;
+  active: boolean;
+  products: FlashSaleItemDto[];
+  createdAt: string;
+}
+
+/** Notification */
+export interface NotificationDto {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  linkTo?: string;
+  createdAt: string;
+}
+
+/** Return Request */
+export interface ReturnRequestDto {
+  id: number;
+  orderId: number;
+  orderCode: string;
+  userId: number;
+  username: string;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
+  images: string[];
+  adminNote?: string;
+  createdAt: string;
+}
+
+/** Subscriber (Newsletter) */
+export interface SubscriberDto {
+  id: number;
+  email: string;
+  active: boolean;
+  subscribedAt: string;
+}
+
+/** Bundle Item */
+export interface BundleItemDto {
+  id: number;
+  productId: number;
+  productName: string;
+  productSlug: string;
+  productImage: string;
+  productPrice: number;
+  quantity: number;
+}
+
+/** Product Bundle / Combo */
+export interface BundleDto {
+  id: number;
+  name: string;
+  description: string;
+  imageUrl?: string;
+  discountPercent: number;
+  active: boolean;
+  totalOriginalPrice: number;
+  bundlePrice: number;
+  items: BundleItemDto[];
+  createdAt: string;
+}

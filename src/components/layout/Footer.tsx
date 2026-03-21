@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
+import { Facebook, Instagram, Mail, Phone, MapPin, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAppSettingsReadOnly } from '@/context/AppSettingsContext';
+import { newsletterApi } from '@/lib/customerApi';
 
 const shopLinks = [
   { to: '/shop', label: 'Tất Cả Sản Phẩm' },
@@ -33,8 +35,25 @@ function BrandName({ name }: { name: string }) {
 
 export function Footer() {
   const { store, general } = useAppSettingsReadOnly();
+  const [nlEmail, setNlEmail] = useState('');
+  const [nlStatus, setNlStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const telHref = store.hotline ? `tel:${store.hotline.replace(/\s/g, '')}` : undefined;
   const mailHref = store.supportEmail ? `mailto:${store.supportEmail}` : undefined;
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nlEmail.trim()) return;
+    setNlStatus('loading');
+    try {
+      await newsletterApi.subscribe(nlEmail.trim());
+      setNlStatus('success');
+      setNlEmail('');
+      setTimeout(() => setNlStatus('idle'), 3000);
+    } catch {
+      setNlStatus('error');
+      setTimeout(() => setNlStatus('idle'), 3000);
+    }
+  };
 
   return (
     <footer className="bg-[#0a0a0a] text-white pt-16 pb-8 border-t border-white/5" role="contentinfo">
@@ -134,16 +153,23 @@ export function Footer() {
 
             {general.newsletterEnabled && (
               <div className="pt-2">
-                <form className="relative" onSubmit={(e) => e.preventDefault()}>
+                <form className="relative" onSubmit={handleNewsletterSubmit}>
                   <Input
                     type="email"
                     placeholder="Email nhận tin..."
+                    value={nlEmail}
+                    onChange={(e) => setNlEmail(e.target.value)}
                     className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 rounded-lg pr-12 focus-visible:ring-primary focus-visible:border-primary/50"
+                    disabled={nlStatus === 'loading'}
                   />
-                  <Button size="icon" type="submit" className="absolute right-0 top-0 h-full w-10 bg-trasparent hover:bg-primary/20 text-primary hover:text-primary rounded-r-lg transition-colors">
-                    <ArrowRight className="h-4 w-4" />
+                  <Button size="icon" type="submit" disabled={nlStatus === 'loading'} className="absolute right-0 top-0 h-full w-10 bg-trasparent hover:bg-primary/20 text-primary hover:text-primary rounded-r-lg transition-colors">
+                    {nlStatus === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> :
+                     nlStatus === 'success' ? <Check className="h-4 w-4 text-green-400" /> :
+                     <ArrowRight className="h-4 w-4" />}
                   </Button>
                 </form>
+                {nlStatus === 'success' && <p className="text-green-400 text-xs mt-1">Đăng ký thành công!</p>}
+                {nlStatus === 'error' && <p className="text-red-400 text-xs mt-1">Có lỗi xảy ra, thử lại sau.</p>}
               </div>
             )}
           </div>

@@ -7,6 +7,10 @@ import type {
   CartItemDto,
   BannerDto,
   Page,
+  FlashSaleDto,
+  NotificationDto,
+  ReturnRequestDto,
+  BundleDto,
 } from '@/types/api';
 
 /** Public – không cần đăng nhập */
@@ -152,4 +156,53 @@ export const authApi = {
     phone?: string;
     address?: string;
   }) => api.put<import('@/types/api').UserResponse>('/api/auth/profile', data),
+};
+
+/** Newsletter */
+export const newsletterApi = {
+  subscribe: (email: string) =>
+    api.post<import('@/types/api').SubscriberDto>('/api/newsletter/subscribe', { email }),
+  unsubscribe: (email: string) =>
+    api.post<{ message: string }>('/api/newsletter/unsubscribe', { email }),
+};
+
+/** Flash Sales – public */
+export const flashSalesApi = {
+  getActive: () => api.get<FlashSaleDto[]>('/api/flash-sales/active'),
+};
+
+/** Notifications – authenticated */
+export const notificationsApi = {
+  list: (params?: { page?: number; size?: number }) =>
+    api.get<Page<NotificationDto>>('/api/notifications', {
+      params: { page: params?.page ?? 0, size: params?.size ?? 20 },
+    }),
+  unreadCount: () => api.get<{ count: number }>('/api/notifications/unread-count'),
+  markAsRead: (id: number) => api.patch<NotificationDto>(`/api/notifications/${id}/read`),
+  markAllAsRead: () => api.post<{ message: string }>('/api/notifications/read-all'),
+};
+
+/** Return Requests – authenticated */
+export const returnsApi = {
+  create: (orderId: number, reason: string, images?: File[]) => {
+    const formData = new FormData();
+    formData.append('orderId', String(orderId));
+    formData.append('reason', reason);
+    if (images) {
+      images.forEach((file) => formData.append('images', file));
+    }
+    return api.post<ReturnRequestDto>('/api/returns', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  myReturns: (params?: { page?: number; size?: number }) =>
+    api.get<Page<ReturnRequestDto>>('/api/returns/my', {
+      params: { page: params?.page ?? 0, size: params?.size ?? 10 },
+    }),
+};
+
+/** Bundles / Combo */
+export const bundlesApi = {
+  list: () => api.get<BundleDto[]>('/api/bundles'),
+  getById: (id: number) => api.get<BundleDto>(`/api/bundles/${id}`),
 };

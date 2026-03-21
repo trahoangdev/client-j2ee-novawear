@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import {
   User,
   Mail,
@@ -37,7 +37,9 @@ import { cn } from '@/lib/utils';
 import type { OrderDto, Page } from '@/types/api';
 import { SEO } from '@/components/SEO';
 
-type ProfileTab = 'overview' | 'orders' | 'wishlist' | 'settings';
+import { NotificationsTab } from '@/components/profile/NotificationsTab';
+
+type ProfileTab = 'overview' | 'orders' | 'wishlist' | 'settings' | 'notifications';
 
 const NOTIFY_PREFS_KEY = 'novawear_notify_prefs';
 
@@ -67,7 +69,16 @@ export function ProfilePage() {
   const { user, isAuthenticated, logout, refreshUser } = useAuth();
   const { store } = useAppSettingsReadOnly();
   const { count: wishlistCount } = useWishlist();
-  const [activeTab, setActiveTab] = useState<ProfileTab>('overview');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<ProfileTab>(() => {
+    return location.hash === '#notifications' ? 'notifications' : 'overview';
+  });
+
+  useEffect(() => {
+    if (location.hash === '#notifications') {
+      setActiveTab('notifications');
+    }
+  }, [location.hash]);
   const [notifyPrefs, setNotifyPrefsState] = useState(() =>
     user?.id != null ? getNotifyPrefs(user.id) : { emailOrders: true, emailPromo: false }
   );
@@ -214,6 +225,7 @@ export function ProfilePage() {
   const tabs: { id: ProfileTab; label: string; icon: typeof LayoutDashboard }[] = [
     { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
     { id: 'orders', label: 'Đơn hàng', icon: Package },
+    { id: 'notifications', label: 'Thông báo', icon: Bell },
     { id: 'wishlist', label: 'Yêu thích', icon: Heart },
     { id: 'settings', label: 'Cài đặt tài khoản', icon: Settings },
   ];
@@ -625,6 +637,11 @@ export function ProfilePage() {
                     </ul>
                   </div>
                 </section>
+              )}
+
+              {/* Tab: Thông báo */}
+              {activeTab === 'notifications' && (
+                <NotificationsTab />
               )}
             </div>
           </div>

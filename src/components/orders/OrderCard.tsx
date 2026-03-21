@@ -1,4 +1,4 @@
-import { Calendar, ChevronDown, ChevronUp, XCircle, Truck } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, XCircle, Truck, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { OrderTimeline } from '@/components/orders/OrderTimeline';
@@ -31,12 +31,14 @@ export function OrderCard({
   onToggle,
   detail,
   onCancelClick,
+  onReturnClick,
 }: {
   order: OrderDto;
   expanded: boolean;
   onToggle: () => void;
   detail: OrderDto | null;
   onCancelClick?: () => void;
+  onReturnClick?: () => void;
 }) {
   const details = detail?.orderDetails ?? order.orderDetails ?? [];
   const orderNumber = order.orderNumber ?? String(order.id).padStart(6, '0');
@@ -133,6 +135,24 @@ export function OrderCard({
               >
                 <XCircle className="h-4 w-4 mr-2" />
                 Hủy đơn hàng
+              </Button>
+            </div>
+          )}
+
+          {/* Nút yêu cầu trả hàng */}
+          {order.status === 'DELIVERED' && onReturnClick && (
+            <div className="pt-3 border-t border-border flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300 dark:border-orange-800 dark:hover:bg-orange-900/20"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReturnClick();
+                }}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Yêu cầu trả hàng
               </Button>
             </div>
           )}

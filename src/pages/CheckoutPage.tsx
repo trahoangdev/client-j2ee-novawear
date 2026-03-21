@@ -26,7 +26,9 @@ import { ordersApi, vnpayApi } from '@/lib/customerApi';
 import { cn } from '@/lib/utils';
 import { SEO } from '@/components/SEO';
 import { VoucherModal } from '@/components/voucher/VoucherModal';
-import type { VoucherDto } from '@/types/api'; = [
+import type { VoucherDto } from '@/types/api';
+
+const steps = [
   { id: 1, name: 'Thông tin giao hàng', icon: Truck },
   { id: 2, name: 'Phương thức thanh toán', icon: CreditCard },
   { id: 3, name: 'Xác nhận đơn hàng', icon: Check },
