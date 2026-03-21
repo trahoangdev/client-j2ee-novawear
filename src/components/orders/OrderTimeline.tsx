@@ -1,4 +1,4 @@
-import { Package, CheckCircle2, Truck, ClipboardCheck, XCircle, Clock } from 'lucide-react';
+import { Package, CheckCircle2, Truck, ClipboardCheck, XCircle, Clock, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TIMELINE_STEPS = [
@@ -15,6 +15,8 @@ const STATUS_INDEX: Record<string, number> = {
   PROCESSING: 2,
   SHIPPED: 3,
   DELIVERED: 4,
+  RETURNING: 5,
+  RETURNED: 6,
 };
 
 export function OrderTimeline({ status }: { status: string }) {
@@ -32,15 +34,23 @@ export function OrderTimeline({ status }: { status: string }) {
 
   const currentIdx = STATUS_INDEX[status] ?? 0;
 
+  const displaySteps = [...TIMELINE_STEPS];
+  if (status === 'RETURNING' || status === 'RETURNED') {
+    displaySteps.push({ status: 'RETURNING', label: 'Đang xử lý trả hàng', icon: RotateCcw, description: 'Yêu cầu trả hàng đã được duyệt' });
+    if (status === 'RETURNED') {
+      displaySteps.push({ status: 'RETURNED', label: 'Đã hoàn trả', icon: RotateCcw, description: 'Hoàn tất quá trình trả hàng' });
+    }
+  }
+
   return (
     <div className="relative">
       <div className="space-y-0">
-        {TIMELINE_STEPS.map((step, i) => {
+        {displaySteps.map((step, i) => {
           const stepIdx = STATUS_INDEX[step.status];
           const isPast = stepIdx < currentIdx;
           const isCurrent = stepIdx === currentIdx;
           const isFuture = stepIdx > currentIdx;
-          const isLast = i === TIMELINE_STEPS.length - 1;
+          const isLast = i === displaySteps.length - 1;
           const StepIcon = step.icon;
 
           return (

@@ -77,11 +77,11 @@ export function ProductDetailPage() {
         setProduct(p);
         // If product is in flash sale, load the flash sale data
         if (p.isFlashSale) {
-           import('@/lib/customerApi').then(({ flashSalesApi }) => {
-               flashSalesApi.getActive().then(({ data }) => {
-                   if (data && data.length > 0) setActiveFlashSale(data[0]);
-               }).catch(() => {});
-           });
+          import('@/lib/customerApi').then(({ flashSalesApi }) => {
+            flashSalesApi.getActive().then(({ data }) => {
+              if (data && data.length > 0) setActiveFlashSale(data[0]);
+            }).catch(() => { });
+          });
         }
         // Load reviews by product ID
         return Promise.all([
@@ -350,12 +350,12 @@ export function ProductDetailPage() {
                 </div>
 
                 {product.isFlashSale && activeFlashSale && (
-                   <div className="mb-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl p-4">
-                      <div className="flex items-center gap-2 text-red-600 dark:text-red-500 font-bold text-sm uppercase tracking-widest mb-1">
-                        <Zap className="w-5 h-5 fill-current" /> Đang trong Flash Sale
-                      </div>
-                      <p className="text-muted-foreground text-xs font-medium">Nhanh tay số lượng có hạn!</p>
-                   </div>
+                  <div className="mb-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-red-600 dark:text-red-500 font-bold text-sm uppercase tracking-widest mb-1">
+                      <Zap className="w-5 h-5 fill-current" /> Đang trong Flash Sale
+                    </div>
+                    <p className="text-muted-foreground text-xs font-medium">Nhanh tay số lượng có hạn!</p>
+                  </div>
                 )}
 
                 <div className="flex items-baseline gap-3">
@@ -364,9 +364,9 @@ export function ProductDetailPage() {
                       <span className={cn("text-xl text-muted-foreground line-through font-medium", product.isFlashSale && "text-muted-foreground/70")}>{formatCurrency(product.price)}</span>
                       <span className={cn("text-3xl font-semibold tracking-tight", product.isFlashSale ? "text-red-600" : "text-foreground")}>{formatCurrency(product.salePrice)}</span>
                       {product.isFlashSale && (
-                          <Badge className="ml-2 bg-red-600/10 text-red-600 border-none px-2.5 py-1 text-sm font-black shadow-none pointer-events-none">
-                            -{Math.round(((product.price - product.salePrice) / product.price) * 100)}%
-                          </Badge>
+                        <Badge className="ml-2 bg-red-600/10 text-red-600 border-none px-2.5 py-1 text-sm font-black shadow-none pointer-events-none">
+                          -{Math.round(((product.price - product.salePrice) / product.price) * 100)}%
+                        </Badge>
                       )}
                     </>
                   ) : (
@@ -491,22 +491,22 @@ export function ProductDetailPage() {
                       <div className="flex gap-3 p-4 rounded-lg bg-card border shadow-sm">
                         <Truck className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-semibold text-sm mb-0.5">Delivery</p>
+                          <p className="font-semibold text-sm mb-0.5">Giao hàng</p>
                           <p className="text-xs text-muted-foreground">Ho Chi Minh, VN</p>
                         </div>
                       </div>
                       <div className="flex gap-3 p-4 rounded-lg bg-card border shadow-sm">
                         <RefreshCw className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-semibold text-sm mb-0.5">Shipping</p>
-                          <p className="text-xs text-muted-foreground">Nationwide</p>
+                          <p className="font-semibold text-sm mb-0.5">Vận chuyển</p>
+                          <p className="text-xs text-muted-foreground">Toàn quốc</p>
                         </div>
                       </div>
                       <div className="flex gap-3 p-4 rounded-lg bg-card border shadow-sm">
                         <ShieldCheck className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                         <div>
-                          <p className="font-semibold text-sm mb-0.5">Arrival</p>
-                          <p className="text-xs text-muted-foreground">Estimated 2-4 Days</p>
+                          <p className="font-semibold text-sm mb-0.5">Thời gian giao hàng</p>
+                          <p className="text-xs text-muted-foreground">Ước tính 2-4 ngày</p>
                         </div>
                       </div>
                     </div>
@@ -516,10 +516,10 @@ export function ProductDetailPage() {
                     <div className="space-y-6">
                       {/* Form viết đánh giá thu gọn */}
                       <div className="p-5 border rounded-xl bg-card">
-                        <h4 className="font-semibold text-sm mb-3">Write a Review</h4>
+                        <h4 className="font-semibold text-sm mb-3">Viết đánh giá</h4>
                         <textarea
                           className="w-full min-h-[80px] p-3 border rounded-lg text-sm bg-background resize-none focus:ring-1 focus:ring-foreground focus:border-foreground transition-all mb-3"
-                          placeholder="Share your thoughts..."
+                          placeholder="Chia sẻ suy nghĩ của bạn..."
                           value={reviewForm.comment}
                           onChange={(e) => setReviewForm((f) => ({ ...f, comment: e.target.value }))}
                         />

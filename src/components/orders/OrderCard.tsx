@@ -11,6 +11,8 @@ export const ORDER_STATUS_MAP: Record<string, { label: string; className: string
   SHIPPED: { label: 'Đang giao', className: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400' },
   DELIVERED: { label: 'Đã giao', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   CANCELLED: { label: 'Đã hủy', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  RETURNING: { label: 'Đang trả hàng', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
+  RETURNED: { label: 'Đã hoàn trả', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
 };
 
 // Chỉ cho phép hủy khi đơn ở trạng thái này

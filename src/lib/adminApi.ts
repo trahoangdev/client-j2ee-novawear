@@ -203,4 +203,5 @@ export const adminReturnsApi = {
     api.patch<ReturnRequestDto>(`/api/admin/returns/${id}/status`, null, {
       params: { status, ...(adminNote && { adminNote }) },
     }),
+  delete: (id: number) => api.delete(`/api/admin/returns/${id}`),
 };

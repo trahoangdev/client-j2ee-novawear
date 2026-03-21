@@ -45,6 +45,16 @@ export function AdminReturns() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    try {
+      await adminReturnsApi.delete(id);
+      message.success('Đã xóa yêu cầu trả hàng');
+      fetchReturns();
+    } catch {
+      message.error('Lỗi khi xóa yêu cầu');
+    }
+  };
+
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
     { title: 'Mã đơn', dataIndex: 'orderCode', key: 'orderCode', render: (v: string) => <span className="font-mono">#{v}</span> },
@@ -64,9 +74,14 @@ export function AdminReturns() {
     {
       title: '', key: 'actions',
       render: (_: unknown, r: ReturnRequestDto) => (
-        <Button size="small" onClick={() => { setSelected(r); setNewStatus(r.status); setAdminNote(r.adminNote || ''); setDetailOpen(true); }}>
-          Xử lý
-        </Button>
+        <Space>
+          <Button size="small" onClick={() => { setSelected(r); setNewStatus(r.status); setAdminNote(r.adminNote || ''); setDetailOpen(true); }}>
+            Xử lý
+          </Button>
+          <Popconfirm title="Xóa yêu cầu này?" onConfirm={() => handleDelete(r.id)} okText="Xóa" cancelText="Hủy">
+            <Button size="small" danger>Xóa</Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];

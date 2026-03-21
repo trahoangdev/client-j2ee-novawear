@@ -180,6 +180,7 @@ export const notificationsApi = {
   unreadCount: () => api.get<{ count: number }>('/api/notifications/unread-count'),
   markAsRead: (id: number) => api.patch<NotificationDto>(`/api/notifications/${id}/read`),
   markAllAsRead: () => api.post<{ message: string }>('/api/notifications/read-all'),
+  deleteRead: () => api.delete<{ message: string }>('/api/notifications/read'),
 };
 
 /** Return Requests – authenticated */

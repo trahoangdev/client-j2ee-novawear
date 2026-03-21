@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, CheckSquare, Loader2, Calendar, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
+import { Bell, CheckSquare, Loader2, Calendar, Link as LinkIcon, CheckCircle2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { notificationsApi } from '@/lib/customerApi';
@@ -15,6 +15,7 @@ export function NotificationsTab() {
   const [data, setData] = useState<Page<NotificationDto> | null>(null);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchNotifs = (page = 0) => {
     setLoading(true);
@@ -44,6 +45,18 @@ export function NotificationsTab() {
       .finally(() => setMarking(false));
   };
 
+  const handleDeleteRead = () => {
+    if (!data || data.content.every(n => !n.isRead)) return;
+    setDeleting(true);
+    notificationsApi.deleteRead()
+      .then(() => {
+        toast.success("Đã xóa các thông báo đã đọc");
+        fetchNotifs(data.number);
+      })
+      .catch(() => toast.error("Có lỗi xảy ra khi xóa"))
+      .finally(() => setDeleting(false));
+  };
+
   const handleMarkRead = (notif: NotificationDto) => {
     if (notif.isRead) return;
     notificationsApi.markAsRead(notif.id)
@@ -67,16 +80,28 @@ export function NotificationsTab() {
           <Bell className="h-5 w-5" />
           Thông báo của bạn
         </h2>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={handleMarkAllRead} 
-          disabled={marking || !data || data.content.every(n => n.isRead)}
-          className="gap-2 shrink-0 bg-background hover:bg-muted font-bold tracking-widest uppercase text-[10px]"
-        >
-          {marking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckSquare className="w-3.5 h-3.5" />}
-          Đánh dấu đã đọc tất cả
-        </Button>
+        <div className="flex gap-2 shrink-0">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleDeleteRead} 
+            disabled={deleting || !data || data.content.every(n => !n.isRead)}
+            className="gap-2 bg-background hover:bg-muted font-bold tracking-widest uppercase text-[10px]"
+          >
+            {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+            Xóa đã đọc
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleMarkAllRead} 
+            disabled={marking || !data || data.content.every(n => n.isRead)}
+            className="gap-2 bg-background hover:bg-muted font-bold tracking-widest uppercase text-[10px]"
+          >
+            {marking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckSquare className="w-3.5 h-3.5" />}
+            Đánh dấu đã đọc tất cả
+          </Button>
+        </div>
       </div>
 
       <div className="bg-card rounded-2xl p-2 sm:p-4 shadow-sm border border-border min-h-[400px]">
