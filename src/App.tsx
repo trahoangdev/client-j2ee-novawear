@@ -11,6 +11,7 @@ const HomePage = lazy(() => import("@/pages/HomePage").then(m => ({ default: m.H
 const ShopPage = lazy(() => import("@/pages/ShopPage").then(m => ({ default: m.ShopPage })));
 const BestsellerPage = lazy(() => import("@/pages/BestsellerPage").then(m => ({ default: m.BestsellerPage })));
 const SalePage = lazy(() => import("@/pages/SalePage").then(m => ({ default: m.SalePage })));
+const FlashSalePage = lazy(() => import("@/pages/FlashSalePage").then(m => ({ default: m.FlashSalePage })));
 const NewArrivalsPage = lazy(() => import("@/pages/NewArrivalsPage").then(m => ({ default: m.NewArrivalsPage })));
 const ProductDetailPage = lazy(() => import("@/pages/ProductDetailPage").then(m => ({ default: m.ProductDetailPage })));
 const CartPage = lazy(() => import("@/pages/CartPage").then(m => ({ default: m.CartPage })));
@@ -26,6 +27,9 @@ const ContactPage = lazy(() => import("@/pages/ContactPage").then(m => ({ defaul
 const PrivacyPage = lazy(() => import("@/pages/PrivacyPage").then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import("@/pages/TermsPage").then(m => ({ default: m.TermsPage })));
 const WishlistPage = lazy(() => import("@/pages/WishlistPage").then(m => ({ default: m.WishlistPage })));
+
+// 404
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage").then(m => ({ default: m.NotFoundPage })));
 
 // Auth pages
 const LoginPage = lazy(() => import("@/pages/LoginPage").then(m => ({ default: m.LoginPage })));
@@ -46,6 +50,17 @@ const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings").then(m =>
 const AdminBanners = lazy(() => import("@/pages/admin/AdminBanners").then(m => ({ default: m.AdminBanners })));
 const AdminVouchers = lazy(() => import("@/pages/admin/AdminVouchers").then(m => ({ default: m.AdminVouchers })));
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin").then(m => ({ default: m.AdminLogin })));
+const AdminFlashSales = lazy(() => import("@/pages/admin/AdminFlashSales").then(m => ({ default: m.AdminFlashSales })));
+const AdminReturns = lazy(() => import("@/pages/admin/AdminReturns").then(m => ({ default: m.AdminReturns })));
+const AdminSubscribers = lazy(() => import("@/pages/admin/AdminSubscribers").then(m => ({ default: m.AdminSubscribers })));
+const AdminBundles = lazy(() => import("@/pages/admin/AdminBundles").then(m => ({ default: m.AdminBundles })));
+const BundlesPage = lazy(() => import("@/pages/BundlesPage"));
+
+// Live Chat Widget
+import { LiveChatWidget } from "@/components/layout/LiveChatWidget";
+
+// Route Protection
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 // Loading Fallback
 function LoadingFallback() {
@@ -75,13 +90,14 @@ function App() {
                 <Route path="/unisex" element={<ShopPage />} />
                 <Route path="/bestseller" element={<BestsellerPage />} />
                 <Route path="/sale" element={<SalePage />} />
+                <Route path="/flash-sale" element={<FlashSalePage />} />
                 <Route path="/new-arrivals" element={<NewArrivalsPage />} />
                 <Route path="/product/:slug" element={<ProductDetailPage />} />
                 <Route path="/cart" element={<CartPage />} />
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/payment/vnpay/return" element={<PaymentReturnPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+                <Route path="/payment/vnpay/return" element={<ProtectedRoute><PaymentReturnPage /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
                 <Route path="/faq" element={<FaqPage />} />
                 <Route path="/shipping" element={<ShippingPage />} />
                 <Route path="/returns" element={<ReturnsPage />} />
@@ -90,6 +106,7 @@ function App() {
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/wishlist" element={<WishlistPage />} />
+                <Route path="/bundles" element={<BundlesPage />} />
 
                 {/* Auth Routes */}
                 <Route path="/login" element={<LoginPage />} />
@@ -110,13 +127,21 @@ function App() {
                   <Route path="reviews" element={<AdminReviews />} />
                   <Route path="public/banners" element={<AdminBanners />} />
                   <Route path="vouchers" element={<AdminVouchers />} />
+                  <Route path="flash-sales" element={<AdminFlashSales />} />
+                  <Route path="returns" element={<AdminReturns />} />
+                  <Route path="subscribers" element={<AdminSubscribers />} />
+                  <Route path="bundles" element={<AdminBundles />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
+
+                {/* 404 */}
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
 
             {/* Global Components */}
+            <LiveChatWidget />
             <Toaster 
               position="top-right" 
               richColors 

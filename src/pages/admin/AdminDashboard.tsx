@@ -192,7 +192,7 @@ export function AdminDashboard() {
                   title={<span style={{ color: 'var(--admin-text-secondary)' }}>{s.title}</span>}
                   value={s.value}
                   prefix={s.prefix}
-                  formatter={s.formatter ? (_, v) => s.formatter(Number(v)) : undefined}
+                  formatter={s.formatter ? (v) => s.formatter(Number(v)) : undefined}
                   valueStyle={{ color: 'var(--admin-text)' }}
                 />
               </Card>

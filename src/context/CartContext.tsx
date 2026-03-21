@@ -24,11 +24,13 @@ function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case 'ADD_ITEM': {
       const { product, quantity, size, color } = action.payload;
+      const isFlash = 'isFlashSale' in product ? product.isFlashSale : undefined;
       const existingItem = state.items.find(
         (item) =>
           item.product.id === product.id &&
           item.size === size &&
-          item.color.hex === color.hex
+          item.color.hex === color.hex &&
+          item.isFlashSale === isFlash
       );
 
       if (existingItem) {
@@ -48,6 +50,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         quantity,
         size,
         color,
+        isFlashSale: 'isFlashSale' in product ? product.isFlashSale : undefined,
       };
 
       return {

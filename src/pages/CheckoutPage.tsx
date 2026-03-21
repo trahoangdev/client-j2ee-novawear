@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,6 +8,7 @@ import {
   Truck,
   ShoppingBag,
   Loader2,
+  TicketPercent,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,11 @@ import { formatCurrency } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import { ordersApi, vnpayApi } from '@/lib/customerApi';
 import { cn } from '@/lib/utils';
-import { SEO } from '@/components/SEO'; = [
+import { SEO } from '@/components/SEO';
+import { VoucherModal } from '@/components/voucher/VoucherModal';
+import type { VoucherDto } from '@/types/api';
+
+const steps = [
   { id: 1, name: 'Thông tin giao hàng', icon: Truck },
   { id: 2, name: 'Phương thức thanh toán', icon: CreditCard },
   { id: 3, name: 'Xác nhận đơn hàng', icon: Check },
@@ -67,6 +72,7 @@ export function CheckoutPage() {
 
   // Voucher state - đọc từ sessionStorage
   const [appliedVoucher, setAppliedVoucher] = useState<{ code: string; discountAmount: number } | null>(null);
+  const [voucherModalOpen, setVoucherModalOpen] = useState(false);
 
   useEffect(() => {
     // Đọc voucher từ sessionStorage khi component mount
@@ -81,6 +87,17 @@ export function CheckoutPage() {
       }
     }
   }, []);
+
+  const handleApplyVoucher = (voucher: VoucherDto, discountAmount: number) => {
+    const voucherData = { code: voucher.code, discountAmount };
+    setAppliedVoucher(voucherData);
+    sessionStorage.setItem('appliedVoucher', JSON.stringify(voucherData));
+  };
+
+  const handleRemoveVoucher = () => {
+    setAppliedVoucher(null);
+    sessionStorage.removeItem('appliedVoucher');
+  };
 
   const shipping = subtotal >= 200000 ? 0 : 30000;
   const discountAmount = appliedVoucher?.discountAmount || 0;
@@ -248,26 +265,7 @@ export function CheckoutPage() {
   };
 
   if (state.items.length === 0 && !orderComplete) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-              <ShoppingBag className="h-12 w-12 text-muted-foreground" />
-            </div>
-            <h1 className="font-display text-2xl font-bold mb-2">Giỏ hàng trống</h1>
-            <p className="text-muted-foreground mb-6">
-              Hãy thêm sản phẩm vào giỏ hàng trước khi thanh toán
-            </p>
-            <Button asChild>
-              <Link to="/shop">Mua Sắm Ngay</Link>
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <Navigate to="/shop" replace />;
   }
 
   if (orderComplete) {
@@ -580,9 +578,11 @@ export function CheckoutPage() {
                           >
                             <RadioGroupItem value="vnpay" id="vnpay" />
                             <div className="flex items-center gap-4 flex-1">
-                              <div className="h-8 w-20 bg-blue-600 text-white rounded flex items-center justify-center text-xs font-bold">
-                                VNPAY
-                              </div>
+                              <img
+                                src="/images/vnpay.png"
+                                alt="VNPAY"
+                                className="h-8 object-contain"
+                              />
                               <div>
                                 <p className="font-medium">VNPAY</p>
                                 <p className="text-sm text-muted-foreground">
@@ -668,9 +668,14 @@ export function CheckoutPage() {
                               className="h-16 w-14 object-cover rounded-md"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm line-clamp-1">
+                              <div className="font-medium text-sm line-clamp-1">
                                 {item.product.name}
-                              </p>
+                                {item.isFlashSale && (
+                                  <span className="ml-1.5 inline-flex items-center gap-1 bg-red-100 text-red-600 px-1 py-[1px] rounded text-[9px] font-bold uppercase tracking-wider translate-y-[-1px]">
+                                    ⚡ Flash Sale
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-xs text-muted-foreground">
                                 {item.size} • {item.color.name} • SL: {item.quantity}
                               </p>
@@ -753,9 +758,14 @@ export function CheckoutPage() {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium line-clamp-1">
+                        <div className="text-sm font-medium line-clamp-1 leading-snug">
                           {item.product.name}
-                        </p>
+                          {item.isFlashSale && (
+                            <span className="ml-1.5 inline-flex items-center gap-1 bg-red-100 text-red-600 px-1 py-[1px] rounded text-[9px] font-bold uppercase tracking-wider translate-y-[-1px]">
+                              ⚡ Flash Sale
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {item.size} • {item.color.name}
                         </p>
@@ -803,6 +813,40 @@ export function CheckoutPage() {
                     {formatCurrency(total)}
                   </span>
                 </div>
+
+                {/* Voucher */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  {appliedVoucher ? (
+                    <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                      <div className="min-w-0">
+                        <p className="font-mono text-sm font-bold text-green-700 dark:text-green-400">{appliedVoucher.code}</p>
+                        <p className="text-xs text-green-600 dark:text-green-400">Giảm {formatCurrency(appliedVoucher.discountAmount)}</p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setVoucherModalOpen(true)}>Sửa</Button>
+                        <Button variant="ghost" size="sm" className="text-xs h-7 text-destructive" onClick={handleRemoveVoucher}>Bỏ</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2 text-sm"
+                      onClick={() => setVoucherModalOpen(true)}
+                    >
+                      <TicketPercent className="h-4 w-4 text-primary" />
+                      Chọn mã giảm giá
+                    </Button>
+                  )}
+                </div>
+
+                <VoucherModal
+                  open={voucherModalOpen}
+                  onOpenChange={setVoucherModalOpen}
+                  orderTotal={subtotal}
+                  appliedCode={appliedVoucher?.code}
+                  onApply={handleApplyVoucher}
+                  onRemove={handleRemoveVoucher}
+                />
               </div>
             </div>
           </div>

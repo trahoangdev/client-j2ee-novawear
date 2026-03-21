@@ -1,6 +1,7 @@
-import { Calendar, ChevronDown, ChevronUp, XCircle } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronUp, XCircle, Truck, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { OrderTimeline } from '@/components/orders/OrderTimeline';
 import type { OrderDto } from '@/types/api';
 
 export const ORDER_STATUS_MAP: Record<string, { label: string; className: string }> = {
@@ -10,6 +11,8 @@ export const ORDER_STATUS_MAP: Record<string, { label: string; className: string
   SHIPPED: { label: 'Đang giao', className: 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400' },
   DELIVERED: { label: 'Đã giao', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   CANCELLED: { label: 'Đã hủy', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  RETURNING: { label: 'Đang trả hàng', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
+  RETURNED: { label: 'Đã hoàn trả', className: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
 };
 
 // Chỉ cho phép hủy khi đơn ở trạng thái này
@@ -30,12 +33,14 @@ export function OrderCard({
   onToggle,
   detail,
   onCancelClick,
+  onReturnClick,
 }: {
   order: OrderDto;
   expanded: boolean;
   onToggle: () => void;
   detail: OrderDto | null;
   onCancelClick?: () => void;
+  onReturnClick?: () => void;
 }) {
   const details = detail?.orderDetails ?? order.orderDetails ?? [];
   const orderNumber = order.orderNumber ?? String(order.id).padStart(6, '0');
@@ -86,6 +91,38 @@ export function OrderCard({
             </div>
           )}
 
+          {/* Voucher / Giảm giá */}
+          {detail?.voucherCode && (
+            <div className="pt-3 border-t border-border">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Mã giảm giá: <span className="font-mono font-medium text-foreground">{detail.voucherCode}</span></span>
+                {detail.discountAmount != null && detail.discountAmount > 0 && (
+                  <span className="text-green-600 dark:text-green-400 font-medium">-{formatCurrency(detail.discountAmount)}</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Thông tin vận chuyển */}
+          {(detail?.trackingNumber || detail?.carrier) && (
+            <div className="pt-3 border-t border-border">
+              <h4 className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                <Truck className="h-4 w-4" />
+                Thông tin vận chuyển
+              </h4>
+              <div className="text-sm text-muted-foreground space-y-1">
+                {detail?.carrier && <p>Đơn vị vận chuyển: <span className="font-medium text-foreground">{detail.carrier}</span></p>}
+                {detail?.trackingNumber && <p>Mã vận đơn: <span className="font-mono font-medium text-foreground">{detail.trackingNumber}</span></p>}
+              </div>
+            </div>
+          )}
+
+          {/* Timeline trạng thái */}
+          <div className="pt-3 border-t border-border">
+            <h4 className="text-sm font-medium mb-3">Trạng thái đơn hàng</h4>
+            <OrderTimeline status={order.status} />
+          </div>
+
           {/* Nút hủy đơn */}
           {canCancel && onCancelClick && (
             <div className="pt-3 border-t border-border flex justify-end">
@@ -100,6 +137,24 @@ export function OrderCard({
               >
                 <XCircle className="h-4 w-4 mr-2" />
                 Hủy đơn hàng
+              </Button>
+            </div>
+          )}
+
+          {/* Nút yêu cầu trả hàng */}
+          {order.status === 'DELIVERED' && onReturnClick && (
+            <div className="pt-3 border-t border-border flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300 dark:border-orange-800 dark:hover:bg-orange-900/20"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReturnClick();
+                }}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Yêu cầu trả hàng
               </Button>
             </div>
           )}

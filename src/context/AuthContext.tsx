@@ -11,6 +11,7 @@ interface AuthContextValue {
   login: (usernameOrEmail: string, password: string) => Promise<{ ok: boolean; role?: string }>;
   register: (username: string, email: string, password: string) => Promise<{ ok: boolean; role?: string }>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   showAuthModal: boolean;
   setShowAuthModal: (show: boolean) => void;
   authMode: 'login' | 'register';
@@ -20,11 +21,14 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function mapUserResponseToUser(res: { id: number; username: string; email: string; role: string }): User {
+function mapUserResponseToUser(res: { id: number; username: string; email: string; role: string; fullName?: string; phone?: string; address?: string }): User {
   return {
     id: String(res.id),
     email: res.email,
     name: res.username,
+    fullName: res.fullName ?? '',
+    phone: res.phone ?? '',
+    address: res.address ?? '',
     role: res.role === 'ADMIN' ? 'admin' : 'customer',
     createdAt: '',
   };
@@ -50,6 +54,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const { data } = await authApi.me();
+      setUser(mapUserResponseToUser(data));
+    } catch {
+      // ignore
     }
   }, []);
 
@@ -108,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        refreshUser,
         showAuthModal,
         setShowAuthModal,
         authMode,

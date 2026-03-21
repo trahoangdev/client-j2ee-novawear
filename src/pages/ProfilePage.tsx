@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import {
   User,
   Mail,
@@ -15,8 +15,14 @@ import {
   Phone,
   MapPin,
   Bell,
+  Eye,
+  EyeOff,
+  Pencil,
+  Save,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Header } from '@/components/layout/Header';
@@ -25,13 +31,15 @@ import { useAuth } from '@/context/AuthContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useAppSettingsReadOnly } from '@/context/AppSettingsContext';
 import { toast } from '@/lib/toast';
-import { ordersApi } from '@/lib/customerApi';
+import { ordersApi, authApi } from '@/lib/customerApi';
 import { OrderCard } from '@/components/orders/OrderCard';
 import { cn } from '@/lib/utils';
 import type { OrderDto, Page } from '@/types/api';
 import { SEO } from '@/components/SEO';
 
-type ProfileTab = 'overview' | 'orders' | 'wishlist' | 'settings';
+import { NotificationsTab } from '@/components/profile/NotificationsTab';
+
+type ProfileTab = 'overview' | 'orders' | 'wishlist' | 'settings' | 'notifications';
 
 const NOTIFY_PREFS_KEY = 'novawear_notify_prefs';
 
@@ -58,10 +66,19 @@ function setNotifyPrefs(userId: string | number, prefs: { emailOrders: boolean; 
 }
 
 export function ProfilePage() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, refreshUser } = useAuth();
   const { store } = useAppSettingsReadOnly();
   const { count: wishlistCount } = useWishlist();
-  const [activeTab, setActiveTab] = useState<ProfileTab>('overview');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<ProfileTab>(() => {
+    return location.hash === '#notifications' ? 'notifications' : 'overview';
+  });
+
+  useEffect(() => {
+    if (location.hash === '#notifications') {
+      setActiveTab('notifications');
+    }
+  }, [location.hash]);
   const [notifyPrefs, setNotifyPrefsState] = useState(() =>
     user?.id != null ? getNotifyPrefs(user.id) : { emailOrders: true, emailPromo: false }
   );
@@ -69,6 +86,94 @@ export function ProfilePage() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [orderDetails, setOrderDetails] = useState<Record<number, OrderDto>>({});
+
+  // Password change state
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [pwLoading, setPwLoading] = useState(false);
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+
+  // Profile edit state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    fullName: user?.fullName ?? '',
+    email: user?.email ?? '',
+    phone: user?.phone ?? '',
+    address: user?.address ?? '',
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        fullName: user.fullName ?? '',
+        email: user.email ?? '',
+        phone: user.phone ?? '',
+        address: user.address ?? '',
+      });
+    }
+  }, [user]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profileForm.email.trim()) {
+      toast.error('Email không được để trống');
+      return;
+    }
+    setProfileLoading(true);
+    try {
+      await authApi.updateProfile(profileForm);
+      await refreshUser();
+      setIsEditingProfile(false);
+      toast.success('Cập nhật thông tin thành công!');
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Cập nhật thất bại';
+      toast.error(msg);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingProfile(false);
+    setProfileForm({
+      fullName: user?.fullName ?? '',
+      email: user?.email ?? '',
+      phone: user?.phone ?? '',
+      address: user?.address ?? '',
+    });
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pwForm.newPassword.length < 6) {
+      toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
+      return;
+    }
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      toast.error('Mật khẩu xác nhận không khớp');
+      return;
+    }
+    if (pwForm.currentPassword === pwForm.newPassword) {
+      toast.error('Mật khẩu mới phải khác mật khẩu hiện tại');
+      return;
+    }
+    setPwLoading(true);
+    try {
+      await authApi.changePassword(pwForm);
+      toast.success('Đổi mật khẩu thành công!');
+      setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setShowCurrentPw(false);
+      setShowNewPw(false);
+      setShowConfirmPw(false);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.response?.data?.error || 'Đổi mật khẩu thất bại';
+      toast.error(msg);
+    } finally {
+      setPwLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user?.id != null) {
@@ -120,6 +225,7 @@ export function ProfilePage() {
   const tabs: { id: ProfileTab; label: string; icon: typeof LayoutDashboard }[] = [
     { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
     { id: 'orders', label: 'Đơn hàng', icon: Package },
+    { id: 'notifications', label: 'Thông báo', icon: Bell },
     { id: 'wishlist', label: 'Yêu thích', icon: Heart },
     { id: 'settings', label: 'Cài đặt tài khoản', icon: Settings },
   ];
@@ -179,12 +285,23 @@ export function ProfilePage() {
                         <User className="h-12 w-12 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h2 className="font-semibold text-xl truncate">{user?.name ?? '—'}</h2>
+                        <h2 className="font-semibold text-xl truncate">{user?.fullName || user?.name || '—'}</h2>
+                        {user?.fullName && (
+                          <p className="text-sm text-muted-foreground">@{user.name}</p>
+                        )}
                         <p className="text-muted-foreground flex items-center gap-2 mt-1">
                           <Mail className="h-4 w-4 shrink-0" />
                           <span className="truncate">{user?.email ?? '—'}</span>
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2 font-mono">ID: {user?.id ?? '—'}</p>
+                        {user?.phone && (
+                          <p className="text-muted-foreground flex items-center gap-2 mt-1">
+                            <Phone className="h-4 w-4 shrink-0" />
+                            <span>{user.phone}</span>
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-2 font-mono">
+                          Mã KH: {user?.id != null ? String((Number(user.id) * 9301 + 49297) % 10000).padStart(4, '0') : '—'}
+                        </p>
                         <span className="inline-flex items-center gap-1.5 mt-2 text-sm">
                           <BadgeCheck className="h-4 w-4 text-primary" />
                           {user?.role === 'admin' ? 'Quản trị viên' : 'Khách hàng'}
@@ -286,36 +403,110 @@ export function ProfilePage() {
               {activeTab === 'settings' && (
                 <section className="space-y-8">
                   <div className="rounded-2xl border border-border bg-card p-6">
-                    <h2 className="font-semibold text-lg flex items-center gap-2 mb-4">
-                      <User className="h-5 w-5" />
-                      Thông tin cá nhân
-                    </h2>
-                    <dl className="space-y-4">
-                      <div>
-                        <dt className="text-sm text-muted-foreground">Tên đăng nhập</dt>
-                        <dd className="font-medium mt-1">{user?.name ?? '—'}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm text-muted-foreground">Email</dt>
-                        <dd className="font-medium mt-1">{user?.email ?? '—'}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm text-muted-foreground">Mã tài khoản</dt>
-                        <dd className="font-mono text-sm mt-1">{user?.id ?? '—'}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm text-muted-foreground">Vai trò</dt>
-                        <dd className="mt-1">{user?.role === 'admin' ? 'Quản trị viên' : 'Khách hàng'}</dd>
-                      </div>
-                    </dl>
-                    <p className="text-sm text-muted-foreground mt-4 pt-4 border-t border-border">
-                      Để thay đổi thông tin cá nhân, vui lòng liên hệ{' '}
-                      {store.supportEmail ? (
-                        <a href={`mailto:${store.supportEmail}`} className="text-primary hover:underline">{store.supportEmail}</a>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="font-semibold text-lg flex items-center gap-2">
+                        <User className="h-5 w-5" />
+                        Thông tin cá nhân
+                      </h2>
+                      {!isEditingProfile ? (
+                        <Button variant="outline" size="sm" onClick={() => setIsEditingProfile(true)}>
+                          <Pencil className="h-4 w-4 mr-1.5" />
+                          Chỉnh sửa
+                        </Button>
                       ) : (
-                        'bộ phận hỗ trợ'
-                      )}.
-                    </p>
+                        <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
+                          <X className="h-4 w-4 mr-1.5" />
+                          Hủy
+                        </Button>
+                      )}
+                    </div>
+
+                    {!isEditingProfile ? (
+                      <dl className="space-y-4">
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Tên đăng nhập</dt>
+                          <dd className="font-medium mt-1">{user?.name ?? '—'}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Họ và tên</dt>
+                          <dd className="font-medium mt-1">{user?.fullName || <span className="text-muted-foreground italic">Chưa cập nhật</span>}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Email</dt>
+                          <dd className="font-medium mt-1">{user?.email ?? '—'}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Số điện thoại</dt>
+                          <dd className="font-medium mt-1">{user?.phone || <span className="text-muted-foreground italic">Chưa cập nhật</span>}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Địa chỉ</dt>
+                          <dd className="font-medium mt-1">{user?.address || <span className="text-muted-foreground italic">Chưa cập nhật</span>}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Mã tài khoản</dt>
+                          <dd className="font-mono text-sm mt-1">{user?.id != null ? String((Number(user.id) * 9301 + 49297) % 10000).padStart(4, '0') : '—'}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm text-muted-foreground">Vai trò</dt>
+                          <dd className="mt-1">{user?.role === 'admin' ? 'Quản trị viên' : 'Khách hàng'}</dd>
+                        </div>
+                      </dl>
+                    ) : (
+                      <form onSubmit={handleSaveProfile} className="space-y-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="profileFullName">Họ và tên</Label>
+                          <Input
+                            id="profileFullName"
+                            placeholder="Nhập họ và tên"
+                            value={profileForm.fullName}
+                            onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                            maxLength={100}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="profileEmail">Email</Label>
+                          <Input
+                            id="profileEmail"
+                            type="email"
+                            placeholder="Nhập email"
+                            value={profileForm.email}
+                            onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="profilePhone">Số điện thoại</Label>
+                          <Input
+                            id="profilePhone"
+                            type="tel"
+                            placeholder="Nhập số điện thoại"
+                            value={profileForm.phone}
+                            onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                            maxLength={20}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="profileAddress">Địa chỉ</Label>
+                          <Input
+                            id="profileAddress"
+                            placeholder="Nhập địa chỉ"
+                            value={profileForm.address}
+                            onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
+                            maxLength={500}
+                          />
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <Button type="submit" disabled={profileLoading}>
+                            {profileLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                            Lưu thay đổi
+                          </Button>
+                          <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                            Hủy
+                          </Button>
+                        </div>
+                      </form>
+                    )}
                   </div>
 
                   <div className="rounded-2xl border border-border bg-card p-6">
@@ -355,24 +546,80 @@ export function ProfilePage() {
                       <Lock className="h-5 w-5" />
                       Đổi mật khẩu
                     </h2>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      Tính năng đổi mật khẩu đang được cập nhật. Nếu bạn cần đổi mật khẩu, vui lòng liên hệ chúng tôi.
-                    </p>
-                    <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                      {store.supportEmail && (
-                        <a href={`mailto:${store.supportEmail}`} className="inline-flex items-center gap-1.5 text-primary hover:underline">
-                          <Mail className="h-4 w-4" />
-                          {store.supportEmail}
-                        </a>
-                      )}
-                      {store.supportEmail && store.hotline && <span>hoặc</span>}
-                      {store.hotline && (
-                        <a href={`tel:${store.hotline.replace(/\s/g, '')}`} className="inline-flex items-center gap-1.5 text-primary hover:underline">
-                          <Phone className="h-4 w-4" />
-                          {store.hotline}
-                        </a>
-                      )}
-                    </div>
+                    <form onSubmit={handleChangePassword} className="space-y-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
+                        <div className="relative">
+                          <Input
+                            id="currentPassword"
+                            type={showCurrentPw ? 'text' : 'password'}
+                            placeholder="Nhập mật khẩu hiện tại"
+                            value={pwForm.currentPassword}
+                            onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })}
+                            required
+                            autoComplete="current-password"
+                          />
+                          <button
+                            type="button"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowCurrentPw(!showCurrentPw)}
+                            tabIndex={-1}
+                          >
+                            {showCurrentPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                        <div className="relative">
+                          <Input
+                            id="newPassword"
+                            type={showNewPw ? 'text' : 'password'}
+                            placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
+                            value={pwForm.newPassword}
+                            onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })}
+                            required
+                            minLength={6}
+                            autoComplete="new-password"
+                          />
+                          <button
+                            type="button"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowNewPw(!showNewPw)}
+                            tabIndex={-1}
+                          >
+                            {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type={showConfirmPw ? 'text' : 'password'}
+                            placeholder="Nhập lại mật khẩu mới"
+                            value={pwForm.confirmPassword}
+                            onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })}
+                            required
+                            minLength={6}
+                            autoComplete="new-password"
+                          />
+                          <button
+                            type="button"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowConfirmPw(!showConfirmPw)}
+                            tabIndex={-1}
+                          >
+                            {showConfirmPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <Button type="submit" disabled={pwLoading} className="w-full sm:w-auto">
+                        {pwLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        Đổi mật khẩu
+                      </Button>
+                    </form>
                   </div>
 
                   <div className="rounded-2xl border border-border bg-card p-6">
@@ -390,6 +637,11 @@ export function ProfilePage() {
                     </ul>
                   </div>
                 </section>
+              )}
+
+              {/* Tab: Thông báo */}
+              {activeTab === 'notifications' && (
+                <NotificationsTab />
               )}
             </div>
           </div>

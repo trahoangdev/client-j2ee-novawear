@@ -8,6 +8,7 @@ import { NewArrivals } from '@/components/home/NewArrivals';
 import { PromoBanner } from '@/components/home/PromoBanner';
 import { Features } from '@/components/home/Features';
 import { GenderSection } from '@/components/home/GenderSection';
+import { FlashSaleBanner } from '@/components/home/FlashSaleBanner';
 import { SEO, buildWebSiteLD, buildOrganizationLD } from '@/components/SEO';
 
 export function HomePage() {
@@ -24,6 +25,7 @@ export function HomePage() {
       <main className="flex-1">
         <HeroCarousel />
         <Features />
+        <FlashSaleBanner />
         <CategoryGrid />
         <GenderSection
           gender="MALE"

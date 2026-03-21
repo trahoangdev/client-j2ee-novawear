@@ -16,6 +16,7 @@ export interface Product {
   reviewCount: number;
   isFeatured: boolean;
   isNew: boolean;
+  isFlashSale?: boolean;
   createdAt: string;
 }
 
@@ -38,6 +39,7 @@ export interface CartItem {
   quantity: number;
   size: string;
   color: ProductColor;
+  isFlashSale?: boolean;
 }
 
 export interface Cart {
@@ -52,6 +54,9 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  fullName?: string;
+  phone?: string;
+  address?: string;
   avatar?: string;
   role: 'customer' | 'admin';
   createdAt: string;
