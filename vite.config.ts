@@ -20,5 +20,9 @@ export default defineConfig({
   server: {
     // @ts-ignore
     allowedHosts: true,
+    headers: {
+      "Cross-Origin-Opener-Policy": "unsafe-none",
+      "Cross-Origin-Embedder-Policy": "unsafe-none"
+    }
   }
 });
