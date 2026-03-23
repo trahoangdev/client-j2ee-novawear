@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Timer, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Zap, Timer, Flame, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { flashSalesApi } from '@/lib/customerApi';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import type { FlashSaleDto } from '@/types/api';
 import { motion } from 'framer-motion';
 
@@ -30,17 +30,17 @@ function CountdownTimer({ endTime }: { endTime: string }) {
   const pad = (n: number) => String(n).padStart(2, '0');
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5 sm:gap-2">
       {[
         { val: timeLeft.hours, label: 'Giờ' },
         { val: timeLeft.minutes, label: 'Phút' },
         { val: timeLeft.seconds, label: 'Giây' },
-      ].map((item, i) => (
-        <div key={i} className="flex flex-col items-center">
-          <div className="bg-black/40 backdrop-blur-md border border-white/10 text-white font-black text-xl sm:text-2xl px-3 py-2 rounded-xl min-w-[3rem] text-center tabular-nums shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
+      ].map((item, i, arr) => (
+        <div key={i} className="flex items-center gap-1.5 sm:gap-2">
+          <div className="bg-destructive text-destructive-foreground font-bold text-lg sm:text-2xl px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl min-w-[3rem] sm:min-w-[4rem] text-center tabular-nums shadow-sm border border-border/50">
             {pad(item.val)}
           </div>
-          <span className="text-[10px] sm:text-xs text-white/50 uppercase tracking-widest mt-1.5 font-bold">{item.label}</span>
+          {i < arr.length - 1 && <span className="text-destructive font-black text-xl sm:text-2xl animate-pulse">:</span>}
         </div>
       ))}
     </div>
@@ -73,119 +73,139 @@ export function FlashSaleBanner() {
   if (loading || !sale || sale.products.length === 0) return null;
 
   return (
-    <section className="py-16 sm:py-24">
-      <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
+    <section className="py-12 sm:py-20 relative overflow-hidden">
+      {/* Subtle Background Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-red-500/5 dark:bg-red-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="container mx-auto px-4 sm:px-6 max-w-[85rem] relative z-10">
         <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
-            className="rounded-[2.5rem] bg-gradient-to-br from-red-700 via-rose-600 to-orange-600 overflow-hidden shadow-2xl relative border border-white/10"
+            className="flex flex-col gap-8"
         >
-          {/* Decorative background grid and flares */}
-          <div className="absolute inset-0 bg-[url('https://transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400/30 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
           
-          {/* Header Section */}
-          <div className="relative z-10 p-6 sm:p-10 border-b border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 backdrop-blur-sm bg-black/10">
-            <div className="flex items-center gap-4 sm:gap-6 w-full md:w-auto">
-              <div className="bg-gradient-to-br from-yellow-300 to-orange-500 p-3 sm:p-4 rounded-2xl shadow-lg ring-4 ring-yellow-400/20">
-                <Flame className="h-8 w-8 sm:h-10 sm:w-10 text-red-900" strokeWidth={2.5} />
+          {/* Header Section Clean */}
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-2 border-b border-border/50">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2 text-destructive font-black tracking-widest uppercase text-sm">
+                <Zap className="h-5 w-5 fill-current animate-pulse" /> KẾT THÚC CHƯƠNG TRÌNH SAU
               </div>
-              <div>
-                <motion.h2 
-                    animate={{ textShadow: ["0px 0px 8px rgba(255,255,255,0.5)", "0px 0px 16px rgba(255,255,255,0.8)", "0px 0px 8px rgba(255,255,255,0.5)"] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="text-white font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight mb-1"
-                >
-                    {sale.name}
-                </motion.h2>
-                <div className="inline-flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/10">
-                    <Zap className="w-3.5 h-3.5 text-yellow-400" />
-                    <p className="text-yellow-400 text-sm font-bold tracking-widest uppercase">Giảm sốc đến {sale.discountPercent}%</p>
-                </div>
-              </div>
+              <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground">
+                {sale.name}
+              </h2>
+              <p className="text-muted-foreground font-medium text-lg flex items-center gap-2">
+                Sở hữu siêu phẩm với mức giá giảm đến <span className="font-bold text-destructive">-{sale.discountPercent}%</span>
+              </p>
             </div>
             
-            <div className="flex flex-col items-center sm:items-end w-full md:w-auto bg-black/20 p-5 rounded-3xl border border-white/10">
-              <div className="flex items-center gap-2 text-white/80 text-sm mb-3 font-bold uppercase tracking-widest">
-                  <Timer className="w-4 h-4" /> Kết thúc sau
-              </div>
+            <div className="flex flex-col items-start md:items-end gap-2 pb-1">
               <CountdownTimer endTime={sale.endTime} />
             </div>
           </div>
 
           {/* Products Scroll Area */}
-          <div className="relative z-10 p-6 sm:p-10 bg-white/5 backdrop-blur-3xl group">
+          <div className="relative group -mx-4 px-4 sm:mx-0 sm:px-0 mt-2">
              {/* Navigation Buttons */}
              <button 
                onClick={() => scroll('left')}
-               className="absolute left-4 sm:left-6 top-[60%] -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-background border border-border/50 shadow-[0_0_15px_rgba(0,0,0,0.2)] flex items-center justify-center text-foreground hover:bg-red-600 hover:text-white hover:border-red-500 hover:scale-110 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
+               className="absolute left-4 sm:-left-6 top-[40%] -translate-y-1/2 z-20 h-10 w-10 sm:h-14 sm:w-14 rounded-full bg-background/90 backdrop-blur-md border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-foreground hover:text-background hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
                aria-label="Cuộn qua trái"
              >
-               <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+               <ChevronLeft className="h-5 w-5 sm:h-7 sm:w-7" />
              </button>
              <button 
                onClick={() => scroll('right')}
-               className="absolute right-4 sm:right-6 top-[60%] -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-background border border-border/50 shadow-[0_0_15px_rgba(0,0,0,0.2)] flex items-center justify-center text-foreground hover:bg-red-600 hover:text-white hover:border-red-500 hover:scale-110 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
+               className="absolute right-4 sm:-right-6 top-[40%] -translate-y-1/2 z-20 h-10 w-10 sm:h-14 sm:w-14 rounded-full bg-background/90 backdrop-blur-md border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-foreground hover:text-background hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 disabled:opacity-0 focus:outline-none"
                aria-label="Cuộn qua phải"
              >
-               <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+               <ChevronRight className="h-5 w-5 sm:h-7 sm:w-7" />
              </button>
 
             <div 
               ref={scrollContainerRef}
-              className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 snap-x hide-scrollbar"
+              className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-10 pt-4 snap-x hide-scrollbar"
             >
               {sale.products.map((item, index) => {
                 const percent = item.quantity > 0 ? Math.round((item.soldCount / item.quantity) * 100) : 0;
+                const isSoldOut = item.soldCount >= item.quantity;
                 
                 return (
                   <motion.div
                     key={item.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="shrink-0 snap-center"
                   >
                         <Link
                             to={`/product/${item.productSlug || item.productId}`}
-                            className="group flex-shrink-0 w-[240px] sm:w-[280px] snap-center block rounded-3xl bg-background border border-border overflow-hidden hover:shadow-2xl hover:shadow-red-900/20 hover:-translate-y-2 transition-all duration-300"
+                            className="group flex flex-col w-[260px] sm:w-[280px] lg:w-[320px] rounded-[2rem] bg-card border border-border/50 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/30 transition-all duration-500"
                         >
-                            <div className="relative aspect-square overflow-hidden bg-muted">
+                            {/* Image Section */}
+                            <div className="relative aspect-[4/5] overflow-hidden bg-muted/30 p-4 sm:p-6 flex flex-col items-center justify-center">
                                 {item.productImage ? (
-                                    <img src={item.productImage} alt={item.productName} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out" />
+                                    <img src={item.productImage} alt={item.productName} className={cn("h-full w-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-700 ease-out", isSoldOut && "grayscale opacity-70")} />
                                 ) : (
                                     <div className="h-full w-full flex items-center justify-center text-muted-foreground text-sm font-medium">No image</div>
                                 )}
                                 
-                                <div className="absolute top-3 left-3 bg-red-600 text-white text-xs sm:text-sm font-black px-3 py-1.5 rounded-full shadow-lg border border-red-500/50 flex items-center gap-1">
-                                    <Zap className="w-3.5 h-3.5 fill-current" /> -{sale.discountPercent}%
+                                <div className="absolute top-5 left-5 sm:top-6 sm:left-6 flex flex-col gap-2">
+                                  <div className="bg-destructive text-destructive-foreground text-xs sm:text-sm font-black px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 w-fit uppercase tracking-widest">
+                                      <Zap className="w-3.5 h-3.5 fill-current" /> -{sale.discountPercent}%
+                                  </div>
                                 </div>
-                                
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                {isSoldOut && (
+                                    <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] flex items-center justify-center">
+                                      <div className="bg-foreground text-background text-sm font-black px-5 py-2.5 rounded-full shadow-xl uppercase tracking-widest rotate-[-10deg]">
+                                          ĐÃ HẾT HÀNG
+                                      </div>
+                                    </div>
+                                )}
                             </div>
                             
-                            <div className="p-5">
-                                <h3 className="text-base font-bold line-clamp-2 mb-3 group-hover:text-red-600 transition-colors">{item.productName}</h3>
-                                <div className="flex items-baseline gap-2 mb-4">
-                                    <span className="text-red-600 font-black text-lg">{formatCurrency(item.salePrice)}</span>
-                                    <span className="text-muted-foreground text-sm line-through font-medium">{formatCurrency(item.originalPrice)}</span>
-                                </div>
-                                {/* Advanced Progress bar */}
-                                <div className="relative h-2 bg-red-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-2">
-                                    <div
-                                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-red-600 to-orange-500 rounded-full"
-                                        style={{ width: `${Math.min(percent, 100)}%` }}
-                                    />
-                                </div>
-                                <div className="flex justify-between items-center text-xs font-bold text-muted-foreground">
-                                    <span className="text-red-600 flex items-center gap-1"><Flame className="w-3 h-3"/> Đã bán {item.soldCount}</span>
-                                    <span>Còn {item.quantity - item.soldCount}</span>
+                            {/* Content Section */}
+                            <div className="p-5 sm:p-6 flex flex-col flex-1 bg-card">
+                                <h3 className="text-base sm:text-lg font-semibold line-clamp-2 mb-4 group-hover:text-primary transition-colors text-foreground">{item.productName}</h3>
+                                
+                                <div className="mt-auto">
+                                  <div className="flex flex-col gap-0.5 mb-5">
+                                      <span className="text-destructive font-black tracking-tight text-2xl sm:text-3xl">{formatCurrency(item.salePrice)}</span>
+                                      <span className="text-muted-foreground text-sm line-through font-medium">{formatCurrency(item.originalPrice)}</span>
+                                  </div>
+
+                                  {/* Sleek Progress bar */}
+                                  <div className="flex items-center justify-between text-xs font-bold text-muted-foreground mb-2.5">
+                                      <span className="flex items-center gap-1.5 text-foreground/80"><Flame className="w-4 h-4 text-orange-500"/> Đã bán {item.soldCount}</span>
+                                      {isSoldOut ? (
+                                        <span className="text-destructive font-bold uppercase tracking-wider">HẾT HÀNG</span>
+                                      ) : (
+                                        <span className="bg-muted px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider">Còn {item.quantity - item.soldCount}</span>
+                                      )}
+                                  </div>
+                                  <div className="relative h-2.5 bg-muted rounded-full overflow-hidden shadow-inner">
+                                      <div
+                                          className={cn("absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out", isSoldOut ? "bg-muted-foreground opacity-50" : percent > 80 ? "bg-orange-500" : "bg-primary")}
+                                          style={{ width: `${Math.min(percent, 100)}%` }}
+                                      />
+                                  </div>
                                 </div>
                             </div>
                         </Link>
                   </motion.div>
                 );
               })}
+              
+              {/* "View More" Fake Card */}
+              <motion.div className="shrink-0 snap-center flex items-center justify-center p-4">
+                 <Link to="/flash-sale" className="group flex flex-col items-center justify-center w-[200px] h-[300px] rounded-[2rem] bg-muted/20 border border-border/50 hover:bg-muted hover:border-primary/30 transition-all duration-300">
+                    <div className="h-14 w-14 rounded-full bg-background border border-border shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+                      <ArrowRight className="h-6 w-6" />
+                    </div>
+                    <span className="font-bold text-foreground hover:text-primary">Xem tất cả</span>
+                 </Link>
+              </motion.div>
             </div>
           </div>
           
