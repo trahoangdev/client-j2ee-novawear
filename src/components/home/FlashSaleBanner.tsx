@@ -134,7 +134,7 @@ export function FlashSaleBanner() {
 
             <div 
               ref={scrollContainerRef}
-              className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 snap-x hide-scrollbar scroll-smooth"
+              className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 snap-x hide-scrollbar"
             >
               {sale.products.map((item, index) => {
                 const percent = item.quantity > 0 ? Math.round((item.soldCount / item.quantity) * 100) : 0;
@@ -143,8 +143,7 @@ export function FlashSaleBanner() {
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
                   >
                         <Link

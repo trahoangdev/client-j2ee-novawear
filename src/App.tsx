@@ -7,15 +7,19 @@ import { AuthProvider } from "@/context/AuthContext";
 import { AppSettingsProvider } from "@/context/AppSettingsContext";
 
 // Lazy load pages
-const HomePage = lazy(() => import("@/pages/HomePage").then(m => ({ default: m.HomePage })));
-const ShopPage = lazy(() => import("@/pages/ShopPage").then(m => ({ default: m.ShopPage })));
-const BestsellerPage = lazy(() => import("@/pages/BestsellerPage").then(m => ({ default: m.BestsellerPage })));
-const SalePage = lazy(() => import("@/pages/SalePage").then(m => ({ default: m.SalePage })));
-const FlashSalePage = lazy(() => import("@/pages/FlashSalePage").then(m => ({ default: m.FlashSalePage })));
-const NewArrivalsPage = lazy(() => import("@/pages/NewArrivalsPage").then(m => ({ default: m.NewArrivalsPage })));
-const ProductDetailPage = lazy(() => import("@/pages/ProductDetailPage").then(m => ({ default: m.ProductDetailPage })));
-const CartPage = lazy(() => import("@/pages/CartPage").then(m => ({ default: m.CartPage })));
-const CheckoutPage = lazy(() => import("@/pages/CheckoutPage").then(m => ({ default: m.CheckoutPage })));
+// Eager load primary customer pages to prevent Suspense layout flashing (since Header/Footer are inside them)
+import { HomePage } from "@/pages/HomePage";
+import { ShopPage } from "@/pages/ShopPage";
+import { ProductDetailPage } from "@/pages/ProductDetailPage";
+import { CartPage } from "@/pages/CartPage";
+import { CheckoutPage } from "@/pages/CheckoutPage";
+import { BestsellerPage } from "@/pages/BestsellerPage";
+import { SalePage } from "@/pages/SalePage";
+import { FlashSalePage } from "@/pages/FlashSalePage";
+import { NewArrivalsPage } from "@/pages/NewArrivalsPage";
+import BundlesPage from "@/pages/BundlesPage";
+
+// Lazy load secondary pages
 const PaymentReturnPage = lazy(() => import("@/pages/PaymentReturnPage").then(m => ({ default: m.PaymentReturnPage })));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage").then(m => ({ default: m.ProfilePage })));
 const OrdersPage = lazy(() => import("@/pages/OrdersPage").then(m => ({ default: m.OrdersPage })));
@@ -54,7 +58,6 @@ const AdminFlashSales = lazy(() => import("@/pages/admin/AdminFlashSales").then(
 const AdminReturns = lazy(() => import("@/pages/admin/AdminReturns").then(m => ({ default: m.AdminReturns })));
 const AdminSubscribers = lazy(() => import("@/pages/admin/AdminSubscribers").then(m => ({ default: m.AdminSubscribers })));
 const AdminBundles = lazy(() => import("@/pages/admin/AdminBundles").then(m => ({ default: m.AdminBundles })));
-const BundlesPage = lazy(() => import("@/pages/BundlesPage"));
 
 // Live Chat Widget
 import { LiveChatWidget } from "@/components/layout/LiveChatWidget";

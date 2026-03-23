@@ -383,23 +383,28 @@ export function ProductDetailPage() {
                     <span className="text-sm text-muted-foreground font-medium">Màu sắc</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {colors.map((color) => (
-                      <button
-                        key={color.hex}
-                        onClick={() => setSelectedColor(color)}
-                        className={cn(
-                          'h-10 px-4 rounded-md border text-sm transition-all focus:outline-none flex items-center gap-2',
-                          selectedColor.hex === color.hex
-                            ? 'border-foreground shadow-sm bg-muted/50 font-medium'
-                            : 'border-border hover:border-foreground/30 bg-background text-muted-foreground'
-                        )}
-                        title={color.name}
-                        aria-label={`Chọn màu ${color.name}`}
-                      >
-                        <span className="w-3 h-3 rounded-full border border-border/50" style={{ backgroundColor: color.hex }} />
-                        {color.name}
-                      </button>
-                    ))}
+                    {colors.map((color, index) => {
+                      const isValidHex = color.hex && color.hex.trim() !== '';
+                      const backgroundColor = isValidHex ? color.hex : '#CCCCCC';
+                      
+                      return (
+                        <button
+                          key={color.name || index}
+                          onClick={() => setSelectedColor(color)}
+                          className={cn(
+                            'h-10 px-4 rounded-md border text-sm transition-all focus:outline-none flex items-center gap-2',
+                            selectedColor.name === color.name
+                              ? 'border-foreground shadow-sm bg-muted/50 font-medium'
+                              : 'border-border hover:border-foreground/30 bg-background text-muted-foreground'
+                          )}
+                          title={color.name}
+                          aria-label={`Chọn màu ${color.name}`}
+                        >
+                          <span className="w-3 h-3 rounded-full border border-border/50" style={{ backgroundColor }} />
+                          {color.name}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

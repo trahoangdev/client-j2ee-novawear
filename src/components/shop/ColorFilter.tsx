@@ -1,57 +1,46 @@
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import type { ProductColorDto } from "@/types/api";
 
 interface ColorFilterProps {
-    colors: string[];
+    colors: ProductColorDto[];
     selectedColors: string[];
     onChange: (colors: string[]) => void;
 }
 
 export function ColorFilter({ colors, selectedColors, onChange }: ColorFilterProps) {
-    const toggleColor = (color: string) => {
-        if (selectedColors.includes(color)) {
-            onChange(selectedColors.filter((c) => c !== color));
+    const toggleColor = (colorName: string) => {
+        if (selectedColors.includes(colorName)) {
+            onChange(selectedColors.filter((c) => c !== colorName));
         } else {
-            onChange([...selectedColors, color]);
+            onChange([...selectedColors, colorName]);
         }
-    };
-
-    // Predefined hex map for common colors (could be improved)
-    const colorMap: Record<string, string> = {
-        'Đen': '#000000',
-        'Trắng': '#FFFFFF',
-        'Xám': '#808080',
-        'Xanh dương': '#0000FF',
-        'Đỏ': '#FF0000',
-        'Vàng': '#FFFF00',
-        'Hồng': '#FFC0CB',
-        'Cam': '#FFA500',
-        'Tím': '#800080',
-        'Nâu': '#A52A2A',
-        'Be': '#F5F5DC',
-        'Kem': '#FFFDD0',
-        'Xanh lá': '#008000',
     };
 
     return (
         <div className="flex flex-wrap gap-2">
-            {colors.map((color) => {
-                const hex = colorMap[color] || '#CCCCCC';
-                const isSelected = selectedColors.includes(color);
-                const isWhite = hex.toLowerCase() === '#ffffff' || color === 'Trắng';
+            {colors.map((colorObj, index) => {
+                const isString = typeof colorObj === 'string';
+                const colorName = isString ? colorObj : colorObj.name;
+                const hex = isString ? '#CCCCCC' : (colorObj.hex || '#CCCCCC');
+                
+                if (!colorName) return null;
+
+                const isSelected = selectedColors.includes(colorName);
+                const isWhite = hex.toLowerCase() === '#ffffff' || colorName.toLowerCase() === 'trắng';
 
                 return (
                     <button
-                        key={color}
+                        key={colorName || index}
                         type="button"
                         className={cn(
-                            "h-8 w-8 rounded-full border flex items-center justify-center transition-all",
-                            isSelected ? "ring-2 ring-primary ring-offset-2" : "hover:scale-110",
-                            isWhite ? "border-gray-200" : "border-transparent"
+                            "h-8 w-8 rounded-full border flex items-center justify-center transition-all shadow-sm",
+                            isSelected ? "ring-2 ring-primary ring-offset-2 scale-110" : "hover:scale-110",
+                            isWhite ? "border-foreground/20" : "border-transparent"
                         )}
                         style={{ backgroundColor: hex }}
-                        onClick={() => toggleColor(color)}
-                        title={color}
+                        onClick={() => toggleColor(colorName)}
+                        title={colorName}
                     >
                         {isSelected && <Check className={cn("h-4 w-4", isWhite ? "text-black" : "text-white")} />}
                     </button>

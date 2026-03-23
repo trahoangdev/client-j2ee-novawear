@@ -198,7 +198,7 @@ export interface ProductFiltersDto {
   minPrice: number | null;
   maxPrice: number | null;
   sizes: string[];
-  colors: string[];
+  colors: import('./api').ProductColorDto[];
 }
 
 /** Flash Sale */
