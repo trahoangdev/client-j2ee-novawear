@@ -60,6 +60,36 @@ export function ShopPage() {
   const rating = searchParams.get('rating') ? Number(searchParams.get('rating')) : undefined;
 
   const [availableFilters, setAvailableFilters] = useState<import('@/types/api').ProductFiltersDto | null>(null);
+  const [sliderRange, setSliderRange] = useState<number[] | null>(null);
+
+  useEffect(() => {
+    if (availableFilters) {
+      setSliderRange([
+        minPrice ?? availableFilters.minPrice ?? 0,
+        maxPrice ?? availableFilters.maxPrice ?? 10000000
+      ]);
+    }
+  }, [minPrice, maxPrice, availableFilters]);
+
+  // Debounced URL updates when user drags slider (bypasses potential Radix onValueCommit failures)
+  useEffect(() => {
+    if (!sliderRange || !availableFilters) return;
+    const [sMin, sMax] = sliderRange;
+    const cMin = minPrice ?? availableFilters.minPrice ?? 0;
+    const cMax = maxPrice ?? availableFilters.maxPrice ?? 10000000;
+    
+    // Only dispatch update if values actually changed to prevent infinite loops
+    if (sMin !== cMin || sMax !== cMax) {
+      const timeoutId = setTimeout(() => {
+        const params = new URLSearchParams(searchParams);
+        params.set('minPrice', String(sMin));
+        params.set('maxPrice', String(sMax));
+        setSearchParams(params);
+        setPage(0);
+      }, 500); // 500ms delay after dragging stops
+      return () => clearTimeout(timeoutId);
+    }
+  }, [sliderRange, minPrice, maxPrice, searchParams, availableFilters, setSearchParams]);
 
   useEffect(() => {
     productsApi.getFilters().then(({ data }) => setAvailableFilters(data)).catch(console.error);
@@ -131,10 +161,10 @@ export function ShopPage() {
     const list = [...products];
     switch (sortBy) {
       case 'price-asc':
-        list.sort((a, b) => a.price - b.price);
+        list.sort((a, b) => (a.salePrice ?? a.price) - (b.salePrice ?? b.price));
         break;
       case 'price-desc':
-        list.sort((a, b) => b.price - a.price);
+        list.sort((a, b) => (b.salePrice ?? b.price) - (a.salePrice ?? a.price));
         break;
       default:
         break;
@@ -292,22 +322,16 @@ export function ShopPage() {
         <h4 className="font-bold uppercase tracking-wider text-xs text-muted-foreground mb-4">Khoảng Giá</h4>
         <div className="px-2">
           <PriceRangeSlider
-            value={[minPrice || availableFilters?.minPrice || 0, maxPrice || availableFilters?.maxPrice || 10000000]}
+            value={sliderRange || [availableFilters?.minPrice || 0, availableFilters?.maxPrice || 10000000]}
             min={availableFilters?.minPrice || 0}
             max={availableFilters?.maxPrice || 10000000}
             step={50000}
-            onValueChange={(val) => {}}
-            onValueCommit={(val) => {
-              updateFilters({
-                minPrice: String(val[0]),
-                maxPrice: String(val[1])
-              });
-            }}
+            onValueChange={setSliderRange}
             className="mb-4"
           />
           <div className="flex justify-between text-xs font-medium text-muted-foreground">
-            <span>{formatCurrency(minPrice || availableFilters?.minPrice || 0)}</span>
-            <span>{formatCurrency(maxPrice || availableFilters?.maxPrice || 10000000)}</span>
+            <span>{formatCurrency(sliderRange?.[0] || availableFilters?.minPrice || 0)}</span>
+            <span>{formatCurrency(sliderRange?.[1] || availableFilters?.maxPrice || 10000000)}</span>
           </div>
         </div>
       </div>
@@ -353,7 +377,7 @@ export function ShopPage() {
         <div className="sticky bottom-4 z-10 mx-[-8px] px-2 bg-background/80 backdrop-blur-md pb-4 pt-2">
            <Button variant="destructive" className="w-full rounded-xl font-bold shadow-lg" onClick={clearFilters}>
              <X className="h-4 w-4 mr-2" />
-             Xóa bộ lọc rác
+             Xoá Tất Cả Bộ Lọc
            </Button>
         </div>
       )}

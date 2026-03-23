@@ -99,7 +99,7 @@ module.exports = {
   			charcoal: '#2D2D2D',
   			gold: '#D4AF37',
   			coral: '#FF6B6B',
-  			success: '#4ECDC4',
+  			success: 'hsl(var(--success))',
   			navy: {
   				DEFAULT: '#1A1F36',
   				light: '#252B45'

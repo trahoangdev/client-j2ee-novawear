@@ -19,7 +19,7 @@ export function FlashSalePage() {
     flashSalesApi
       .getActive()
       .then(({ data }) => setSales(data))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -52,13 +52,13 @@ export function FlashSalePage() {
   }, [sales]);
 
   // Lấy danh sách sản phẩm từ tất cả flash sale đang active
-  const activeProducts = sales.flatMap(sale => 
+  const activeProducts = sales.flatMap(sale =>
     (sale.products || []).map(p => {
       const display = productDtoToDisplay(p as any);
       // Đặt giá sale Price và original Price theo flash sale. Note: data trả về từ API có productName, originalPrice, salePrice, quantity, stock (tuỳ API).
       // Giả lập display:
-      return { 
-        ...display, 
+      return {
+        ...display,
         id: p.id.toString(), // Chú ý: trong mảng products của flashSale API nó trả về format riêng, nhưng `productDtoToDisplay` kỳ vọng `ProductDto`. 
         // Thay vì map trực tiếp, hãy gọi API `productsApi` với filter (nếu có). Hoặc ta patch tạm thời. Cần kiểm tra kỹ.
       };
@@ -92,7 +92,7 @@ export function FlashSalePage() {
         ) : sales.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <AlertCircle className="w-16 h-16 text-muted-foreground/30 mb-4" />
-            <h2 className="text-xl font-bold mb-2">Hiện tại không có Flash Sale nảo</h2>
+            <h2 className="text-xl font-bold mb-2">Hiện tại không có Flash Sale nào</h2>
             <p className="text-muted-foreground">Vui lòng quay lại sau nhé!</p>
           </div>
         ) : (
@@ -117,31 +117,31 @@ export function FlashSalePage() {
                 {/* Chú ý: FlashSaleDto.products chứa {id, productId, productName, originalPrice, salePrice, quantity, soldCount, imageUrl} 
                     Nó không phải ProductDto đầy đủ, nên ta cần map cẩn thận để truyền cho ProductCard */}
                 {(!sale.products || sale.products.length === 0) ? (
-                   <p className="text-center py-6 text-muted-foreground text-sm">Sale này hiện chưa có sản phẩm nào.</p>
+                  <p className="text-center py-6 text-muted-foreground text-sm">Sale này hiện chưa có sản phẩm nào.</p>
                 ) : (
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {sale.products.map((item: any) => {
-                       // Patch to match ProductDisplay expected by ProductCard
-                       const fakeDisplay = {
-                         id: String(item.productId),
-                         name: item.productName,
-                         slug: item.productSlug || item.productId.toString(),
-                         price: item.salePrice, // Giá hiện tại
-                         originalPrice: item.originalPrice, // Giá cũ
-                         description: '',
-                         images: item.productImage ? [item.productImage] : [],
-                         colors: [],
-                         sizes: [],
-                         category: '',
-                         inStock: item.quantity > item.soldCount,
-                         isNew: false,
-                         isFlashSale: true,
-                         salePct: sale.discountPercent,
-                       };
+                      // Patch to match ProductDisplay expected by ProductCard
+                      const fakeDisplay = {
+                        id: String(item.productId),
+                        name: item.productName,
+                        slug: item.productSlug || item.productId.toString(),
+                        price: item.salePrice, // Giá hiện tại
+                        originalPrice: item.originalPrice, // Giá cũ
+                        description: '',
+                        images: item.productImage ? [item.productImage] : [],
+                        colors: [],
+                        sizes: [],
+                        category: '',
+                        inStock: item.quantity > item.soldCount,
+                        isNew: false,
+                        isFlashSale: true,
+                        salePct: sale.discountPercent,
+                      };
 
-                       return (
-                         <ProductCard key={item.id} product={fakeDisplay as any} />
-                       );
+                      return (
+                        <ProductCard key={item.id} product={fakeDisplay as any} />
+                      );
                     })}
                   </div>
                 )}
