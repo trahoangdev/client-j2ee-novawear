@@ -9,6 +9,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isAdmin: boolean;
   login: (usernameOrEmail: string, password: string) => Promise<{ ok: boolean; role?: string }>;
+  googleLogin: (token: string) => Promise<{ ok: boolean; role?: string }>;
   register: (username: string, email: string, password: string) => Promise<{ ok: boolean; role?: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -90,6 +91,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const googleLogin = async (token: string): Promise<{ ok: boolean; role?: string }> => {
+    try {
+      const { data } = await authApi.googleLogin(token);
+      setToken(data.token);
+      setUser(mapUserResponseToUser(data));
+      setShowAuthModal(false);
+      return { ok: true, role: data.role };
+    } catch {
+      return { ok: false };
+    }
+  };
+
   const register = async (username: string, email: string, password: string): Promise<{ ok: boolean; role?: string }> => {
     try {
       await authApi.register({ username: username.trim(), email: email.trim(), password });
@@ -121,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
         login,
+        googleLogin,
         register,
         logout,
         refreshUser,

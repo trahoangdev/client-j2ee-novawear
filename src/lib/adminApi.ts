@@ -19,6 +19,8 @@ import type {
 export const authApi = {
   login: (username: string, password: string) =>
     api.post<import('@/types/api').LoginResponse>('/api/auth/login', { username, password }),
+  googleLogin: (token: string) =>
+    api.post<import('@/types/api').LoginResponse>('/api/auth/google', { token }),
   me: () => api.get<UserResponse>('/api/auth/me'),
   register: (data: { username: string; email: string; password: string }) =>
     api.post<UserResponse>('/api/auth/register', data),
