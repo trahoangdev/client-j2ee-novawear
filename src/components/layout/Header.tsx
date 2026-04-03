@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingBag, User, Menu, X, Heart, Loader2, ChevronDown, Bell, ArrowRight, Grid, Sparkles, Flame, Tag } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, X, Heart, Loader2, ChevronDown, Bell, ArrowRight, Grid, Sparkles, Flame, Tag, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useViewedProducts } from '@/context/ViewedProductsContext';
 import { useAuth } from '@/context/AuthContext';
 import {
   DropdownMenu,
@@ -275,6 +276,7 @@ export function Header() {
   
   const { itemCount } = useCart();
   const { count: wishlistCount } = useWishlist();
+  const { count: viewedCount } = useViewedProducts();
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -507,6 +509,18 @@ export function Header() {
                 </Link>
               </Button>
 
+              {/* Viewed Products Icon */}
+              <Button asChild variant="ghost" size="icon" className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-full hover:bg-muted text-foreground/80 hover:text-foreground hidden sm:flex">
+                <Link to="/da-xem" aria-label={`Đã xem, ${viewedCount} sản phẩm`}>
+                  <Eye className="h-5 w-5 sm:h-6 sm:w-6" />
+                  {viewedCount > 0 && (
+                    <span className="absolute top-[2px] right-[2px] min-w-5 h-5 px-1 rounded-full bg-muted-foreground border-[2px] border-background text-background text-[10px] sm:text-xs font-bold flex items-center justify-center shadow-sm">
+                      {viewedCount > 99 ? '99+' : viewedCount}
+                    </span>
+                  )}
+                </Link>
+              </Button>
+
               {/* User Dropdown / Auth Icons */}
               {isAuthenticated ? (
                 <DropdownMenu>
@@ -532,6 +546,9 @@ export function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer py-2.5 rounded-lg focus:bg-primary/10 focus:text-primary sm:hidden">
                       <Link to="/wishlist">Danh Sách Yêu Thích</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer py-2.5 rounded-lg focus:bg-primary/10 focus:text-primary sm:hidden">
+                      <Link to="/da-xem">Đã Xem</Link>
                     </DropdownMenuItem>
                     {isAdmin && (
                       <>
