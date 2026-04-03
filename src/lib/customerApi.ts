@@ -207,3 +207,14 @@ export const bundlesApi = {
   list: () => api.get<BundleDto[]>('/api/bundles'),
   getById: (id: number) => api.get<BundleDto>(`/api/bundles/${id}`),
 };
+
+/** Viewed Products – authenticated */
+export const viewedProductsApi = {
+  list: () => api.get<ViewedProductDto[]>('/api/viewed-products'),
+  record: (productId: number) =>
+    api.post<ViewedProductDto>('/api/viewed-products', { productId }),
+  remove: (productId: number) =>
+    api.delete<void>(`/api/viewed-products/${productId}`),
+  clearAll: () => api.delete<void>('/api/viewed-products'),
+  count: () => api.get<{ count: number }>('/api/viewed-products/count'),
+};

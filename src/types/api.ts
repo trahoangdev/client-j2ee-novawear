@@ -282,3 +282,11 @@ export interface BundleDto {
   items: BundleItemDto[];
   createdAt: string;
 }
+
+/** Viewed Product DTO */
+export interface ViewedProductDto {
+  id: number;
+  productId: number;
+  viewedAt: string;
+  product: ProductDto;
+}
