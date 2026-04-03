@@ -3,8 +3,10 @@ import { Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
+import { ViewedProductsProvider } from "@/context/ViewedProductsContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppSettingsProvider } from "@/context/AppSettingsContext";
+import { ViewedProductsPage } from "@/pages/ViewedProductsPage";
 
 // Lazy load pages
 // Eager load primary customer pages to prevent Suspense layout flashing (since Header/Footer are inside them)
@@ -82,7 +84,8 @@ function App() {
     <AuthProvider>
       <AppSettingsProvider>
         <WishlistProvider>
-          <CartProvider>
+          <ViewedProductsProvider>
+            <CartProvider>
             <Suspense fallback={<LoadingFallback />}>
               <Routes>
                 {/* Customer Routes */}
@@ -109,6 +112,7 @@ function App() {
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/wishlist" element={<WishlistPage />} />
+                <Route path="/da-xem" element={<ViewedProductsPage />} />
                 <Route path="/bundles" element={<BundlesPage />} />
 
                 {/* Auth Routes */}
@@ -152,8 +156,9 @@ function App() {
               duration={4000} 
               offset={{ top: 80 }} 
             />
-          </CartProvider>
-        </WishlistProvider>
+            </CartProvider>
+            </ViewedProductsProvider>
+          </WishlistProvider>
       </AppSettingsProvider>
     </AuthProvider>
   );
