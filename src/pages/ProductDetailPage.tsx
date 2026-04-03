@@ -30,6 +30,7 @@ import { ProductCardSkeleton } from '@/components/products/ProductCardSkeleton';
 import { ProductDetailSkeleton } from '@/components/products/ProductDetailSkeleton';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useViewedProducts } from '@/context/ViewedProductsContext';
 import { productsApi, reviewsApi } from '@/lib/customerApi';
 import { productDtoToDisplay, type ProductDisplay } from '@/lib/productUtils';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -47,6 +48,7 @@ export function ProductDetailPage() {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { has: isInWishlist, toggle: toggleWishlist } = useWishlist();
+  const { addViewed } = useViewedProducts();
   const { isAuthenticated, user } = useAuth();
 
   const [product, setProduct] = useState<ProductDisplay | null>(null);
@@ -75,6 +77,7 @@ export function ProductDetailPage() {
         const p = productDtoToDisplay(prodRes.data);
         const productId = Number(p.id);
         setProduct(p);
+        addViewed(p);
         // If product is in flash sale, load the flash sale data
         if (p.isFlashSale) {
           import('@/lib/customerApi').then(({ flashSalesApi }) => {
